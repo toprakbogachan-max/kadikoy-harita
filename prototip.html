@@ -273,6 +273,23 @@
   .alan textarea{min-height:92px;line-height:1.5}
   .alan select:focus,.alan textarea:focus,.alan input:focus{outline:none;border-color:var(--jeton)}
   .zorunlu{color:var(--jeton)}
+  /* ---------- pin formunda mekan seçimi: arama + harita ---------- */
+  .yer-ara{display:flex;align-items:center;gap:9px;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:2px;padding:9px 11px}
+  .yer-ara svg{flex-shrink:0;color:var(--murekkep-2)}
+  .yer-ara input{flex:1;border:none;background:none;outline:none;font-family:var(--font-metin);font-size:14px;color:var(--murekkep);min-width:0}
+  .yer-ara input::placeholder{color:var(--murekkep-2)}
+  .yer-oneri{margin-top:-1px;border:1px solid var(--cizgi);border-top:none;border-radius:0 0 2px 2px;background:var(--yuzey);max-height:168px;overflow-y:auto;box-shadow:var(--golge)}
+  .yer-oneri-satir{display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:none;border-bottom:1px solid var(--cizgi-2);background:none;cursor:pointer;text-align:left;font-family:var(--font-metin);color:var(--murekkep)}
+  .yer-oneri-satir:last-child{border-bottom:none}
+  .yer-oneri-satir:hover{background:rgba(35,52,60,.05)}
+  .yer-oneri-ad{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .yer-oneri-alt{font-family:var(--font-sayi);font-size:10.5px;color:var(--murekkep-2);flex-shrink:0}
+  .yer-harita-sarma{position:relative;margin-top:9px;height:190px;border:1px solid var(--cizgi);border-radius:2px;overflow:hidden;background:var(--su)}
+  #f-harita{position:absolute;inset:0}
+  .yer-secili{margin-top:9px;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--murekkep-2);min-height:22px}
+  .yer-secili b{font-weight:600;color:var(--murekkep)}
+  .yer-secili-nokta{width:11px;height:11px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 34% 30%,#fff 0%,var(--pin-isik) 16%,var(--pin) 55%,var(--pin-koyu) 100%);box-shadow:0 1.5px 2px rgba(74,58,30,.35)}
+
   .foto-yukle{width:100%;aspect-ratio:4/3;border:1px dashed rgba(35,52,60,.3);border-radius:2px;background:var(--yuzey);color:var(--murekkep-2);cursor:pointer;display:grid;place-items:center;font-family:var(--font-metin);font-size:13px;gap:6px}
   .foto-yukle:hover{border-color:var(--jeton);color:var(--murekkep)}
   .ipucu{font-size:12px;color:var(--murekkep-2);line-height:1.5;margin-top:8px;font-style:italic}
@@ -465,8 +482,14 @@
     </div>
     <div class="cekmece-govde">
       <div class="alan">
-        <label for="f-yer">Mekan <span class="zorunlu">*</span></label>
-        <select id="f-yer"></select>
+        <label>Mekan <span class="zorunlu">*</span></label>
+        <div class="yer-ara">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.2 16.2 21 21"/></svg>
+          <input id="f-ara" type="text" placeholder="Mekan ara ya da haritadan seç" autocomplete="off">
+        </div>
+        <div class="yer-oneri" id="f-oneri" hidden></div>
+        <div class="yer-harita-sarma"><div id="f-harita"></div></div>
+        <div class="yer-secili" id="f-secili"></div>
       </div>
 
       <div class="alan">
@@ -1549,6 +1572,82 @@ $('ara-girdi').addEventListener('input', cizArama);
 
 /* ==================== pin ekleme ==================== */
 let fotoVar = false, secSenaryo = null, secSiklik = null, secTekrar = null;
+let fSecilenYer = null, fKilitli = false, formMap = null;
+const formMarkerlar = {};
+
+/* ---------- pin formu: mekanı haritadan seç ya da ara ---------- */
+function formHaritaHazirla(){
+  if(formMap) return;
+  formMap = new maplibregl.Map({
+    container: 'f-harita',
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: [29.033, 40.985],
+    zoom: 13.2,
+    attributionControl: false
+  });
+  formMap.on('load', () => { formMap.resize(); formPinleriCiz(); });
+}
+
+function formPinleriCiz(){
+  if(!formMap) return;
+  YERLER.forEach(y => {
+    const secili = fSecilenYer === y.id;
+    let m = formMarkerlar[y.id];
+    if(!m){
+      const el = document.createElement('div');
+      el.className = 'jeton-marker';
+      el.innerHTML = '<div class="jeton-ic"></div>';
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        if(fKilitli) return;
+        fYerSec(y.id, false);
+      });
+      el.addEventListener('mousedown', e => e.stopPropagation());
+      m = formMarkerlar[y.id] = new maplibregl.Marker({element: el, anchor:'center'})
+        .setLngLat([y.lng, y.lat]).addTo(formMap);
+    }
+    const el = m.getElement();
+    /* seçim haritasında açık/kapalı bilgisi gürültü — kategori rengi hep açık gösterilir */
+    el.querySelector('.jeton-ic').innerHTML = jetonSVG(y, true, false, secili);
+    el.classList.toggle('secili', secili);
+    el.style.opacity = (fKilitli && !secili) ? .35 : 1;
+    el.style.zIndex = secili ? 10 : 1;
+  });
+}
+
+function fYerSec(id, haritayiOynat = true){
+  fSecilenYer = id;
+  const y = yerBul(id);
+  $('f-ara').value = '';
+  $('f-oneri').hidden = true;
+  $('f-secili').innerHTML =
+    `<span class="yer-secili-nokta" style="${igneStil(y.tur)}"></span>
+     <span>Seçildi: <b>${y.ad}</b> · ${TUR_AD[y.tur]} · ${y.semt}</span>`;
+  if(fotoVar) $('f-foto').style.background = fotoZemin(y.tur);
+  if(formMap && haritayiOynat){
+    try{ formMap.jumpTo({center:[y.lng, y.lat], zoom: Math.max(formMap.getZoom(), 15)}); }
+    catch(e){ console.warn('form haritası odaklanamadı', e); }
+  }
+  formPinleriCiz();
+  kontrolEt();
+}
+
+function fOnerileriCiz(){
+  const q = $('f-ara').value.trim().toLocaleLowerCase('tr');
+  if(!q){ $('f-oneri').hidden = true; return; }
+  const bulunan = YERLER.filter(y =>
+    y.ad.toLocaleLowerCase('tr').includes(q) || y.semt.toLocaleLowerCase('tr').includes(q));
+  $('f-oneri').innerHTML = bulunan.length
+    ? bulunan.map(y => `<button type="button" class="yer-oneri-satir" data-yer="${y.id}">
+        ${simgeSvg(y.tur,17,RENK[y.tur].ana)}
+        <span class="yer-oneri-ad">${y.ad}</span>
+        <span class="yer-oneri-alt">${y.semt}</span></button>`).join('')
+    : '<p class="bos-durum" style="padding:11px">Eşleşen mekan yok.</p>';
+  $('f-oneri').hidden = false;
+  $('f-oneri').querySelectorAll('[data-yer]').forEach(el =>
+    el.onclick = () => fYerSec(el.dataset.yer));
+}
+$('f-ara').addEventListener('input', fOnerileriCiz);
 
 function secimKur(kutuId, secenekler, getir, ayarla){
   const kutu = $(kutuId);
@@ -1569,6 +1668,7 @@ const kelimeler = () => ['f-k1','f-k2','f-k3'].map(i => $(i).value.trim().toLowe
 
 function kontrolEt(){
   $('f-paylas').disabled = !(
+    fSecilenYer &&
     fotoVar &&
     kelimeler().length === 3 &&
     secSenaryo &&
@@ -1584,12 +1684,15 @@ function ekleAc(yerId, duzenlenecek){
   $('ekle-baslik').textContent = duzenlenecek ? 'Pini düzenle' : 'Pin at';
   $('f-paylas').textContent = duzenlenecek ? 'Kaydet' : 'Paylaş';
 
-  const sel = $('f-yer');
-  sel.innerHTML = YERLER.map(y => `<option value="${y.id}">${y.ad} — ${y.semt}</option>`).join('');
-  sel.disabled = !!duzenlenecek;
+  fKilitli = !!duzenlenecek;
+  fSecilenYer = null;
+  $('f-ara').value = '';
+  $('f-oneri').hidden = true;
+  $('f-ara').disabled = fKilitli;
+  $('f-ara').placeholder = fKilitli ? 'Düzenlerken mekan değiştirilemez' : 'Mekan ara ya da haritadan seç';
+  $('f-secili').innerHTML = '<span>Henüz mekan seçilmedi.</span>';
 
   if(duzenlenecek){
-    sel.value = duzenlenecek.yer;
     ['f-k1','f-k2','f-k3'].forEach((id,i) => $(id).value = duzenlenecek.kelimeler?.[i] || '');
     $('f-metin').value = duzenlenecek.metin;
     $('f-fiyat').value = duzenlenecek.fiyat || '';
@@ -1603,7 +1706,6 @@ function ekleAc(yerId, duzenlenecek){
     $('f-foto').style.borderStyle = 'solid';
     $('f-foto').style.background = fotoZemin(yerBul(duzenlenecek.yer).tur);
   } else {
-    if(yerId) sel.value = yerId;
     ['f-k1','f-k2','f-k3','f-metin','f-fiyat','f-degisse'].forEach(i => $(i).value = '');
     $('f-puan').value = 7; $('f-puan-c').textContent = '7';
     secSenaryo = secSiklik = secTekrar = null;
@@ -1618,6 +1720,15 @@ function ekleAc(yerId, duzenlenecek){
   grupSenkron('f-tekrar', secTekrar);
   kontrolEt();
   $('ekle').classList.add('acik');
+
+  /* harita çekmece görünür olduktan sonra ölçülebilir — açılış animasyonunu bekle */
+  setTimeout(() => {
+    formHaritaHazirla();
+    if(formMap) formMap.resize();
+    const baslangic = duzenlenecek ? duzenlenecek.yer : yerId;
+    if(baslangic) fYerSec(baslangic);
+    else formPinleriCiz();
+  }, 340);
 }
 
 ['f-k1','f-k2','f-k3'].forEach(i => $(i).addEventListener('input', kontrolEt));
@@ -1625,13 +1736,12 @@ $('f-metin').addEventListener('input', e => { $('f-sayac').textContent = e.targe
 $('f-puan').addEventListener('input', e => $('f-puan-c').textContent = e.target.value);
 $('f-foto').onclick = () => {
   fotoVar = !fotoVar;
-  const y = yerBul($('f-yer').value);
+  const y = fSecilenYer ? yerBul(fSecilenYer) : null;
   $('f-foto-metin').textContent = fotoVar ? 'Fotoğraf eklendi ✓ (kaldırmak için dokun)' : 'Fotoğraf ekle';
   $('f-foto').style.borderStyle = fotoVar ? 'solid' : 'dashed';
-  $('f-foto').style.background = fotoVar ? fotoZemin(y.tur) : 'transparent';
+  $('f-foto').style.background = (fotoVar && y) ? fotoZemin(y.tur) : 'transparent';
   kontrolEt();
 };
-$('f-yer').addEventListener('change', () => { if(fotoVar) $('f-foto').style.background = fotoZemin(yerBul($('f-yer').value).tur); });
 $('ekle-kapat').onclick = () => $('ekle').classList.remove('acik');
 $('ekle-ac').onclick = () => ekleAc(null);
 
@@ -1676,7 +1786,7 @@ $('paylas-kopyala').onclick = () => {
 };
 $('f-paylas').onclick = () => {
   const veri = {
-    yer: $('f-yer').value,
+    yer: fSecilenYer,
     puan: parseFloat($('f-puan').value),
     kelimeler: kelimeler(),
     senaryo: secSenaryo,
