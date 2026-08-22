@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +27,10 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#241E14;font-family:var(--font-metin);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px;color:var(--murekkep)}
-  .telefon{width:100%;max-width:392px;height:min(96vh,820px);background:var(--kagit);border-radius:26px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+  /* overflow:clip — hidden'dan farkı: kaydırma konteyneri OLUŞTURMAZ.
+     Kapalı çekmeceler çerçevenin altında durduğu için hidden ile çerçeve
+     programatik olarak (focus vb.) kayabiliyordu; clip bunu tamamen engeller. */
+  .telefon{width:100%;max-width:392px;height:min(96vh,820px);background:var(--kagit);overflow:hidden;overflow:clip;border-radius:26px;display:flex;flex-direction:column;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.55)}
 
   .ekran{flex:1;display:none;flex-direction:column;min-height:0}
   .ekran.aktif{display:flex}
@@ -71,6 +75,7 @@
 
   .harita-sarma{flex:1;position:relative;overflow:hidden;background:var(--su);min-height:0}
   #maplibre-harita{position:absolute;inset:0}
+  .harita-bos{position:absolute;left:16px;right:16px;top:14px;z-index:2;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:2px;padding:11px 13px;box-shadow:var(--golge-2);font-size:13px;color:var(--murekkep);line-height:1.4;text-align:center}
   .telefon:has(.cekmece.acik) #maplibre-harita{pointer-events:none}
   .jeton-marker{cursor:pointer}
   .jeton-marker:focus-visible{outline:none}
@@ -161,8 +166,11 @@
   .hizli-av-yigin .av{border:2px solid var(--yuzey);margin-left:-9px}
   .hizli-av-yigin .av:first-child{margin-left:0}
   .foto-izgara{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-  .foto-izgara-hucre{position:relative;aspect-ratio:1;border-radius:2px;overflow:hidden;display:grid;place-items:center;cursor:pointer}
-  .foto-izgara-hucre svg{opacity:.35}
+  .foto-izgara-hucre{position:relative;aspect-ratio:.86;border:none;padding:3px;background:var(--kag,#FBF3D9);border-radius:1px;box-shadow:var(--golge);cursor:pointer;transform:rotate(var(--rot,0deg));transition:transform .15s,box-shadow .15s}
+  .foto-izgara-hucre::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0%,var(--pin-isik,#F5C87C) 16%,var(--pin,#DE9B2E) 55%,var(--pin-koyu,#8E5C11) 100%);box-shadow:0 1.5px 2px rgba(74,58,30,.4)}
+  .foto-izgara-hucre:hover{transform:rotate(0deg) translateY(-2px);box-shadow:var(--golge-2)}
+  .foto-izgara-ic{position:relative;width:100%;height:100%;border-radius:1px;overflow:hidden;display:grid;place-items:center}
+  .foto-izgara-ic svg{opacity:.35}
   .foto-izgara-av{position:absolute;left:4px;bottom:4px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
   .foto-izgara-fazla{position:absolute;inset:0;background:rgba(20,15,8,.55);color:#fff;display:grid;place-items:center;font-family:var(--font-sayi);font-weight:700;font-size:14px}
 
@@ -182,9 +190,39 @@
   .p-mini svg{width:100%;height:100%;display:block}
   .p-baslik{font-family:var(--font-tabela);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--murekkep-2);padding:0 16px 9px}
   .izgara{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 20px}
-  .izgara-hucre{position:relative;aspect-ratio:1;border-radius:1px;overflow:hidden;cursor:pointer;display:grid;place-items:center;box-shadow:var(--golge)}
-  .izgara-hucre svg{opacity:.3}
+  .izgara-hucre{position:relative;aspect-ratio:.86;border:none;padding:3px;background:var(--kag,#FBF3D9);border-radius:1px;overflow:visible;cursor:pointer;box-shadow:var(--golge);transform:rotate(var(--rot,0deg));transition:transform .15s,box-shadow .15s}
+  .izgara-hucre::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0%,var(--pin-isik,#F5C87C) 16%,var(--pin,#DE9B2E) 55%,var(--pin-koyu,#8E5C11) 100%);box-shadow:0 1.5px 2px rgba(74,58,30,.4)}
+  .izgara-hucre:hover{transform:rotate(0deg) translateY(-2px);box-shadow:var(--golge-2)}
+  .izgara-ic{position:relative;width:100%;height:100%;border-radius:1px;overflow:hidden;display:grid;place-items:center}
+  .izgara-ic svg{opacity:.3}
   .izgara-ad{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 7px;font-size:11.5px;font-weight:600;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6));line-height:1.25}
+
+  /* ---------- listeler ---------- */
+  .p-baslik-satir{display:flex;align-items:center;justify-content:space-between;padding:0 16px 9px}
+  .p-baslik-satir .p-baslik{padding:0}
+  .p-baslik-ekle{background:none;border:none;color:#8A5E0E;cursor:pointer;font-family:var(--font-tabela);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+  .liste-serit{display:flex;gap:11px;overflow-x:auto;padding:0 16px 20px;scrollbar-width:none}
+  .liste-serit::-webkit-scrollbar{display:none}
+  .liste-kart{position:relative;flex-shrink:0;width:158px;border:none;padding:3px 3px 0;background:var(--kag,#EFE6CC);border-radius:1px;box-shadow:var(--golge);cursor:pointer;text-align:left;transform:rotate(var(--rot,0deg));transition:transform .15s,box-shadow .15s}
+  .liste-kart::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0%,var(--pin-isik,#E0A33E) 16%,var(--pin,#B8801A) 55%,var(--pin-koyu,#8A5E0E) 100%);box-shadow:0 1.5px 2px rgba(74,58,30,.4)}
+  .liste-kart:hover{transform:rotate(0deg) translateY(-2px);box-shadow:var(--golge-2)}
+  .liste-kart-gorsel{height:60px;display:flex;border-radius:1px;overflow:hidden}
+  .liste-kart-gorsel > div{flex:1}
+  .liste-kart-gorsel > div:only-child{flex:1}
+  .liste-kart-govde{padding:9px 8px 11px}
+  .liste-kart-baslik{font-weight:600;font-size:13px;line-height:1.3;margin-bottom:4px}
+  .liste-kart-alt{font-family:var(--font-sayi);font-size:10.5px;color:var(--murekkep-2)}
+  .liste-bos{margin:0 16px 20px;padding:16px 14px;background:var(--yuzey);border:1px dashed rgba(35,52,60,.3);border-radius:2px;text-align:center}
+  .liste-bos p{font-size:13px;color:var(--murekkep-2);line-height:1.5;margin-bottom:10px}
+
+  /* ---------- paylaşım önizlemesi ---------- */
+  .hikaye-onizleme{width:100%;max-width:220px;aspect-ratio:9/16;margin:6px auto 14px;border-radius:16px;overflow:hidden;position:relative;box-shadow:var(--golge-2);background:var(--pano);background-image:radial-gradient(rgba(120,96,52,.15) 1px,transparent 1px);background-size:8px 8px;border:6px solid var(--yuzey)}
+  .hikaye-onizleme-govde{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+  .hikaye-onizleme-mini{width:100%;border-radius:3px;overflow:hidden;box-shadow:var(--golge);margin-bottom:16px}
+  .hikaye-onizleme-mini svg{width:100%;display:block;aspect-ratio:16/10}
+  .hikaye-onizleme-ad{font-family:var(--font-tabela);font-weight:600;font-size:17px;letter-spacing:.03em;color:var(--murekkep);line-height:1.3}
+  .hikaye-onizleme-istat{font-family:var(--font-sayi);font-size:10.5px;color:var(--murekkep-2);margin-top:5px}
+  .hikaye-onizleme-link{margin-top:16px;padding:6px 13px;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:20px;font-family:var(--font-sayi);font-size:10px;color:#8A5E0E}
 
   /* ---------- ara ---------- */
   .ara-kutu-sarma{padding:10px 16px 6px;background:var(--kagit);flex-shrink:0}
@@ -284,6 +322,7 @@
     <div class="hikayeler" id="hikayeler"></div>
     <div class="harita-sarma">
       <div id="maplibre-harita" aria-label="Kadıköy haritası"></div>
+      <div class="harita-bos" id="harita-bos" hidden></div>
     </div>
     <div class="cipler" id="cipler"></div>
   </section>
@@ -370,6 +409,52 @@
       <button class="kapat" id="bildirim-kapat" aria-label="Kapat">✕</button>
     </div>
     <div class="cekmece-govde" id="bildirim-govde"></div>
+  </div>
+
+  <!-- ============ liste detayı ============ -->
+  <div class="cekmece" id="liste" role="dialog" aria-modal="true" aria-labelledby="liste-baslik">
+    <div class="cekmece-ust">
+      <div><h2 id="liste-baslik"></h2><div class="cekmece-alt-baslik" id="liste-alt"></div></div>
+      <button class="kapat" id="liste-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <div class="cekmece-govde" id="liste-govde"></div>
+  </div>
+
+  <!-- ============ liste oluşturma ============ -->
+  <div class="cekmece" id="liste-olustur" role="dialog" aria-modal="true" aria-labelledby="lo-baslik-h">
+    <div class="cekmece-ust">
+      <div><h2 id="lo-baslik-h">Yeni liste</h2><div class="cekmece-alt-baslik">Kendi küratörlüğün</div></div>
+      <button class="kapat" id="lo-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <div class="cekmece-govde">
+      <div class="alan">
+        <label for="lo-baslik">Başlık <span class="zorunlu">*</span></label>
+        <input id="lo-baslik" maxlength="60" placeholder="örn. Yağmurlu günde Kadıköy">
+      </div>
+      <div class="alan">
+        <label for="lo-not">Kısa not</label>
+        <input id="lo-not" maxlength="120" placeholder="Bu liste ne işe yarıyor?">
+      </div>
+      <div class="alan">
+        <label>Mekanlar <span class="zorunlu">*</span> <span id="lo-sayac" style="text-transform:none;font-family:var(--font-sayi);color:var(--murekkep-2)"></span></label>
+        <div class="secim" id="lo-mekanlar"></div>
+      </div>
+    </div>
+    <div class="cekmece-eylem">
+      <button class="btn btn-birincil" id="lo-olustur" disabled>Listeyi oluştur</button>
+    </div>
+  </div>
+
+  <!-- ============ paylaşım önizlemesi ============ -->
+  <div class="cekmece" id="paylas" role="dialog" aria-modal="true" aria-labelledby="paylas-baslik">
+    <div class="cekmece-ust">
+      <div><h2 id="paylas-baslik">Haritamı paylaş</h2><div class="cekmece-alt-baslik">Instagram story önizlemesi</div></div>
+      <button class="kapat" id="paylas-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <div class="cekmece-govde" id="paylas-govde"></div>
+    <div class="cekmece-eylem">
+      <button class="btn btn-birincil" id="paylas-kopyala">Linki kopyala</button>
+    </div>
   </div>
 
   <!-- ============ pin ekleme ============ -->
@@ -697,6 +782,13 @@ let BILDIRIMLER = [
   {id:4, tur:'takip',  kim:'can',    saat:26, okundu:true},
   {id:5, tur:'begeni', kim:'zeynep', pin:3,  saat:40, okundu:true}
 ];
+let LISTELER = [
+  {id:1, sahip:'bogac', baslik:'Yağmurlu günde Kadıköy', not:'Kapalı mekanlar, sıcacık köşeler.', yerler:['kitap','yogurtcu','plak']},
+  {id:2, sahip:'elif',  baslik:'Tek başına oturulacak yerler', not:'Kitap, kahve, sessizlik.', yerler:['poyraz','kitap']},
+  {id:3, sahip:'mert',  baslik:'Geç saate kadar açık', not:'Gece kuşları için.', yerler:['bar','iskele','ocak']}
+];
+let sonrakiListeId = 100;
+let lSecilenMekanlar = new Set();
 
 /* ==================== yardımcılar ==================== */
 const pinSayisi = yerId => PINLER.filter(p => p.yer === yerId).length;
@@ -814,6 +906,74 @@ function jetonSVG(y, acik, pop, seciliMi){
   </svg>`;
 }
 
+function miniHaritaSVG(yerleri){
+  return `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+    <rect width="100" height="100" fill="#D2DFE2"/>
+    <path d="M22 0 L26 14 L28 33 L26 46 L28 61 L34 74 L42 70 L46 61 L53 63 L60 79 L68 91 L63 80 L57 67 L66 62 L78 57 L88 41 L84 12 L80 0 Z" fill="#F4EEE0"/>
+    <g stroke="#fff" stroke-width=".9" fill="none"><path d="M28 33 L45 30 L62 26 L80 20"/><path d="M30 40 L44 44 L58 52 L74 58"/><path d="M33 35 L34 55 L36 70"/></g>
+    ${yerleri.map(y => `<g transform="translate(${svgX(y.lng)} ${svgY(y.lat)})">
+        <circle r="2.6" fill="${RENK[y.tur].ana}" stroke="#fff" stroke-width=".6"/></g>`).join('')}
+  </svg>`;
+}
+
+/* ==================== listeler ==================== */
+function listeKart(l, i){
+  const ilk = l.yerler.slice(0,3).map(yerBul);
+  return `<button class="liste-kart" data-liste="${l.id}" style="--kag:#EFE6CC;--pin:#B8801A;--pin-isik:#E0A33E;--pin-koyu:#8A5E0E;--rot:${egim(i)}deg">
+    <div class="liste-kart-gorsel">${ilk.map(y=>`<div style="background:${fotoZemin(y.tur)}"></div>`).join('')}</div>
+    <div class="liste-kart-govde">
+      <div class="liste-kart-baslik">${l.baslik}</div>
+      <div class="liste-kart-alt">${l.yerler.length} mekan</div>
+    </div>
+  </button>`;
+}
+function listeAc(id){
+  const l = LISTELER.find(x => x.id === id);
+  const sahip = KISILER[l.sahip];
+  $('liste-baslik').textContent = l.baslik;
+  $('liste-alt').textContent = `@${sahip.k} · ${l.yerler.length} mekan`;
+  $('liste-govde').innerHTML = `
+    ${l.not ? `<p class="g-metin" style="margin-top:0">${l.not}</p>` : ''}
+    <div class="bolum-basligi" style="margin-top:${l.not?'22px':'0'}">Mekanlar</div>
+    <div class="ara-izgara">${l.yerler.map((yid,i) => yerKart(yerBul(yid),i)).join('')}</div>
+    ${sahip.ben ? '<button class="ebtn" id="liste-sil" style="margin-top:6px;color:var(--mercan)">Listeyi sil</button>' : ''}
+  `;
+  $('liste-govde').querySelectorAll('[data-yerid]').forEach(el => el.onclick = () => {
+    $('liste').classList.remove('acik');
+    ekranGec('harita'); filtre = 'hepsi';
+    document.querySelectorAll('.cip').forEach(c => c.setAttribute('aria-pressed', c.dataset.filtre==='hepsi'?'true':'false'));
+    cizHarita();
+    setTimeout(() => yerAc(yerBul(el.dataset.yerid).id), 320);
+  });
+  const silBtn = $('liste-govde').querySelector('#liste-sil');
+  if(silBtn) silBtn.onclick = () => {
+    if(!confirm('Bu listeyi silmek istediğine emin misin?')) return;
+    LISTELER = LISTELER.filter(x => x.id !== id);
+    $('liste').classList.remove('acik');
+    cizProfil();
+  };
+  $('liste').classList.add('acik');
+}
+function listeOlusturAc(){
+  $('lo-baslik').value = '';
+  $('lo-not').value = '';
+  lSecilenMekanlar = new Set();
+  $('lo-mekanlar').innerHTML = YERLER.map(y =>
+    `<button type="button" data-yer="${y.id}" aria-pressed="false">${y.ad}</button>`).join('');
+  $('lo-mekanlar').onclick = e => {
+    const b = e.target.closest('button'); if(!b) return;
+    lSecilenMekanlar.has(b.dataset.yer) ? lSecilenMekanlar.delete(b.dataset.yer) : lSecilenMekanlar.add(b.dataset.yer);
+    b.setAttribute('aria-pressed', lSecilenMekanlar.has(b.dataset.yer) ? 'true' : 'false');
+    loKontrolEt();
+  };
+  loKontrolEt();
+  $('liste-olustur').classList.add('acik');
+}
+function loKontrolEt(){
+  $('lo-sayac').textContent = `(${lSecilenMekanlar.size} seçili)`;
+  $('lo-olustur').disabled = !($('lo-baslik').value.trim() && lSecilenMekanlar.size);
+}
+
 function gorunenler(){
   const t = simdi();
   return YERLER.filter(y => {
@@ -855,6 +1015,16 @@ function cizHarita(){
   $('saat').textContent = String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
   $('acik-sayi').textContent = YERLER.filter(y => acikMi(y.saatler,t)).length;
   $('pin-toplam').textContent = PINLER.length;
+
+  const BOS_MESAJ = {
+    acik: 'Şu an açık hiçbir yer yok. "Hepsi"ne bakabilirsin.',
+    kaydettiklerim: 'Henüz hiçbir yer kaydetmedin. Mekan sayfasında "Kaydet"e dokun.',
+    populer: 'Henüz popüler bir yer yok.'
+  };
+  $('harita-bos').hidden = liste.length > 0;
+  if(!liste.length) $('harita-bos').textContent = kisiFiltre
+    ? 'Bu kişinin şu filtrede pinlediği yer yok.'
+    : (BOS_MESAJ[filtre] || 'Bu kategoride yer yok.');
 
   if(map){
     YERLER.forEach(y => {
@@ -938,10 +1108,12 @@ function yerAc(id){
       </div>`:''}
       <div class="foto-izgara">${oz.pinler.slice(0,6).map((p,i) => {
         const fazla = oz.pinler.length - 6;
-        return `<div class="foto-izgara-hucre" style="background:${fotoZemin(y.tur)}">
-          ${simgeSvg(y.tur,22)}
-          <div class="foto-izgara-av">${avatar(p.kisi,18)}</div>
-          ${i===5&&fazla>0?`<div class="foto-izgara-fazla">+${fazla}</div>`:''}
+        return `<div class="foto-izgara-hucre" data-gonderi="${p.id}" style="${igneStil(y.tur)};--rot:${egim(i)}deg">
+          <div class="foto-izgara-ic" style="background:${fotoZemin(y.tur)}">
+            ${simgeSvg(y.tur,22)}
+            <div class="foto-izgara-av">${avatar(p.kisi,18)}</div>
+            ${i===5&&fazla>0?`<div class="foto-izgara-fazla">+${fazla}</div>`:''}
+          </div>
         </div>`;
       }).join('')}</div>
     </div>
@@ -984,8 +1156,13 @@ function yerAc(id){
 
   $('cekmece-govde').innerHTML = h;
   $('kaydet-yer').textContent = KAYITLILAR.has(id) ? 'Kaydedildi ✓' : 'Kaydet';
+  $('cekmece-govde').querySelectorAll('[data-gonderi]').forEach(el => el.onclick = () => {
+    const pinIdler = pinleri.map(p => p.id);
+    $('cekmece').classList.remove('acik');
+    setTimeout(() => gonderiAc(+el.dataset.gonderi, pinIdler), 320);
+  });
   $('cekmece').classList.add('acik');
-  $('kapat').focus();
+  $('kapat').focus({preventScroll:true});
   cizHarita();
 }
 $('kapat').onclick = () => { $('cekmece').classList.remove('acik'); secili=null; cizHarita(); };
@@ -1115,7 +1292,7 @@ function gonderiAc(id, liste){
   gonderiIndex = Math.max(0, gonderiListesi.indexOf(id));
   gonderiIcerikDoldur(id);
   $('gonderi').classList.add('acik');
-  $('gonderi-kapat').focus();
+  $('gonderi-kapat').focus({preventScroll:true});
 }
 $('gonderi-kapat').onclick = () => $('gonderi').classList.remove('acik');
 
@@ -1266,15 +1443,8 @@ function cizProfil(){
   const benim = !!kisi.ben;
   const pinleri = PINLER.filter(p => p.kisi === profilKisi).sort((a,b)=>a.saat-b.saat);
   const yerleri = [...new Set(pinleri.map(p => p.yer))].map(yerBul);
+  const listeleri = LISTELER.filter(l => l.sahip === profilKisi);
   $('profil-basligi').textContent = benim ? 'PROFİL' : kisi.ad.toUpperCase();
-
-  const mini = `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-    <rect width="100" height="100" fill="#D2DFE2"/>
-    <path d="M22 0 L26 14 L28 33 L26 46 L28 61 L34 74 L42 70 L46 61 L53 63 L60 79 L68 91 L63 80 L57 67 L66 62 L78 57 L88 41 L84 12 L80 0 Z" fill="#F4EEE0"/>
-    <g stroke="#fff" stroke-width=".9" fill="none"><path d="M28 33 L45 30 L62 26 L80 20"/><path d="M30 40 L44 44 L58 52 L74 58"/><path d="M33 35 L34 55 L36 70"/></g>
-    ${yerleri.map(y => `<g transform="translate(${svgX(y.lng)} ${svgY(y.lat)})">
-        <circle r="2.6" fill="${RENK[y.tur].ana}" stroke="#fff" stroke-width=".6"/></g>`).join('')}
-  </svg>`;
 
   $('profil-govde').innerHTML = `
     <div class="p-ust">${avatar(profilKisi,62)}
@@ -1295,19 +1465,31 @@ function cizProfil(){
            <button class="btn btn-ikincil" id="p-geri">Akışa dön</button>`}
     </div>
     <div class="p-baslik">${benim?'Senin':kisi.ad+'’in'} Kadıköy haritası</div>
-    <div class="p-mini">${mini}</div>
+    <div class="p-mini">${miniHaritaSVG(yerleri)}</div>
+    <div class="p-baslik-satir">
+      <div class="p-baslik">${benim?'Listelerin':kisi.ad+'’in listeleri'}</div>
+      ${benim?'<button class="p-baslik-ekle" id="p-liste-ekle">+ Yeni</button>':''}
+    </div>
+    ${listeleri.length
+      ? `<div class="liste-serit">${listeleri.map(listeKart).join('')}</div>`
+      : (benim
+          ? `<div class="liste-bos"><p>Henüz listen yok. Sevdiğin yerleri bir araya toplayıp paylaşabilirsin.</p>
+               <button class="btn btn-ikincil" id="liste-bos-ekle" style="max-width:200px;margin:0 auto">İlk listeni oluştur</button></div>`
+          : `<p class="bos-durum" style="padding:0 16px 20px">${kisi.ad} henüz liste oluşturmamış.</p>`)}
     <div class="p-baslik">Pinler</div>
-    <div class="izgara">
-      ${pinleri.map(p => { const y = yerBul(p.yer);
-        return `<div class="izgara-hucre" data-yer="${y.id}" style="background:${fotoZemin(y.tur)}">
-          ${simgeSvg(y.tur,34)}<div class="izgara-ad">${y.ad}</div></div>`; }).join('')}
-    </div>`;
+    ${pinleri.length
+      ? `<div class="izgara">
+          ${pinleri.map((p,i) => { const y = yerBul(p.yer);
+            return `<div class="izgara-hucre" data-yer="${y.id}" style="${igneStil(y.tur)};--rot:${egim(i)}deg">
+              <div class="izgara-ic" style="background:${fotoZemin(y.tur)}">${simgeSvg(y.tur,34)}<div class="izgara-ad">${y.ad}</div></div></div>`; }).join('')}
+        </div>`
+      : `<p class="bos-durum" style="padding:0 16px 24px">${benim?'Henüz pin atmadın. Haritadan bir yer aç ya da + butonuna dokun.':kisi.ad+' henüz pin atmamış.'}</p>`}`;
 
-  const link = $('p-link'); if(link) link.onclick = () => {
-    link.textContent = 'kadikoy.app/@'+kisi.k+' kopyalandı';
-    setTimeout(() => link.textContent = 'Haritamı paylaş', 2200);
-  };
+  const link = $('p-link'); if(link) link.onclick = paylasAc;
   const pe = $('p-ekle'); if(pe) pe.onclick = () => ekleAc(null);
+  const ple = $('p-liste-ekle'); if(ple) ple.onclick = listeOlusturAc;
+  const lbe = $('liste-bos-ekle'); if(lbe) lbe.onclick = listeOlusturAc;
+  $('profil-govde').querySelectorAll('[data-liste]').forEach(el => el.onclick = () => listeAc(+el.dataset.liste));
   const pt = $('p-takip'); if(pt) pt.onclick = () => {
     TAKIPTEKILER.has(profilKisi)?TAKIPTEKILER.delete(profilKisi):TAKIPTEKILER.add(profilKisi); cizProfil();
   };
@@ -1452,6 +1634,46 @@ $('f-foto').onclick = () => {
 $('f-yer').addEventListener('change', () => { if(fotoVar) $('f-foto').style.background = fotoZemin(yerBul($('f-yer').value).tur); });
 $('ekle-kapat').onclick = () => $('ekle').classList.remove('acik');
 $('ekle-ac').onclick = () => ekleAc(null);
+
+/* ==================== listeler: form bağlantıları ==================== */
+$('liste-kapat').onclick = () => $('liste').classList.remove('acik');
+$('lo-kapat').onclick = () => $('liste-olustur').classList.remove('acik');
+$('lo-baslik').addEventListener('input', loKontrolEt);
+$('lo-olustur').onclick = () => {
+  LISTELER.unshift({
+    id: sonrakiListeId++, sahip:'bogac',
+    baslik: $('lo-baslik').value.trim(),
+    not: $('lo-not').value.trim() || null,
+    yerler: [...lSecilenMekanlar]
+  });
+  $('liste-olustur').classList.remove('acik');
+  cizProfil();
+};
+
+/* ==================== paylaşım önizlemesi ==================== */
+function paylasAc(){
+  const kisi = KISILER[profilKisi];
+  const pinleri = PINLER.filter(p => p.kisi === profilKisi);
+  const yerleri = [...new Set(pinleri.map(p => p.yer))].map(yerBul);
+  $('paylas-govde').innerHTML = `
+    <div class="hikaye-onizleme">
+      <div class="hikaye-onizleme-govde">
+        <div class="hikaye-onizleme-mini">${miniHaritaSVG(yerleri)}</div>
+        <div class="hikaye-onizleme-ad">${kisi.ad}’in Kadıköy Haritası</div>
+        <div class="hikaye-onizleme-istat">${pinleri.length} pin · ${yerleri.length} mekan</div>
+        <div class="hikaye-onizleme-link">kadikoy.app/@${kisi.k}</div>
+      </div>
+    </div>
+    <p class="ipucu" style="text-align:center;margin-top:0">Instagram story'ye eklendiğinde böyle görünür — linke dokunan doğrudan haritana gelir.</p>
+  `;
+  $('paylas-kopyala').textContent = 'Linki kopyala';
+  $('paylas').classList.add('acik');
+}
+$('paylas-kapat').onclick = () => $('paylas').classList.remove('acik');
+$('paylas-kopyala').onclick = () => {
+  $('paylas-kopyala').textContent = 'kadikoy.app/@'+KISILER[profilKisi].k+' kopyalandı ✓';
+  setTimeout(() => { if($('paylas').classList.contains('acik')) $('paylas-kopyala').textContent = 'Linki kopyala'; }, 2000);
+};
 $('f-paylas').onclick = () => {
   const veri = {
     yer: $('f-yer').value,
@@ -1486,7 +1708,7 @@ function ekranGec(hedef){
   if(hedef === 'akis')   cizAkis();
   if(hedef === 'profil') cizProfil();
   if(hedef === 'harita') cizHarita();
-  if(hedef === 'ara'){ $('ara-girdi').value = ''; cizArama(); $('ara-girdi').focus(); }
+  if(hedef === 'ara'){ $('ara-girdi').value = ''; cizArama(); $('ara-girdi').focus({preventScroll:true}); }
 }
 document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => ekranGec(b.dataset.ekran));
 $('cipler').onclick = e => {
@@ -1499,6 +1721,9 @@ document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
   if($('sikayet').classList.contains('acik')) $('sikayet').classList.remove('acik');
   else if($('bildirimler').classList.contains('acik')) $('bildirimler').classList.remove('acik');
+  else if($('liste-olustur').classList.contains('acik')) $('liste-olustur').classList.remove('acik');
+  else if($('liste').classList.contains('acik')) $('liste').classList.remove('acik');
+  else if($('paylas').classList.contains('acik')) $('paylas').classList.remove('acik');
   else if($('ekle').classList.contains('acik')) $('ekle').classList.remove('acik');
   else if($('gonderi').classList.contains('acik')) $('gonderi').classList.remove('acik');
   else if($('cekmece').classList.contains('acik')){ $('cekmece').classList.remove('acik'); secili=null; cizHarita(); }
