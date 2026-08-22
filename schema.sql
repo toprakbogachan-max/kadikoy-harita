@@ -1,0 +1,413 @@
+-- ============================================================
+--  Kadıköy Harita — Supabase / Postgres şeması (sosyal sürüm)
+--  Merkez nesne: PIN (bir kullanıcının bir mekana bıraktığı gönderi)
+--  places = kanonik mekan kaydı, pins = üstünde biriken içerik
+-- ============================================================
+
+create extension if not exists postgis;
+create extension if not exists pg_trgm;
+
+-- ---------- enum'lar ----------
+do $$ begin
+  create type place_category as enum ('kahve','yemek','bar','tatli','kultur','park','otel','magaza','diger');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type content_status as enum ('draft','published','hidden','removed');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type source_platform as enum ('tiktok','instagram','youtube','web','manual');
+exception when duplicate_object then null; end $$;
+
+-- ============================================================
+--  1. PROFİLLER
+-- ============================================================
+create table if not exists profiles (
+  id            uuid primary key references auth.users(id) on delete cascade,
+  username      text unique not null check (username ~ '^[a-z0-9_]{3,24}$'),
+  display_name  text not null,
+  bio           text check (char_length(bio) <= 200),
+  avatar_url    text,
+  home_city     text default 'İstanbul',
+  is_verified   boolean not null default false,
+  -- sayaçlar (trigger'la güncellenir, her seferinde count(*) atmamak için)
+  pin_count      integer not null default 0,
+  follower_count integer not null default 0,
+  following_count integer not null default 0,
+  created_at    timestamptz not null default now()
+);
+create index if not exists profiles_username_trgm on profiles using gin (username gin_trgm_ops);
+
+-- ============================================================
+--  2. MEKANLAR (kanonik kayıt — aynı yere 50 pin atılınca 50 mekan olmasın)
+-- ============================================================
+create table if not exists places (
+  id            uuid primary key default gen_random_uuid(),
+  slug          text unique not null,
+  name          text not null,
+  category      place_category not null,
+  neighborhood  text,
+  address       text,
+  geo           geography(Point, 4326) not null,
+  google_place_id text unique,
+  google_synced_at timestamptz,        -- Google ToS: place_id dışındaki alanlar ~30 gün cache
+  opening_hours jsonb,                 -- [{"d":1,"open":"08:00","close":"22:00"}, ...]
+  phone         text,
+  website       text,
+  status        content_status not null default 'published',
+  created_by    uuid references profiles(id) on delete set null,
+  -- türetilmiş sayaçlar
+  pin_count     integer not null default 0,
+  save_count    integer not null default 0,
+  created_at    timestamptz not null default now()
+);
+create index if not exists places_geo_gist on places using gist (geo);
+create index if not exists places_category_idx on places (category) where status = 'published';
+create index if not exists places_name_trgm on places using gin (name gin_trgm_ops);
+
+-- Pratik bilgiler: topluluk düzenler, "gitmeden bilmen gerekenler"
+create table if not exists place_facts (
+  place_id        uuid primary key references places(id) on delete cascade,
+  needs_booking   boolean,
+  booking_note    text,
+  closed_days     smallint[],          -- 0=pazar
+  best_time       text,
+  price_per_person integer,            -- ₺
+  cash_only       boolean,
+  good_for        text[],
+  vibe_tags       text[],
+  warning         text,                -- kırmızı kutuda çıkan uyarı
+  updated_by      uuid references profiles(id) on delete set null,
+  confirm_count   integer not null default 0,   -- "hâlâ geçerli" diyen kullanıcı sayısı
+  updated_at      timestamptz not null default now()
+);
+
+-- Scraper kaynakları (kullanıcıya açılmaz)
+create table if not exists place_sources (
+  id         uuid primary key default gen_random_uuid(),
+  place_id   uuid not null references places(id) on delete cascade,
+  platform   source_platform not null,
+  url        text not null,
+  author     text,
+  confidence real check (confidence between 0 and 1),
+  found_at   timestamptz not null default now(),
+  unique (place_id, url)
+);
+
+-- ============================================================
+--  3. PİNLER — uygulamanın merkezi nesnesi
+-- ============================================================
+create table if not exists pins (
+  id          uuid primary key default gen_random_uuid(),
+  author_id   uuid not null references profiles(id) on delete cascade,
+  place_id    uuid not null references places(id) on delete cascade,
+  body        text not null check (char_length(body) between 10 and 1000),
+  visit_date  date,
+  price_paid  integer,                  -- kişi başı ödediği, ₺
+  tags        text[],
+  status      content_status not null default 'published',
+  like_count    integer not null default 0,
+  comment_count integer not null default 0,
+  created_at  timestamptz not null default now(),
+  -- kalite kapısı: aynı kişi aynı mekana ayda bir kez
+  unique (author_id, place_id, visit_date)
+);
+create index if not exists pins_place_idx on pins (place_id, created_at desc) where status = 'published';
+create index if not exists pins_author_idx on pins (author_id, created_at desc) where status = 'published';
+create index if not exists pins_recent_idx on pins (created_at desc) where status = 'published';
+
+create table if not exists pin_media (
+  id        uuid primary key default gen_random_uuid(),
+  pin_id    uuid not null references pins(id) on delete cascade,
+  storage_path text not null,           -- Supabase Storage yolu
+  width     integer,
+  height    integer,
+  ordering  smallint not null default 0
+);
+create index if not exists pin_media_pin_idx on pin_media (pin_id, ordering);
+
+-- Fotoğraf zorunlu: pin yayına girerken en az 1 medya olsun
+create or replace function assert_pin_has_media() returns trigger language plpgsql as $$
+begin
+  if new.status = 'published'
+     and not exists (select 1 from pin_media where pin_id = new.id) then
+    raise exception 'Pin yayınlanamaz: en az bir fotoğraf gerekli';
+  end if;
+  return new;
+end $$;
+
+create table if not exists pin_likes (
+  pin_id  uuid not null references pins(id) on delete cascade,
+  user_id uuid not null references profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (pin_id, user_id)
+);
+
+create table if not exists pin_comments (
+  id        uuid primary key default gen_random_uuid(),
+  pin_id    uuid not null references pins(id) on delete cascade,
+  author_id uuid not null references profiles(id) on delete cascade,
+  body      text not null check (char_length(body) between 1 and 500),
+  status    content_status not null default 'published',
+  created_at timestamptz not null default now()
+);
+create index if not exists pin_comments_pin_idx on pin_comments (pin_id, created_at);
+
+-- ============================================================
+--  4. SOSYAL GRAF
+-- ============================================================
+create table if not exists follows (
+  follower_id  uuid not null references profiles(id) on delete cascade,
+  following_id uuid not null references profiles(id) on delete cascade,
+  created_at   timestamptz not null default now(),
+  primary key (follower_id, following_id),
+  check (follower_id <> following_id)
+);
+create index if not exists follows_following_idx on follows (following_id);
+
+create table if not exists saves (
+  user_id  uuid not null references profiles(id) on delete cascade,
+  place_id uuid not null references places(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, place_id)
+);
+
+-- Listeler = kişinin küratörlüğü ("Kadıköy'de yağmurlu gün")
+create table if not exists lists (
+  id        uuid primary key default gen_random_uuid(),
+  owner_id  uuid not null references profiles(id) on delete cascade,
+  slug      text not null,
+  title     text not null,
+  intro     text,
+  is_public boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (owner_id, slug)
+);
+create table if not exists list_items (
+  list_id  uuid not null references lists(id) on delete cascade,
+  place_id uuid not null references places(id) on delete cascade,
+  note     text,
+  ordering smallint not null default 0,
+  primary key (list_id, place_id)
+);
+
+create table if not exists reports (
+  id          uuid primary key default gen_random_uuid(),
+  reporter_id uuid references profiles(id) on delete set null,
+  pin_id      uuid references pins(id) on delete cascade,
+  comment_id  uuid references pin_comments(id) on delete cascade,
+  reason      text not null,
+  handled     boolean not null default false,
+  created_at  timestamptz not null default now(),
+  check (pin_id is not null or comment_id is not null)
+);
+
+-- ============================================================
+--  5. SAYAÇ TRIGGER'LARI
+-- ============================================================
+create or replace function bump_counter() returns trigger language plpgsql as $$
+begin
+  if tg_table_name = 'pins' then
+    if tg_op = 'INSERT' then
+      update places   set pin_count = pin_count + 1 where id = new.place_id;
+      update profiles set pin_count = pin_count + 1 where id = new.author_id;
+    elsif tg_op = 'DELETE' then
+      update places   set pin_count = greatest(pin_count - 1, 0) where id = old.place_id;
+      update profiles set pin_count = greatest(pin_count - 1, 0) where id = old.author_id;
+    end if;
+
+  elsif tg_table_name = 'pin_likes' then
+    if tg_op = 'INSERT' then
+      update pins set like_count = like_count + 1 where id = new.pin_id;
+    else
+      update pins set like_count = greatest(like_count - 1, 0) where id = old.pin_id;
+    end if;
+
+  elsif tg_table_name = 'pin_comments' then
+    if tg_op = 'INSERT' then
+      update pins set comment_count = comment_count + 1 where id = new.pin_id;
+    else
+      update pins set comment_count = greatest(comment_count - 1, 0) where id = old.pin_id;
+    end if;
+
+  elsif tg_table_name = 'follows' then
+    if tg_op = 'INSERT' then
+      update profiles set follower_count  = follower_count  + 1 where id = new.following_id;
+      update profiles set following_count = following_count + 1 where id = new.follower_id;
+    else
+      update profiles set follower_count  = greatest(follower_count - 1, 0)  where id = old.following_id;
+      update profiles set following_count = greatest(following_count - 1, 0) where id = old.follower_id;
+    end if;
+
+  elsif tg_table_name = 'saves' then
+    if tg_op = 'INSERT' then
+      update places set save_count = save_count + 1 where id = new.place_id;
+    else
+      update places set save_count = greatest(save_count - 1, 0) where id = old.place_id;
+    end if;
+  end if;
+  return null;
+end $$;
+
+drop trigger if exists trg_pins_count on pins;
+create trigger trg_pins_count after insert or delete on pins
+  for each row execute function bump_counter();
+drop trigger if exists trg_likes_count on pin_likes;
+create trigger trg_likes_count after insert or delete on pin_likes
+  for each row execute function bump_counter();
+drop trigger if exists trg_comments_count on pin_comments;
+create trigger trg_comments_count after insert or delete on pin_comments
+  for each row execute function bump_counter();
+drop trigger if exists trg_follows_count on follows;
+create trigger trg_follows_count after insert or delete on follows
+  for each row execute function bump_counter();
+drop trigger if exists trg_saves_count on saves;
+create trigger trg_saves_count after insert or delete on saves
+  for each row execute function bump_counter();
+
+-- ============================================================
+--  6. AÇIK MI? (Europe/Istanbul, gece yarısını aşan saatler dahil)
+-- ============================================================
+create or replace function is_open_now(hours jsonb, at_time timestamptz default now())
+returns boolean language plpgsql immutable as $$
+declare
+  local_ts timestamp; dow int; cur time; rec jsonb; o time; c time;
+begin
+  if hours is null then return null; end if;
+  local_ts := at_time at time zone 'Europe/Istanbul';
+  dow := extract(dow from local_ts);
+  cur := local_ts::time;
+  for rec in select * from jsonb_array_elements(hours) loop
+    o := (rec->>'open')::time;
+    c := (rec->>'close')::time;
+    if c > o then
+      if (rec->>'d')::int = dow and cur >= o and cur < c then return true; end if;
+    else
+      if (rec->>'d')::int = dow and cur >= o then return true; end if;
+      if (rec->>'d')::int = (dow + 6) % 7 and cur < c then return true; end if;
+    end if;
+  end loop;
+  return false;
+end $$;
+
+-- ============================================================
+--  7. HARİTA SORGUSU — konum + filtre + pin sayısı tek çağrıda
+-- ============================================================
+create or replace function places_nearby(
+  in_lat double precision,
+  in_lng double precision,
+  in_radius_m integer default 2000,
+  in_category place_category default null,
+  in_open_only boolean default false,
+  in_limit integer default 200
+) returns table (
+  id uuid, slug text, name text, category place_category, neighborhood text,
+  lat double precision, lng double precision, distance_m double precision,
+  is_open boolean, pin_count integer, warning text, price_per_person integer
+) language sql stable as $$
+  select p.id, p.slug, p.name, p.category, p.neighborhood,
+         st_y(p.geo::geometry), st_x(p.geo::geometry),
+         st_distance(p.geo, st_point(in_lng, in_lat)::geography),
+         is_open_now(p.opening_hours),
+         p.pin_count, f.warning, f.price_per_person
+  from places p
+  left join place_facts f on f.place_id = p.id
+  where p.status = 'published'
+    and st_dwithin(p.geo, st_point(in_lng, in_lat)::geography, in_radius_m)
+    and (in_category is null or p.category = in_category)
+    and (not in_open_only or is_open_now(p.opening_hours) is true)
+  order by p.pin_count desc, 8
+  limit in_limit;
+$$;
+
+-- ============================================================
+--  8. AKIŞLAR
+-- ============================================================
+-- Takip akışı: takip ettiklerinin pinleri
+create or replace function feed_following(in_user uuid, in_limit int default 30, in_before timestamptz default now())
+returns setof pins language sql stable as $$
+  select pn.* from pins pn
+  join follows f on f.following_id = pn.author_id and f.follower_id = in_user
+  where pn.status = 'published' and pn.created_at < in_before
+  order by pn.created_at desc limit in_limit;
+$$;
+
+-- Keşfet: kimseyi takip etmeyen de değer alsın (TikTok dersi)
+-- basit sıralama: tazelik + beğeni. Gerçek sürümde konum da girecek.
+create or replace function feed_discover(in_limit int default 30, in_offset int default 0)
+returns setof pins language sql stable as $$
+  select * from pins
+  where status = 'published'
+  order by (like_count + comment_count * 2)::numeric
+           / power(extract(epoch from (now() - created_at)) / 3600 + 2, 1.5) desc
+  limit in_limit offset in_offset;
+$$;
+
+-- ============================================================
+--  9. RLS
+-- ============================================================
+alter table profiles      enable row level security;
+alter table places        enable row level security;
+alter table place_facts   enable row level security;
+alter table place_sources enable row level security;
+alter table pins          enable row level security;
+alter table pin_media     enable row level security;
+alter table pin_likes     enable row level security;
+alter table pin_comments  enable row level security;
+alter table follows       enable row level security;
+alter table saves         enable row level security;
+alter table lists         enable row level security;
+alter table list_items    enable row level security;
+alter table reports       enable row level security;
+
+-- okuma
+create policy p_profiles_read on profiles for select using (true);
+create policy p_places_read   on places   for select using (status = 'published');
+create policy p_facts_read    on place_facts for select using (true);
+create policy p_pins_read     on pins     for select using (status = 'published');
+create policy p_media_read    on pin_media for select using (true);
+create policy p_likes_read    on pin_likes for select using (true);
+create policy p_comments_read on pin_comments for select using (status = 'published');
+create policy p_follows_read  on follows  for select using (true);
+create policy p_lists_read    on lists    for select using (is_public or owner_id = auth.uid());
+create policy p_list_items_read on list_items for select using (true);
+-- scraper kaynakları kullanıcıya kapalı (service_role bypass eder)
+create policy p_sources_none  on place_sources for select using (false);
+
+-- yazma: herkes serbest ama sadece kendi adına
+create policy p_profiles_write on profiles for update using (id = auth.uid());
+create policy p_places_insert  on places for insert with check (auth.uid() is not null);
+create policy p_facts_write    on place_facts for all
+  using (auth.uid() is not null) with check (auth.uid() is not null);
+
+create policy p_pins_insert on pins for insert with check (author_id = auth.uid());
+create policy p_pins_update on pins for update using (author_id = auth.uid());
+create policy p_pins_delete on pins for delete using (author_id = auth.uid());
+
+create policy p_media_write on pin_media for all
+  using (exists (select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()))
+  with check (exists (select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()));
+
+create policy p_likes_write on pin_likes for all
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy p_comments_insert on pin_comments for insert with check (author_id = auth.uid());
+create policy p_comments_delete on pin_comments for delete using (author_id = auth.uid());
+create policy p_follows_write on follows for all
+  using (follower_id = auth.uid()) with check (follower_id = auth.uid());
+create policy p_saves_write on saves for all
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy p_lists_write on lists for all
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy p_list_items_write on list_items for all
+  using (exists (select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()))
+  with check (exists (select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()));
+create policy p_reports_insert on reports for insert with check (auth.uid() is not null);
+
+-- ============================================================
+--  10. ÖRNEK KAYIT
+-- ============================================================
+-- insert into places (slug, name, category, neighborhood, geo, opening_hours)
+-- values ('poyraz-kahve','Poyraz Kahve','kahve','Moda',
+--         st_point(29.0246, 40.9788)::geography,   -- DİKKAT: önce boylam!
+--         '[{"d":1,"open":"08:00","close":"22:00"}]'::jsonb);
