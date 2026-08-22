@@ -75,6 +75,15 @@
 
   .harita-sarma{flex:1;position:relative;overflow:hidden;background:var(--su);min-height:0}
   #maplibre-harita{position:absolute;inset:0}
+  .harita-ekle{position:absolute;top:10px;left:10px;z-index:3;width:38px;height:38px;border-radius:2px;border:1px solid var(--cizgi);background:var(--jeton);color:#fff;cursor:pointer;display:grid;place-items:center;box-shadow:var(--golge-2);transition:transform .15s}
+  .harita-ekle:hover{transform:translateY(-1px)}
+
+  /* video rozeti — medyası video olan pinlerde */
+  .oynat-rozet{position:absolute;top:6px;right:6px;width:19px;height:19px;border-radius:50%;background:rgba(20,15,8,.62);display:grid;place-items:center;z-index:2;pointer-events:none}
+  .oynat-rozet svg{opacity:1}
+  .oynat-buyuk{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+  .oynat-buyuk span{width:52px;height:52px;border-radius:50%;background:rgba(20,15,8,.5);display:grid;place-items:center;backdrop-filter:blur(2px)}
+
   .harita-bos{position:absolute;left:16px;right:16px;top:14px;z-index:2;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:2px;padding:11px 13px;box-shadow:var(--golge-2);font-size:13px;color:var(--murekkep);line-height:1.4;text-align:center}
   .telefon:has(.cekmece.acik) #maplibre-harita{pointer-events:none}
   .jeton-marker{cursor:pointer}
@@ -100,7 +109,7 @@
   .akis-hucre:hover{transform:rotate(0deg) translateY(-2px);box-shadow:var(--golge-2)}
   .akis-hucre-foto{position:relative;width:100%;height:100%;border-radius:1px;overflow:hidden;display:grid;place-items:center}
   .akis-hucre-foto svg{opacity:.3}
-  .akis-hucre-puan{position:absolute;top:8px;right:8px;background:rgba(20,15,8,.55);color:#fff;font-family:var(--font-sayi);font-weight:700;font-size:10px;padding:2px 5px;border-radius:2px;z-index:1}
+  .akis-hucre-puan{margin-left:auto;flex-shrink:0;color:#fff;font-family:var(--font-sayi);font-weight:700;font-size:11px}
   .akis-hucre-begeni{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:3px;background:rgba(20,15,8,.5);color:#fff;font-family:var(--font-sayi);font-size:9px;padding:2px 5px;border-radius:2px;z-index:1}
   .akis-hucre-alt{position:absolute;left:3px;right:3px;bottom:3px;padding:16px 6px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;text-align:left}
   .akis-hucre-ad{font-size:10px;font-weight:600;line-height:1.2;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -339,6 +348,9 @@
     <div class="hikayeler" id="hikayeler"></div>
     <div class="harita-sarma">
       <div id="maplibre-harita" aria-label="Kadıköy haritası"></div>
+      <button class="harita-ekle" id="harita-ekle" aria-label="Pin at">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
       <div class="harita-bos" id="harita-bos" hidden></div>
     </div>
     <div class="cipler" id="cipler"></div>
@@ -493,11 +505,13 @@
       </div>
 
       <div class="alan">
-        <label>Fotoğraf <span class="zorunlu">*</span></label>
+        <label>Fotoğraf ya da video <span class="zorunlu">*</span></label>
+        <div class="secim" id="f-medya-tur" style="margin-bottom:9px">
+          <button type="button" data-d="foto" aria-pressed="true">Fotoğraf</button>
+          <button type="button" data-d="video" aria-pressed="false">Video</button>
+        </div>
         <button class="foto-yukle" id="f-foto">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-            <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/><path d="M8 5l1.4-2h5.2L16 5"/>
-          </svg>
+          <span id="f-foto-ikon"></span>
           <span id="f-foto-metin">Fotoğraf ekle</span>
         </button>
       </div>
@@ -654,6 +668,16 @@ const IMLEC = 'M12 21.5s7-6.3 7-11.2a7 7 0 1 0-14 0c0 4.9 7 11.2 7 11.2z';
 const YILDIZ = 'M12 3.6l2.6 5.5 5.9.8-4.3 4.2 1 6-5.2-2.8-5.2 2.8 1-6L3.5 9.9l5.9-.8z';
 const KALEM = '<path d="M4 20h4L18.5 9.5a2 2 0 0 0-4-4L4 16v4Z"/><path d="M14 6l4 4"/>';
 const CIKOP = '<path d="M5 7h14"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M7 7l1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/>';
+const OYNAT = 'M8 5.2 19 12 8 18.8z';
+const KAMERA = '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/><path d="M8 5l1.4-2h5.2L16 5"/>';
+const VIDEO = '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10.5 21 8v8l-5-2.5z"/>';
+
+/* medyası video olan pin için oynat rozeti / büyük oynat düğmesi */
+const videoMu = p => p && p.medya === 'video';
+const oynatRozeti = p => videoMu(p)
+  ? `<span class="oynat-rozet"><svg width="9" height="9" viewBox="0 0 24 24" fill="#fff"><path d="${OYNAT}"/></svg></span>` : '';
+const oynatBuyuk = p => videoMu(p)
+  ? `<div class="oynat-buyuk"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="${OYNAT}"/></svg></span></div>` : '';
 
 /* ==================== kullanıcılar ==================== */
 const KISILER = {
@@ -734,7 +758,7 @@ let PINLER = [
    metin:'Üst katta priz bol, laptopla saatlerce oturulur. Alt kat gürültülü, kapının yanına oturma.',
    degisse:'Alt kata da priz koysalar', tekrar:'evet', fiyat:210, begeni:96},
 
-  {id:3, kisi:'bogac', yer:'sahil', saat:8, puan:9.5,
+  {id:3, kisi:'bogac', yer:'sahil', saat:8, puan:9.5, medya:'video',
    kelimeler:['açık','rüzgarlı','bedava'], senaryo:'tek başına', siklik:'haftalık uğrak',
    metin:'Çay ocağının olduğu taraf değil, güneye doğru yürü. Kalabalık orada kesiliyor, 10 dakika yürüyünce sahil senin oluyor.',
    degisse:'Bank sayısı artsa', tekrar:'evet', begeni:341},
@@ -749,7 +773,7 @@ let PINLER = [
    metin:'Arka bahçe kışın da açık, soba yakıyorlar. Wi-Fi şifresi kasada, sorman lazım. Toplantı yapılacak yer değil, sessiz.',
    degisse:'Wi-Fi şifresi masada yazsa', tekrar:'evet', fiyat:175, begeni:73},
 
-  {id:6, kisi:'mert', yer:'bar', saat:20, puan:8,
+  {id:6, kisi:'mert', yer:'bar', saat:20, puan:8, medya:'video',
    kelimeler:['canlı','dar','samimi'], senaryo:'kalabalık grup', siklik:'ayda bir',
    metin:'Canlı müzik cuma-cumartesi 22:00’de başlıyor. Sohbet edecekseniz 21:00’den önce gidin, sonrası bağırışma.',
    degisse:'Ses biraz kısılsa', tekrar:'evet', fiyat:430, begeni:112},
@@ -769,7 +793,7 @@ let PINLER = [
    metin:'Park kenarında ama gürültü almıyor. Yazın gölge sabah tarafında, öğleden sonra güneş tepende.',
    degisse:'Şemsiye konsa', tekrar:'evet', fiyat:140, begeni:41},
 
-  {id:10, kisi:'zeynep', yer:'tatlici', saat:44, puan:8,
+  {id:10, kisi:'zeynep', yer:'tatlici', saat:44, puan:8, medya:'video',
    kelimeler:['deniz','kalabalık','tatlı'], senaryo:'uzun oturma', siklik:'ayda bir',
    metin:'Deniz tarafındaki masalar için beklemeye değer, sıra 15 dakika sürüyor. İç salon fena, orada oturacaksan gitme.',
    degisse:'İç salon yenilense', tekrar:'evet', fiyat:190, begeni:129},
@@ -1132,7 +1156,7 @@ function yerAc(id){
       <div class="foto-izgara">${oz.pinler.slice(0,6).map((p,i) => {
         const fazla = oz.pinler.length - 6;
         return `<div class="foto-izgara-hucre" data-gonderi="${p.id}" style="${igneStil(y.tur)};--rot:${egim(i)}deg">
-          <div class="foto-izgara-ic" style="background:${fotoZemin(y.tur)}">
+          <div class="foto-izgara-ic" style="background:${fotoZemin(y.tur)}">${oynatRozeti(p)}
             ${simgeSvg(y.tur,22)}
             <div class="foto-izgara-av">${avatar(p.kisi,18)}</div>
             ${i===5&&fazla>0?`<div class="foto-izgara-fazla">+${fazla}</div>`:''}
@@ -1205,12 +1229,12 @@ const HAFTA_SAAT = 24*7;
 function akisHucre(p, i){
   const y = yerBul(p.yer), kisi = KISILER[p.kisi];
   return `<button class="akis-hucre" data-gonderi="${p.id}" style="${igneStil(y.tur)};--rot:${egim(i)}deg">
-    <div class="akis-hucre-foto" style="background:${fotoZemin(y.tur)}">${simgeSvg(y.tur,32)}</div>
-    <span class="akis-hucre-puan">${p.puan!=null?p.puan:''}</span>
+    <div class="akis-hucre-foto" style="background:${fotoZemin(y.tur)}">${simgeSvg(y.tur,32)}${oynatRozeti(p)}</div>
     <span class="akis-hucre-begeni"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="${KALP}"/></svg>${p.begeni}</span>
     <div class="akis-hucre-alt">
       <div class="akis-hucre-ad">${y.ad}</div>
-      <div class="akis-hucre-kisi">${avatar(p.kisi,15)}<span>${kisi.ad}</span></div>
+      <div class="akis-hucre-kisi">${avatar(p.kisi,15)}<span>${kisi.ad}</span>
+        ${p.puan!=null?`<span class="akis-hucre-puan">${p.puan}</span>`:''}</div>
     </div>
   </button>`;
 }
@@ -1227,7 +1251,7 @@ function gonderiIcerik(p){
     <div class="g-yer" data-yer="${y.id}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="${IMLEC}"/><circle cx="12" cy="10.3" r="2.4"/></svg>
       <span>${y.ad} · ${y.semt}</span></div>
-    <div class="foto" style="background:${fotoZemin(y.tur)}">${simgeSvg(y.tur,58)}</div>
+    <div class="foto" style="background:${fotoZemin(y.tur)}">${simgeSvg(y.tur,58)}${oynatBuyuk(p)}</div>
     ${p.kelimeler?`<div class="kelimeler">${p.kelimeler.map(k=>`<span class="kelime">${k}</span>`).join('')}</div>`:''}
     <p class="g-metin">${p.metin}</p>
     ${p.degisse?`<p class="g-metin" style="font-style:italic;color:#F0B5A9;font-size:13.5px;margin-top:7px">Bir şey değişse: ${p.degisse}</p>`:''}
@@ -1504,7 +1528,7 @@ function cizProfil(){
       ? `<div class="izgara">
           ${pinleri.map((p,i) => { const y = yerBul(p.yer);
             return `<div class="izgara-hucre" data-yer="${y.id}" style="${igneStil(y.tur)};--rot:${egim(i)}deg">
-              <div class="izgara-ic" style="background:${fotoZemin(y.tur)}">${simgeSvg(y.tur,34)}<div class="izgara-ad">${y.ad}</div></div></div>`; }).join('')}
+              <div class="izgara-ic" style="background:${fotoZemin(y.tur)}">${simgeSvg(y.tur,34)}${oynatRozeti(p)}<div class="izgara-ad">${y.ad}</div></div></div>`; }).join('')}
         </div>`
       : `<p class="bos-durum" style="padding:0 16px 24px">${benim?'Henüz pin atmadın. Haritadan bir yer aç ya da + butonuna dokun.':kisi.ad+' henüz pin atmamış.'}</p>`}`;
 
@@ -1572,7 +1596,7 @@ $('ara-girdi').addEventListener('input', cizArama);
 
 /* ==================== pin ekleme ==================== */
 let fotoVar = false, secSenaryo = null, secSiklik = null, secTekrar = null;
-let fSecilenYer = null, fKilitli = false, formMap = null;
+let fSecilenYer = null, fKilitli = false, formMap = null, fMedyaTur = 'foto';
 const formMarkerlar = {};
 
 /* ---------- pin formu: mekanı haritadan seç ya da ara ---------- */
@@ -1623,7 +1647,7 @@ function fYerSec(id, haritayiOynat = true){
   $('f-secili').innerHTML =
     `<span class="yer-secili-nokta" style="${igneStil(y.tur)}"></span>
      <span>Seçildi: <b>${y.ad}</b> · ${TUR_AD[y.tur]} · ${y.semt}</span>`;
-  if(fotoVar) $('f-foto').style.background = fotoZemin(y.tur);
+  if(fotoVar) fMedyaCiz();
   if(formMap && haritayiOynat){
     try{ formMap.jumpTo({center:[y.lng, y.lat], zoom: Math.max(formMap.getZoom(), 15)}); }
     catch(e){ console.warn('form haritası odaklanamadı', e); }
@@ -1702,18 +1726,15 @@ function ekleAc(yerId, duzenlenecek){
     secSiklik = duzenlenecek.siklik || null;
     secTekrar = duzenlenecek.tekrar || null;
     fotoVar = true;
-    $('f-foto-metin').textContent = 'Fotoğraf eklendi ✓ (kaldırmak için dokun)';
-    $('f-foto').style.borderStyle = 'solid';
-    $('f-foto').style.background = fotoZemin(yerBul(duzenlenecek.yer).tur);
+    fMedyaTur = duzenlenecek.medya === 'video' ? 'video' : 'foto';
   } else {
     ['f-k1','f-k2','f-k3','f-metin','f-fiyat','f-degisse'].forEach(i => $(i).value = '');
     $('f-puan').value = 7; $('f-puan-c').textContent = '7';
     secSenaryo = secSiklik = secTekrar = null;
     fotoVar = false;
-    $('f-foto-metin').textContent = 'Fotoğraf ekle';
-    $('f-foto').style.borderStyle = 'dashed';
-    $('f-foto').style.background = 'transparent';
+    fMedyaTur = 'foto';
   }
+  fMedyaCiz();
   $('f-sayac').textContent = $('f-metin').value.length;
   grupSenkron('f-senaryo', secSenaryo);
   grupSenkron('f-siklik', secSiklik);
@@ -1734,16 +1755,34 @@ function ekleAc(yerId, duzenlenecek){
 ['f-k1','f-k2','f-k3'].forEach(i => $(i).addEventListener('input', kontrolEt));
 $('f-metin').addEventListener('input', e => { $('f-sayac').textContent = e.target.value.length; kontrolEt(); });
 $('f-puan').addEventListener('input', e => $('f-puan-c').textContent = e.target.value);
+/* medya alanı: fotoğraf / video seçimi ve sahte yükleme */
+function fMedyaCiz(){
+  const secildi = fotoVar;
+  const y = fSecilenYer ? yerBul(fSecilenYer) : null;
+  const video = fMedyaTur === 'video';
+  $('f-foto-ikon').innerHTML =
+    `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${video?VIDEO:KAMERA}</svg>`;
+  $('f-foto-metin').textContent = secildi
+    ? (video ? 'Video eklendi ✓ (kaldırmak için dokun)' : 'Fotoğraf eklendi ✓ (kaldırmak için dokun)')
+    : (video ? 'Video ekle' : 'Fotoğraf ekle');
+  $('f-foto').style.borderStyle = secildi ? 'solid' : 'dashed';
+  $('f-foto').style.background = (secildi && y) ? fotoZemin(y.tur) : 'transparent';
+  [...$('f-medya-tur').children].forEach(b =>
+    b.setAttribute('aria-pressed', b.dataset.d === fMedyaTur ? 'true' : 'false'));
+}
+$('f-medya-tur').onclick = e => {
+  const b = e.target.closest('button'); if(!b) return;
+  fMedyaTur = b.dataset.d;
+  fMedyaCiz();
+};
 $('f-foto').onclick = () => {
   fotoVar = !fotoVar;
-  const y = fSecilenYer ? yerBul(fSecilenYer) : null;
-  $('f-foto-metin').textContent = fotoVar ? 'Fotoğraf eklendi ✓ (kaldırmak için dokun)' : 'Fotoğraf ekle';
-  $('f-foto').style.borderStyle = fotoVar ? 'solid' : 'dashed';
-  $('f-foto').style.background = (fotoVar && y) ? fotoZemin(y.tur) : 'transparent';
+  fMedyaCiz();
   kontrolEt();
 };
 $('ekle-kapat').onclick = () => $('ekle').classList.remove('acik');
 $('ekle-ac').onclick = () => ekleAc(null);
+$('harita-ekle').onclick = () => ekleAc(secili || null);
 
 /* ==================== listeler: form bağlantıları ==================== */
 $('liste-kapat').onclick = () => $('liste').classList.remove('acik');
@@ -1787,6 +1826,7 @@ $('paylas-kopyala').onclick = () => {
 $('f-paylas').onclick = () => {
   const veri = {
     yer: fSecilenYer,
+    medya: fMedyaTur,
     puan: parseFloat($('f-puan').value),
     kelimeler: kelimeler(),
     senaryo: secSenaryo,
