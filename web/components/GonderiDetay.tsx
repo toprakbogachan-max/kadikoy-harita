@@ -1,0 +1,224 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { PINLER, KISILER, yerBul, medyalari } from "@/lib/demo";
+import { fotoZemin, simgeSvg, zaman } from "@/lib/gorsel";
+import Avatar from "./Avatar";
+
+interface Props {
+  pinId: number;
+  liste: number[];
+  onKapat: () => void;
+  onPinDegisti: (id: number) => void;
+}
+
+/**
+ * Reels tarzı tam ekran gönderi:
+ *  - dikey (kaydırma / tekerlek / ↑↓) → akıştaki pinler arası
+ *  - yatay (oklar / ←→)               → aynı pinin medyaları arası
+ * Her medyanın kendi notu görselin altında görünür.
+ */
+export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Props) {
+  const [medyaIndex, setMedyaIndex] = useState(0);
+  const govde = useRef<HTMLDivElement>(null);
+
+  const pinIndex = Math.max(0, liste.indexOf(pinId));
+  const p = PINLER.find((x) => x.id === pinId);
+
+  /* pin değişince medya başa döner */
+  useEffect(() => setMedyaIndex(0), [pinId]);
+
+  const pinGec = (yon: number) => {
+    const yeni = pinIndex + yon;
+    if (yeni < 0 || yeni >= liste.length) return;
+    onPinDegisti(liste[yeni]);
+  };
+
+  /* klavye: ↑↓ pinler, ←→ medyalar */
+  useEffect(() => {
+    const el = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return onKapat();
+      if (!p) return;
+      const son = medyalari(p).length - 1;
+      if (e.key === "ArrowUp") pinGec(-1);
+      else if (e.key === "ArrowDown") pinGec(1);
+      else if (e.key === "ArrowLeft") setMedyaIndex((i) => Math.max(0, i - 1));
+      else if (e.key === "ArrowRight") setMedyaIndex((i) => Math.min(son, i + 1));
+    };
+    window.addEventListener("keydown", el);
+    return () => window.removeEventListener("keydown", el);
+  });
+
+  /* dokunma + masaüstü tekerleği */
+  useEffect(() => {
+    const g = govde.current;
+    if (!g) return;
+    let basY: number | null = null;
+    const ESIK = 70;
+    const bitir = (y: number) => {
+      if (basY === null) return;
+      const d = y - basY;
+      basY = null;
+      if (d < -ESIK) pinGec(1);
+      else if (d > ESIK) pinGec(-1);
+    };
+    const basla = (e: TouchEvent) => (basY = e.touches[0].clientY);
+    const bit = (e: TouchEvent) => bitir(e.changedTouches[0].clientY);
+
+    /* tek jest birden çok wheel olayı üretiyor — zaman kilidi */
+    let sonTeker = 0;
+    const teker = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < 12) return;
+      const simdi = Date.now();
+      if (simdi - sonTeker < 550) return;
+      sonTeker = simdi;
+      pinGec(e.deltaY > 0 ? 1 : -1);
+    };
+
+    g.addEventListener("touchstart", basla, { passive: true });
+    g.addEventListener("touchend", bit, { passive: true });
+    g.addEventListener("wheel", teker, { passive: true });
+    return () => {
+      g.removeEventListener("touchstart", basla);
+      g.removeEventListener("touchend", bit);
+      g.removeEventListener("wheel", teker);
+    };
+  });
+
+  if (!p) return null;
+  const y = yerBul(p.yer);
+  const kisi = KISILER[p.kisi];
+  if (!y || !kisi) return null;
+
+  const medya = medyalari(p);
+  const m = medya[Math.min(medyaIndex, medya.length - 1)];
+  const coklu = medya.length > 1;
+
+  return (
+    <div className="absolute inset-0 z-20 flex flex-col bg-[#1B1510]">
+      {/* üst perde */}
+      <div className="absolute inset-x-0 top-0 z-[6] flex items-start justify-between gap-3 bg-gradient-to-b from-[rgba(12,9,5,.62)] to-transparent px-4 pb-8 pt-3.5">
+        <div>
+          <h2 className="text-[20px] font-semibold leading-tight text-white">
+            {kisi.ad}
+            {kisi.ben ? " · sen" : ""}
+          </h2>
+          <div className="mt-1.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-white/75">
+            @{kisi.k} · {zaman(p.saat)}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {liste.length > 1 && (
+            <span className="font-sayi text-[11.5px] text-white/80">
+              {pinIndex + 1}/{liste.length}
+            </span>
+          )}
+          <button
+            onClick={onKapat}
+            aria-label="Kapat"
+            className="size-[30px] shrink-0 rounded-sm border-none bg-white/15 text-[15px] leading-none text-white"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div ref={govde} className="relative min-h-0 flex-1 overflow-hidden">
+        {/* medya tam ekranı kaplar */}
+        <div
+          className="absolute inset-0 grid place-items-center"
+          style={{ background: fotoZemin(y.tur) }}
+        >
+          <div className="opacity-[0.22]" dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 120) }} />
+          {m.tur === "video" && (
+            <div className="pointer-events-none absolute inset-0 grid place-items-center">
+              <span className="grid size-[52px] place-items-center rounded-full bg-[rgba(20,15,8,.5)] text-[22px] text-white">▶</span>
+            </div>
+          )}
+        </div>
+
+        {coklu && (
+          <>
+            <span className="absolute right-3.5 top-[74px] z-[7] rounded-full bg-[rgba(20,15,8,.55)] px-1.5 py-0.5 font-sayi text-[10px] text-white">
+              {medyaIndex + 1}/{medya.length}
+            </span>
+            <div className="absolute inset-x-0 top-[78px] z-[7] flex justify-center gap-1.5">
+              {medya.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setMedyaIndex(i)}
+                  aria-label={`${i + 1}. medya`}
+                  className={`size-1.5 rounded-full border-none p-0 ${i === medyaIndex ? "scale-125 bg-white" : "bg-white/35"}`}
+                />
+              ))}
+            </div>
+            {/* oklar alt panelin ÜSTÜNDE olmalı, yoksa panelin şeffaf kısmı tıklamayı yutuyor */}
+            <button
+              onClick={() => setMedyaIndex((i) => Math.max(0, i - 1))}
+              disabled={medyaIndex === 0}
+              aria-label="Önceki medya"
+              className="absolute left-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(20,15,8,.5)] text-white disabled:opacity-30"
+            >
+              ‹
+            </button>
+            <button
+              onClick={() => setMedyaIndex((i) => Math.min(medya.length - 1, i + 1))}
+              disabled={medyaIndex === medya.length - 1}
+              aria-label="Sonraki medya"
+              className="absolute right-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(20,15,8,.5)] text-white disabled:opacity-30"
+            >
+              ›
+            </button>
+          </>
+        )}
+
+        {/* alt bilgi perdesi */}
+        <div className="absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgba(12,9,5,.92)] via-[rgba(12,9,5,.72)] to-transparent px-4 pb-4 pt-[70px] text-white">
+          <div className="mb-2.5 flex items-center gap-2.5">
+            <Avatar kisi={p.kisi} boyut={34} />
+            <div className="flex-1">
+              <div className="text-[13.5px] font-semibold leading-tight">
+                {kisi.ad}
+                {kisi.ben ? " · sen" : ""}
+              </div>
+              <div className="mt-0.5 font-sayi text-[10.5px] text-white/65">
+                @{kisi.k} · {zaman(p.saat)}
+              </div>
+            </div>
+            {p.puan != null && (
+              <span className="font-sayi text-[14px] font-bold text-[#F2C879]">
+                {p.puan}
+                <span className="text-[10px] font-normal text-white/50">/10</span>
+              </span>
+            )}
+          </div>
+
+          <div className="mb-2.5 inline-flex items-center gap-1.5 border-b border-[rgba(242,200,121,.4)] pb-0.5 font-tabela text-[11.5px] uppercase tracking-[0.06em] text-[#F2C879]">
+            {y.ad} · {y.semt}
+          </div>
+
+          {/* aktif medyanın kendi notu */}
+          {m.not && <p className="mb-2 font-el text-[15px] leading-snug text-white/90">{m.not}</p>}
+
+          {p.kelimeler && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {p.kelimeler.map((k) => (
+                <span key={k} className="rounded-sm border border-white/45 px-2 py-1 font-el text-[13px] font-bold leading-none">
+                  {k}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <p className="line-clamp-4 font-el text-[16px] leading-snug">{p.metin}</p>
+
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {p.senaryo && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">{p.senaryo}</span>}
+            {p.fiyat && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">kişi başı {p.fiyat}₺</span>}
+            {p.siklik && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">{p.siklik}</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
