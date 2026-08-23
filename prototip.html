@@ -364,7 +364,7 @@
   .yer-oneri-ad{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .yer-oneri-alt{font-family:var(--font-sayi);font-size:10.5px;color:var(--murekkep-2);flex-shrink:0}
   .yer-harita-sarma{position:relative;margin-top:9px;height:190px;border:1px solid var(--cizgi);border-radius:2px;overflow:hidden;background:var(--su)}
-  #f-harita{position:absolute;inset:0}
+  #f-harita,#lo-harita{position:absolute;inset:0}
   .yer-secili{margin-top:9px;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--murekkep-2);min-height:22px}
   .yer-secili b{font-weight:600;color:var(--murekkep)}
   .yer-secili-nokta{width:11px;height:11px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 34% 30%,#fff 0%,var(--pin-isik) 16%,var(--pin) 55%,var(--pin-koyu) 100%);box-shadow:0 1.5px 2px rgba(74,58,30,.35)}
@@ -550,6 +550,8 @@
       </div>
       <div class="alan">
         <label>Mekanlar <span class="zorunlu">*</span> <span id="lo-sayac" style="text-transform:none;font-family:var(--font-sayi);color:var(--murekkep-2)"></span></label>
+        <div class="yer-harita-sarma"><div id="lo-harita"></div></div>
+        <p class="ipucu" style="margin:7px 0 9px">Haritadan seç ya da aşağıdaki listeden işaretle.</p>
         <div class="secim" id="lo-mekanlar"></div>
       </div>
     </div>
@@ -911,7 +913,20 @@ let PINLER = [
   {id:14, kisi:'mert', yer:'iskele', saat:78, puan:6.5,
    kelimeler:['kapalı','sakin','eski'], senaryo:'ilk buluşma', siklik:'yılda birkaç',
    metin:'Pazartesi kapalı olduğunu bilmeden gittim, kapıdan döndüm. Salı akşamı da yarı boş, sakin isteyene iyi.',
-   degisse:'Kapalı günü kapıda yazsa', tekrar:'belki', begeni:44}
+   degisse:'Kapalı günü kapıda yazsa', tekrar:'belki', begeni:44},
+
+  /* çok medyalı örnek — karusel, video rozeti ve medya notlarını görmek için */
+  {id:15, kisi:'bogac', yer:'balik', saat:1, puan:8.5,
+   medyalar:[
+     {tur:'foto',  not:'Girişteki tezgah — günlük ne geldiyse burada duruyor.'},
+     {tur:'video', not:'Balık seçerken: fiyatı sorup öyle seç, tahtada yazmıyor.'},
+     {tur:'foto',  not:'Deniz tarafındaki masalar. Rezervasyon buraya yapılıyor.'},
+     {tur:'video', not:'Gün batımında manzara, saat 19:30 civarı.'},
+     {tur:'foto',  not:'Hesap: kişi başı 1050₺ çıktı, iki kişi bir şişe şarapla.'}
+   ],
+   kelimeler:['manzaralı','taze','pahalı'], senaryo:'ilk buluşma', siklik:'yılda birkaç',
+   metin:'Tezgahtan kendin seç, fiyatını sorarak. Deniz tarafı için hafta sonu mutlaka rezervasyon yaptır, yoksa iç salona düşüyorsun.',
+   degisse:'Fiyatlar tahtada yazsa', tekrar:'evet', fiyat:1050, begeni:312}
 ];
 const BEGENDIKLERIM = new Set();
 const KAYITLILAR = new Set(['plak']);
@@ -1096,6 +1111,53 @@ function listeAc(id){
   };
   $('liste').classList.add('acik');
 }
+/* liste formunda mekan seçimi: harita + liste, ikisi senkron çalışır */
+let loMap = null;
+const loMarkerlar = {};
+
+function loHaritaHazirla(){
+  if(loMap) return;
+  loMap = new maplibregl.Map({
+    container: 'lo-harita',
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: [29.033, 40.985],
+    zoom: 13.2,
+    attributionControl: false
+  });
+  loMap.on('load', () => { loMap.resize(); loPinleriCiz(); });
+}
+
+function loPinleriCiz(){
+  if(!loMap) return;
+  YERLER.forEach(y => {
+    const secili = lSecilenMekanlar.has(y.id);
+    let m = loMarkerlar[y.id];
+    if(!m){
+      const el = document.createElement('div');
+      el.className = 'jeton-marker';
+      el.innerHTML = '<div class="jeton-ic"></div>';
+      el.addEventListener('click', e => { e.stopPropagation(); loMekanDegistir(y.id); });
+      el.addEventListener('mousedown', e => e.stopPropagation());
+      m = loMarkerlar[y.id] = new maplibregl.Marker({element: el, anchor:'center'})
+        .setLngLat([y.lng, y.lat]).addTo(loMap);
+    }
+    const el = m.getElement();
+    el.querySelector('.jeton-ic').innerHTML = jetonSVG(y, true, false, secili);
+    el.classList.toggle('secili', secili);
+    el.style.opacity = secili ? 1 : .5;      /* seçilmeyenler soluk */
+    el.style.zIndex = secili ? 10 : 1;
+  });
+}
+
+/* tek giriş noktası: hem harita hem liste buradan geçer, ikisi de güncellenir */
+function loMekanDegistir(yerId){
+  lSecilenMekanlar.has(yerId) ? lSecilenMekanlar.delete(yerId) : lSecilenMekanlar.add(yerId);
+  const btn = $('lo-mekanlar').querySelector(`[data-yer="${yerId}"]`);
+  if(btn) btn.setAttribute('aria-pressed', lSecilenMekanlar.has(yerId) ? 'true' : 'false');
+  loPinleriCiz();
+  loKontrolEt();
+}
+
 function listeOlusturAc(){
   $('lo-baslik').value = '';
   $('lo-not').value = '';
@@ -1104,12 +1166,12 @@ function listeOlusturAc(){
     `<button type="button" data-yer="${y.id}" aria-pressed="false">${y.ad}</button>`).join('');
   $('lo-mekanlar').onclick = e => {
     const b = e.target.closest('button'); if(!b) return;
-    lSecilenMekanlar.has(b.dataset.yer) ? lSecilenMekanlar.delete(b.dataset.yer) : lSecilenMekanlar.add(b.dataset.yer);
-    b.setAttribute('aria-pressed', lSecilenMekanlar.has(b.dataset.yer) ? 'true' : 'false');
-    loKontrolEt();
+    loMekanDegistir(b.dataset.yer);
   };
   loKontrolEt();
   $('liste-olustur').classList.add('acik');
+  /* harita ancak çekmece görünür olunca ölçülebilir */
+  setTimeout(() => { loHaritaHazirla(); if(loMap){ loMap.resize(); loPinleriCiz(); } }, 340);
 }
 function loKontrolEt(){
   $('lo-sayac').textContent = `(${lSecilenMekanlar.size} seçili)`;
