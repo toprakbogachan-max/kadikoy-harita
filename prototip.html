@@ -291,6 +291,11 @@
   .p-ad{font-weight:600;font-size:19px;line-height:1.2}
   .p-kullanici{font-family:var(--font-sayi);font-size:12px;color:var(--murekkep-2);margin-top:2px}
   .p-bio{padding:0 16px 12px;font-size:13.5px;line-height:1.5}
+  /* kendi profilinde ad ve bio dokunmayla düzenlenir */
+  .duzenlenebilir{cursor:pointer;border-radius:2px}
+  .duzenlenebilir:hover{background:rgba(35,52,60,.04)}
+  .p-duzenle-ikon{flex-shrink:0;color:var(--murekkep-2)}
+  .p-ust.duzenlenebilir:hover .p-duzenle-ikon{color:#8A5E0E}
   .p-sayilar{display:flex;padding:0 16px 14px}
   .p-sayi{flex:1;text-align:center;border-left:1px solid var(--cizgi)}
   .p-sayi:first-child{border-left:none}
@@ -595,6 +600,33 @@
   </div>
 
   <!-- ============ ayarlar ============ -->
+  <!-- ============ profil düzenleme ============ -->
+  <div class="cekmece" id="profil-duzenle" role="dialog" aria-modal="true" aria-labelledby="pd-baslik">
+    <div class="cekmece-ust">
+      <div><h2 id="pd-baslik">Profili düzenle</h2><div class="cekmece-alt-baslik">Adın ve bion</div></div>
+      <button class="kapat" id="pd-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <div class="cekmece-govde">
+      <div class="alan">
+        <label for="pd-ad">Görünen ad <span class="zorunlu">*</span></label>
+        <input id="pd-ad" maxlength="40" autocomplete="off">
+      </div>
+      <div class="alan">
+        <label for="pd-bio">Bio</label>
+        <textarea id="pd-bio" maxlength="200" placeholder="Kendini bir iki cümleyle anlat…"></textarea>
+        <div class="sayac"><span id="pd-sayac">0</span>/200</div>
+        <p class="ipucu">Bion, profilini paylaştığında ilk okunan şey — nasıl gezdirdiğini anlat.</p>
+      </div>
+      <div class="alan">
+        <label>Kullanıcı adı</label>
+        <div class="yer-secili"><span>@<b id="pd-kullanici"></b> · değiştirilemez, paylaştığın link buna bağlı</span></div>
+      </div>
+    </div>
+    <div class="cekmece-eylem">
+      <button class="btn btn-birincil" id="pd-kaydet">Kaydet</button>
+    </div>
+  </div>
+
   <div class="cekmece" id="ayarlar" role="dialog" aria-modal="true" aria-labelledby="ayarlar-baslik">
     <div class="cekmece-ust">
       <div><h2 id="ayarlar-baslik">Ayarlar</h2><div class="cekmece-alt-baslik">Arşiv ve tercihler</div></div>
@@ -2047,6 +2079,13 @@ function ayarlarCiz(){
     </div>`;
 
   $('ayarlar-govde').innerHTML = `
+    <div class="ayar-baslik">Hesap</div>
+    <button class="ayar-satir" id="ayar-profil-duzenle">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${KALEM}</svg>
+      <span class="ayar-ad">Profili düzenle<span class="ayar-aciklama">Görünen adın ve bion</span></span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+
     <div class="ayar-baslik">Arşiv</div>
     ${satir('kaydettiklerim', '<path d="M6 3.6h12v17l-6-4.2-6 4.2z"/>', 'Kaydettiklerim', KAYITLILAR.size)}
     ${satir('begendiklerim', `<path d="${KALP}"/>`, 'Beğendiklerim', BEGENDIKLERIM.size)}
@@ -2076,10 +2115,39 @@ function ayarlarCiz(){
       filtre = 'hepsi'; cizCipler(); cizHarita();
     }
   });
+  $('ayar-profil-duzenle').onclick = () => {
+    $('ayarlar').classList.remove('acik');
+    setTimeout(profilDuzenleAc, 320);
+  };
   $('ayar-cikis').onclick = () => alert('Prototipte oturum yok — gerçek çıkış Supabase Auth ile gelecek.');
 }
 $('ayarlar-ac').onclick = () => { ayarlarCiz(); $('ayarlar').classList.add('acik'); };
 $('ayarlar-kapat').onclick = () => $('ayarlar').classList.remove('acik');
+
+/* ==================== profil düzenleme ==================== */
+function profilDuzenleAc(){
+  const k = KISILER['bogac'];
+  $('pd-ad').value = k.ad;
+  $('pd-bio').value = k.bio || '';
+  $('pd-sayac').textContent = ($('pd-bio').value).length;
+  $('pd-kullanici').textContent = k.k;
+  pdKontrolEt();
+  $('profil-duzenle').classList.add('acik');
+}
+function pdKontrolEt(){
+  $('pd-kaydet').disabled = !$('pd-ad').value.trim();
+}
+$('pd-ad').addEventListener('input', pdKontrolEt);
+$('pd-bio').addEventListener('input', e => { $('pd-sayac').textContent = e.target.value.length; });
+$('pd-kapat').onclick = () => $('profil-duzenle').classList.remove('acik');
+$('pd-kaydet').onclick = () => {
+  const k = KISILER['bogac'];
+  k.ad  = $('pd-ad').value.trim();
+  k.bio = $('pd-bio').value.trim();
+  $('profil-duzenle').classList.remove('acik');
+  /* ad her yerde görünüyor: profil, akış, yorumlar, bildirimler */
+  cizProfil(); cizAkis(); cizHikayeler();
+};
 
 function cizAkis(){
   let sirali;
@@ -2114,9 +2182,10 @@ function cizProfil(){
   $('ayarlar-ac').hidden = !benim;   /* ayarlar sadece kendi profilinde */
 
   $('profil-govde').innerHTML = `
-    <div class="p-ust">${avatar(profilKisi,62)}
-      <div><div class="p-ad">${kisi.ad}</div><div class="p-kullanici">@${kisi.k}</div></div></div>
-    <p class="p-bio">${kisi.bio}</p>
+    <div class="p-ust${benim?' duzenlenebilir':''}"${benim?' id="p-duzenle-alan"':''}>${avatar(profilKisi,62)}
+      <div style="flex:1"><div class="p-ad">${kisi.ad}</div><div class="p-kullanici">@${kisi.k}</div></div>
+      ${benim?`<svg class="p-duzenle-ikon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${KALEM}</svg>`:''}</div>
+    <p class="p-bio${benim?' duzenlenebilir':''}"${benim?' id="p-bio-alan"':''}>${kisi.bio || (benim?'Bio ekle — profilini paylaştığında ilk okunan şey.':'')}</p>
     <div class="p-sayilar">
       <div class="p-sayi"><b>${pinleri.length}</b><span>pin</span></div>
       <div class="p-sayi"><b>${yerleri.length}</b><span>mekan</span></div>
@@ -2154,6 +2223,10 @@ function cizProfil(){
 
   const link = $('p-link'); if(link) link.onclick = paylasAc;
   const pe = $('p-ekle'); if(pe) pe.onclick = () => ekleAc(null);
+  /* kendi profilinde ad/bio alanına dokunmak düzenlemeyi açar */
+  ['p-duzenle-alan','p-bio-alan'].forEach(id => {
+    const el = $(id); if(el) el.onclick = profilDuzenleAc;
+  });
   const ple = $('p-liste-ekle'); if(ple) ple.onclick = listeOlusturAc;
   const lbe = $('liste-bos-ekle'); if(lbe) lbe.onclick = listeOlusturAc;
   $('profil-govde').querySelectorAll('[data-liste]').forEach(el => el.onclick = () => listeAc(+el.dataset.liste));
@@ -2588,6 +2661,7 @@ document.addEventListener('keydown', e => {
   if($('sikayet').classList.contains('acik')) $('sikayet').classList.remove('acik');
   else if($('yorumlar').classList.contains('acik')) $('yorumlar').classList.remove('acik');
   else if($('arsiv').classList.contains('acik')) $('arsiv').classList.remove('acik');
+  else if($('profil-duzenle').classList.contains('acik')) $('profil-duzenle').classList.remove('acik');
   else if($('ayarlar').classList.contains('acik')) $('ayarlar').classList.remove('acik');
   else if($('bildirimler').classList.contains('acik')) $('bildirimler').classList.remove('acik');
   else if($('liste-olustur').classList.contains('acik')) $('liste-olustur').classList.remove('acik');
