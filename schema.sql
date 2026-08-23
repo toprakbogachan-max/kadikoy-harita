@@ -20,6 +20,10 @@ do $$ begin
   create type source_platform as enum ('tiktok','instagram','youtube','web','manual');
 exception when duplicate_object then null; end $$;
 
+do $$ begin
+  create type media_kind as enum ('photo','video');
+exception when duplicate_object then null; end $$;
+
 -- ============================================================
 --  1. PROFİLLER
 -- ============================================================
@@ -52,7 +56,10 @@ create table if not exists places (
   geo           geography(Point, 4326) not null,
   google_place_id text unique,
   google_synced_at timestamptz,        -- Google ToS: place_id dışındaki alanlar ~30 gün cache
-  opening_hours jsonb,                 -- [{"d":1,"open":"08:00","close":"22:00"}, ...]
+  -- [{"d":1,"open":"08:00","close":"22:00"}, ...]
+  -- NULL = saat bilgisi YOK (kapali degil). is_open_now() bu durumda null doner,
+  -- arayuz "saat bilgisi yok" gosterir. Kullanicinin ekledigi mekanlar boyle baslar.
+  opening_hours jsonb,
   phone         text,
   website       text,
   status        content_status not null default 'published',
@@ -102,17 +109,37 @@ create table if not exists pins (
   id          uuid primary key default gen_random_uuid(),
   author_id   uuid not null references profiles(id) on delete cascade,
   place_id    uuid not null references places(id) on delete cascade,
-  body        text not null check (char_length(body) between 10 and 1000),
-  visit_date  date,
+
+  -- ---- kalite kapısı: BRIEF'te zorunlu sayılan alanlar (formda da zorunlu) ----
+  body        text not null check (char_length(body) between 15 and 1000),  -- somut not
+  words       text[] not null check (array_length(words, 1) = 3),           -- üç kelime
+  scenario    text not null,                                               -- geliş senaryosu
+  rating      smallint not null check (rating between 1 and 10),            -- "bana hitap puanı"
+  -- (fotoğraf/video zorunluluğu pin_media + assert_pin_has_media trigger'ında)
+
+  -- ---- isteğe bağlı alanlar ----
+  improve     text,                     -- "bir şey değişse" — mekanın yapılacaklar listesi
+  frequency   text,                     -- hangi sıklıkla gelinir
+  would_return text check (would_return in ('evet','belki','hayır')),
   price_paid  integer,                  -- kişi başı ödediği, ₺
-  tags        text[],
+  visit_date  date,
+
   status      content_status not null default 'published',
   like_count    integer not null default 0,
   comment_count integer not null default 0,
   created_at  timestamptz not null default now(),
-  -- kalite kapısı: aynı kişi aynı mekana ayda bir kez
+  -- kalite kapısı: aynı kişi aynı mekana aynı gün tek pin
   unique (author_id, place_id, visit_date)
 );
+
+comment on column pins.rating is
+  'Yildiz degil: "bana uygun mu" puani. Mekan sayfasinda ortalama degil dagilim gosterilir.';
+comment on column pins.words is
+  'Uc kelime. Serbest metin oldugu icin zamanla dagilir; 200 pinden sonra otomatik tamamlama gerekecek.';
+comment on column pins.improve is
+  '"Bir sey degisse" — mekanin yapilacaklar listesi olarak gosteriliyor.';
+
+create index if not exists pins_words_idx on pins using gin (words);
 create index if not exists pins_place_idx on pins (place_id, created_at desc) where status = 'published';
 create index if not exists pins_author_idx on pins (author_id, created_at desc) where status = 'published';
 create index if not exists pins_recent_idx on pins (created_at desc) where status = 'published';
@@ -120,11 +147,17 @@ create index if not exists pins_recent_idx on pins (created_at desc) where statu
 create table if not exists pin_media (
   id        uuid primary key default gen_random_uuid(),
   pin_id    uuid not null references pins(id) on delete cascade,
+  kind      media_kind not null default 'photo',   -- fotograf mi video mu
   storage_path text not null,           -- Supabase Storage yolu
+  caption   text check (char_length(caption) <= 120),  -- her medyanin kendi notu
   width     integer,
   height    integer,
+  duration_s numeric(6,2),              -- video ise suresi
   ordering  smallint not null default 0
 );
+
+comment on column pin_media.caption is
+  'Karusel'de o gorselin/videonun hemen altinda gosterilir.';
 create index if not exists pin_media_pin_idx on pin_media (pin_id, ordering);
 
 -- Fotoğraf zorunlu: pin yayına girerken en az 1 medya olsun
@@ -319,6 +352,47 @@ create or replace function places_nearby(
     and (not in_open_only or is_open_now(p.opening_hours) is true)
   order by p.pin_count desc, 8
   limit in_limit;
+$$;
+
+-- ============================================================
+--  7b. MEKAN ÖZETİ
+--  Mekan sayfasindaki "hizli bakis" ve dagilim bloklari.
+--  BRIEF: ortalama tek basina gosterilmiyor; dagilim + takip
+--  ettiklerinin ayri ortalamasi asil deger.
+-- ============================================================
+create or replace function place_summary(in_place uuid, in_viewer uuid default null)
+returns jsonb language sql stable as $$
+  with p as (
+    select * from pins where place_id = in_place and status = 'published'
+  ),
+  takip as (                       -- izleyicinin takip ettikleri (+ kendisi)
+    select following_id as id from follows where follower_id = in_viewer
+    union select in_viewer::uuid
+  )
+  select jsonb_build_object(
+    'pin_count',      (select count(*) from p),
+    'rating_avg',     (select round(avg(rating)::numeric, 1) from p),
+    -- 1..10 kovalari: [n1, n2, ... n10]
+    'rating_buckets', (select coalesce(jsonb_agg(x.c order by x.g), '[]'::jsonb)
+                       from (select g, (select count(*) from p where p.rating = g) c
+                             from generate_series(1,10) g) x),
+    'following_avg',  (select round(avg(rating)::numeric, 1)
+                       from p where in_viewer is not null and author_id in (select id from takip)),
+    'following_ids',  (select coalesce(jsonb_agg(distinct author_id), '[]'::jsonb)
+                       from p where in_viewer is not null and author_id in (select id from takip)),
+    -- uc kelimeler, sikliga gore
+    -- set-returning fonksiyonu select listesinde group by ile birlestirmek yerine
+    -- lateral unnest: daha guvenli ve okunur
+    'words',          (select coalesce(jsonb_agg(jsonb_build_array(t.w, t.n) order by t.n desc), '[]'::jsonb)
+                       from (select w, count(*) n from p, unnest(p.words) w group by w
+                             order by n desc limit 8) t),
+    'top_scenario',   (select scenario from p group by scenario order by count(*) desc limit 1),
+    'would_return',   (select count(*) from p where would_return = 'evet'),
+    -- "bir sey degisse" listesi: mekanin yapilacaklar listesi
+    'improvements',   (select coalesce(jsonb_agg(jsonb_build_object('author', author_id, 'text', improve)), '[]'::jsonb)
+                       from p where improve is not null and improve <> ''),
+    'save_count',     (select count(*) from saves where place_id = in_place)
+  );
 $$;
 
 -- ============================================================
