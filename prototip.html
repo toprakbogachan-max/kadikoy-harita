@@ -465,7 +465,7 @@
   <section class="ekran aktif" id="ekran-harita">
     <header>
       <div class="baslik-satir">
-        <h1>KADIKÖY</h1>
+        <h1 id="harita-basligi">KADIKÖY</h1>
         <span class="saat" id="saat">--:--</span>
       </div>
       <div class="durum">
@@ -1146,8 +1146,66 @@ function haritaHazirla(){
     attributionControl: {compact:true}
   });
   map.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-right');
-  map.on('load', () => { map.resize(); cizHarita(); });
+  map.on('load', () => {
+    map.resize(); cizHarita();
+    /* stildeki yer-adı katmanlarını bir kez topla (mahalle/semt/ilçe etiketleri) */
+    yerAdKatmanlari = map.getStyle().layers
+      .filter(l => l['source-layer'] === 'place')
+      .map(l => l.id);
+    basligiGuncelle();
+  });
+  map.on('moveend', basligiGuncelle);
+  /* moveend anında etiket karoları henüz gelmemiş olabiliyor;
+     idle, çizim ve yükleme bittiğinde tetiklenir */
+  map.on('idle', basligiGuncelle);
   window.addEventListener('resize', () => map.resize());
+}
+
+/* ---------- Snapchat Map tarzı: başlık, haritanın baktığı yere göre değişir ----------
+   Adı kendi 12 mekanımızdan değil, haritanın kendi etiket verisinden okuyoruz;
+   böylece Kadıköy dışına çıkınca da doğru isim çıkıyor. */
+let yerAdKatmanlari = [];
+const YER_ONCELIK = ['neighbourhood','quarter','suburb','hamlet','village','town','city','county','state','country'];
+
+/* Yakınlaşma seviyesine göre hangi ölçekteki isim uygun:
+   sokak seviyesinde mahalle, ilçe seviyesinde semt/ilçe, şehir seviyesinde şehir. */
+function uygunSiniflar(z){
+  if(z >= 13.5) return ['neighbourhood','quarter','suburb','hamlet','village'];
+  if(z >= 11)   return ['suburb','town'];
+  if(z >= 7.5)  return ['city','county'];
+  return ['state','country'];
+}
+
+function basligiGuncelle(){
+  if(!map || !yerAdKatmanlari.length) return;
+  let ozellikler;
+  try{ ozellikler = map.queryRenderedFeatures({layers: yerAdKatmanlari}); }
+  catch(e){ return; }
+  if(!ozellikler || !ozellikler.length) return;
+
+  const merkez = map.getCenter();
+  const tumAdaylar = ozellikler.map(f => {
+    const p = f.properties || {};
+    const ad = p['name:tr'] || p.name;
+    if(!ad) return null;
+    const sinif = p.class || '';
+    const oncelik = YER_ONCELIK.indexOf(sinif);
+    const koor = f.geometry && f.geometry.type === 'Point' ? f.geometry.coordinates : null;
+    const uzaklik = koor ? Math.hypot(koor[0] - merkez.lng, koor[1] - merkez.lat) : Infinity;
+    return {ad, sinif, oncelik: oncelik === -1 ? 99 : oncelik, uzaklik};
+  }).filter(Boolean);
+  if(!tumAdaylar.length) return;
+
+  /* önce bu zoom'a uygun ölçekte ara; yoksa tüm adaylara düş */
+  const uygun = uygunSiniflar(map.getZoom());
+  let adaylar = tumAdaylar.filter(a => uygun.includes(a.sinif));
+  if(!adaylar.length) adaylar = tumAdaylar;
+
+  /* eşit ölçekte merkeze en yakın etiket kazanır */
+  adaylar.sort((a,b) => a.oncelik - b.oncelik || a.uzaklik - b.uzaklik);
+  const yeni = adaylar[0].ad.toLocaleUpperCase('tr');
+  const el = $('harita-basligi');
+  if(el.textContent !== yeni) el.textContent = yeni;
 }
 
 /* jeton pin — eski elle-çizilmiş harita için kullanılan tasarımın custom marker karşılığı */
