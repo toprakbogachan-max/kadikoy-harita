@@ -141,11 +141,50 @@
 
   /* ---------- "buraya bırakılanlar" karusel başlığı ---------- */
   .bolum-satir{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 6px;padding-top:14px;border-top:1px solid var(--cizgi)}
-  .pin-pager{display:flex;align-items:center;gap:6px;flex-shrink:0}
-  .pin-ok{width:26px;height:26px;border-radius:2px;border:1px solid var(--cizgi);background:var(--yuzey);color:var(--murekkep);cursor:pointer;display:grid;place-items:center}
+  /* oklar kartın sağ ve sol kenarında, dikeyde ortalı */
+  .pin-karusel{position:relative;padding:0 34px}
+  .pin-ok{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;border:1px solid var(--cizgi);background:var(--yuzey);color:var(--murekkep);cursor:pointer;display:grid;place-items:center;box-shadow:var(--golge)}
+  .pin-ok.sol{left:0}
+  .pin-ok.sag{right:0}
   .pin-ok:hover:not(:disabled){border-color:var(--murekkep-2)}
   .pin-ok:disabled{opacity:.3;cursor:default}
   .pin-pager-sayac{font-family:var(--font-sayi);font-size:11px;color:var(--murekkep-2);min-width:28px;text-align:center}
+
+  /* ---------- Reels tarzı tam ekran gönderi ---------- */
+  #gonderi{background:#1B1510}
+  #gonderi .cekmece-ust{position:absolute;top:0;left:0;right:0;z-index:6;border-bottom:none;
+    background:linear-gradient(rgba(12,9,5,.62),transparent);padding:14px 16px 34px}
+  #gonderi #gonderi-ad{color:#fff}
+  #gonderi .cekmece-alt-baslik,#gonderi .gonderi-sayac{color:rgba(255,255,255,.78)}
+  #gonderi .kapat{background:rgba(255,255,255,.16);border-color:transparent;color:#fff}
+  #gonderi #gonderi-govde{padding:0;overflow:hidden}
+  .reels-sahne{position:absolute;inset:0}
+  .reels-medya{position:absolute;inset:0}
+  .reels-gorsel{position:absolute;inset:0;display:grid;place-items:center}
+  .reels-gorsel svg{opacity:.22}
+  .reels-alt{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:70px 16px 18px;color:#fff;
+    background:linear-gradient(transparent,rgba(12,9,5,.72) 38%,rgba(12,9,5,.92))}
+  .reels-alt .g-ad,.reels-alt .g-metin{color:#fff}
+  .reels-alt .g-alt-ad{color:rgba(255,255,255,.65)}
+  .reels-alt .puan{color:#F2C879}
+  .reels-alt .puan span{color:rgba(255,255,255,.5)}
+  .reels-alt .g-yer{color:#F2C879;border-bottom-color:rgba(242,200,121,.4)}
+  .reels-alt .kelime{color:#fff;border-color:rgba(255,255,255,.45)}
+  .reels-alt .etiket{background:rgba(255,255,255,.14);color:rgba(255,255,255,.9)}
+  .reels-alt .medya-not{color:#fff;opacity:.92;margin-top:8px}
+  .reels-alt .g-metin{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .reels-alt .g-eylem{border-top-color:rgba(255,255,255,.18)}
+  .reels-alt .ebtn{color:rgba(255,255,255,.8)}
+  .reels-alt .ebtn:hover{color:#fff}
+  .reels-alt .ebtn.dolu{color:#FF8A7A}
+  .reels-alt .ebtn.dolu-altin{color:#F2C879}
+  .reels-alt .ebtn-sikayet{color:rgba(255,255,255,.45)}
+  .reels-medya .medya-ok{z-index:4}
+  /* sayaç ve noktalar üstte — alt paneli kapatmasınlar */
+  .reels-medya .medya-sayac{top:74px;right:14px;z-index:7}
+  .reels-medya .medya-noktalar{position:absolute;left:0;right:0;top:78px;z-index:7;margin:0}
+  .reels-medya .medya-nokta{background:rgba(255,255,255,.35)}
+  .reels-medya .medya-nokta[aria-current="true"]{background:#fff}
 
   /* ---------- medya karuseli: oklarla gezinme + her medyanın kendi notu ---------- */
   .medya-ok{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:none;background:rgba(20,15,8,.5);color:#fff;cursor:pointer;display:grid;place-items:center;z-index:3;transition:background .15s}
@@ -1252,9 +1291,9 @@ function yerAc(id){
   const pinBlok = pinleri.length
     ? `<div class="bolum-satir">
          <div class="bolum-basligi" style="margin:0;padding:0;border:none">Buraya bırakılanlar</div>
-         <div class="pin-pager" id="mekan-pin-pager"></div>
+         <span class="pin-pager-sayac" id="mekan-pin-sayac"></span>
        </div>
-       <div id="mekan-pinler"></div>`
+       <div class="pin-karusel" id="mekan-pinler"></div>`
     : `<div class="bolum-basligi">Buraya bırakılanlar</div>
        <p class="bos-durum">Buraya henüz kimse pin atmamış. İlk sen ol.</p>`;
 
@@ -1280,20 +1319,19 @@ function yerAc(id){
 /* "Buraya bırakılanlar" karuseli — tek tek, oklarla gezilir */
 let mekanPinIndex = 0;
 function mekanPinCiz(pinleri){
-  const kap = $('mekan-pinler'), pager = $('mekan-pin-pager');
+  const kap = $('mekan-pinler');
   if(!kap || !pinleri.length) return;
   mekanPinIndex = Math.max(0, Math.min(mekanPinIndex, pinleri.length - 1));
   const p = pinleri[mekanPinIndex], coklu = pinleri.length > 1;
-
-  pager.innerHTML = coklu ? `
-    <button class="pin-ok" data-yon="-1" ${mekanPinIndex===0?'disabled':''} aria-label="Önceki pin">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
-    <span class="pin-pager-sayac">${mekanPinIndex+1}/${pinleri.length}</span>
-    <button class="pin-ok" data-yon="1" ${mekanPinIndex===pinleri.length-1?'disabled':''} aria-label="Sonraki pin">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>` : '';
+  const sayacEl = $('mekan-pin-sayac');
+  if(sayacEl) sayacEl.textContent = coklu ? `${mekanPinIndex+1}/${pinleri.length}` : '';
 
   kap.innerHTML = `
-    <div class="mini-gonderi" data-gonderi="${p.id}" style="${igneStil(yerBul(p.yer).tur)};transform:rotate(0deg);cursor:pointer">
+    ${coklu ? `<button class="pin-ok sol" data-yon="-1" ${mekanPinIndex===0?'disabled':''} aria-label="Önceki pin">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
+    <button class="pin-ok sag" data-yon="1" ${mekanPinIndex===pinleri.length-1?'disabled':''} aria-label="Sonraki pin">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>` : ''}
+    <div class="mini-gonderi" data-gonderi="${p.id}" style="${igneStil(yerBul(p.yer).tur)};transform:rotate(0deg);cursor:pointer;margin:0">
       <div class="g-ust">${avatar(p.kisi,30)}
         <div><div class="g-ad">${KISILER[p.kisi].ad}</div>
         <div class="g-alt-ad">@${KISILER[p.kisi].k} · ${zaman(p.saat)}</div></div>
@@ -1303,7 +1341,8 @@ function mekanPinCiz(pinleri){
       ${p.fiyat?`<div class="g-etiketler"><span class="etiket">kişi başı ${p.fiyat}₺ ödedi</span></div>`:''}
     </div>`;
 
-  pager.querySelectorAll('[data-yon]').forEach(b => b.onclick = () => {
+  kap.querySelectorAll('[data-yon]').forEach(b => b.onclick = e => {
+    e.stopPropagation();
     mekanPinIndex += +b.dataset.yon; mekanPinCiz(pinleri);
   });
   kap.querySelector('[data-gonderi]').onclick = () => {
@@ -1382,7 +1421,10 @@ function gonderiIcerik(p){
   const y = yerBul(p.yer), kisi = KISILER[p.kisi];
   const begendim = BEGENDIKLERIM.has(p.id);
   const benimMi = !!kisi.ben;
-  return `<div class="postit" style="${igneStil(y.tur)};transform:rotate(0deg);margin-bottom:0">
+  /* Reels düzeni: medya tam ekranı kaplar, bilgiler altta perde üstünde durur */
+  return `<div class="reels-sahne">
+    <div class="reels-medya" id="gonderi-medya"></div>
+    <div class="reels-alt">
     <div class="g-ust" style="cursor:pointer" data-kisi="${p.kisi}">${avatar(p.kisi,34)}
       <div style="flex:1"><div class="g-ad">${kisi.ad}${kisi.ben?' · sen':''}</div>
       <div class="g-alt-ad">@${kisi.k} · ${zaman(p.saat)}</div></div>
@@ -1390,10 +1432,10 @@ function gonderiIcerik(p){
     <div class="g-yer" data-yer="${y.id}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="${IMLEC}"/><circle cx="12" cy="10.3" r="2.4"/></svg>
       <span>${y.ad} · ${y.semt}</span></div>
-    <div id="gonderi-medya"></div>
+    <p class="medya-not" id="reels-not"></p>
     ${p.kelimeler?`<div class="kelimeler">${p.kelimeler.map(k=>`<span class="kelime">${k}</span>`).join('')}</div>`:''}
     <p class="g-metin">${p.metin}</p>
-    ${p.degisse?`<p class="g-metin" style="font-style:italic;color:#F0B5A9;font-size:13.5px;margin-top:7px">Bir şey değişse: ${p.degisse}</p>`:''}
+    ${p.degisse?`<p class="g-metin" style="font-style:italic;font-size:13.5px;margin-top:7px;opacity:.75">Bir şey değişse: ${p.degisse}</p>`:''}
     <div class="g-etiketler">
       ${p.senaryo?`<span class="etiket">${p.senaryo}</span>`:''}
       ${p.fiyat?`<span class="etiket">kişi başı ${p.fiyat}₺</span>`:''}
@@ -1414,7 +1456,7 @@ function gonderiIcerik(p){
         ${KAYITLILAR.has(y.id)?'kaydedildi':'kaydet'}</button>`}
       <button class="ebtn" data-yer="${y.id}">haritada gör</button>
       ${!benimMi ? `<button class="ebtn ebtn-sikayet" data-sikayet="${p.id}">şikayet et</button>` : ''}
-    </div></div>`;
+    </div></div></div>`;
 }
 
 let gonderiListesi = [], gonderiIndex = -1;
@@ -1429,18 +1471,20 @@ function medyaCiz(p){
   const m = liste[medyaIndex], coklu = liste.length > 1;
 
   kap.innerHTML = `
-    <div class="foto" style="background:${fotoZemin(y.tur)}">
-      ${simgeSvg(y.tur,58)}
+    <div class="reels-gorsel" style="background:${fotoZemin(y.tur)}">
+      ${simgeSvg(y.tur,120)}
       ${m.tur === 'video' ? `<div class="oynat-buyuk"><span><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="${OYNAT}"/></svg></span></div>` : ''}
-      ${coklu ? `<span class="medya-sayac">${medyaIndex+1}/${liste.length}</span>
-        <button class="medya-ok sol" data-yon="-1" ${medyaIndex===0?'disabled':''} aria-label="Önceki medya">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
-        <button class="medya-ok sag" data-yon="1" ${medyaIndex===liste.length-1?'disabled':''} aria-label="Sonraki medya">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>` : ''}
     </div>
-    ${coklu ? `<div class="medya-noktalar">${liste.map((_,i) =>
-      `<button class="medya-nokta" data-git="${i}" aria-current="${i===medyaIndex}" aria-label="${i+1}. medya"></button>`).join('')}</div>` : ''}
-    <p class="medya-not">${m.not || ''}</p>`;
+    ${coklu ? `<span class="medya-sayac">${medyaIndex+1}/${liste.length}</span>
+      <button class="medya-ok sol" data-yon="-1" ${medyaIndex===0?'disabled':''} aria-label="Önceki medya">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
+      <button class="medya-ok sag" data-yon="1" ${medyaIndex===liste.length-1?'disabled':''} aria-label="Sonraki medya">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      <div class="medya-noktalar">${liste.map((_,i) =>
+        `<button class="medya-nokta" data-git="${i}" aria-current="${i===medyaIndex}" aria-label="${i+1}. medya"></button>`).join('')}</div>` : ''}`;
+
+  const notEl = $('reels-not');
+  if(notEl) notEl.textContent = m.not || '';
 
   kap.querySelectorAll('[data-yon]').forEach(b => b.onclick = () => {
     medyaIndex += +b.dataset.yon; medyaCiz(p);
