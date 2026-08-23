@@ -369,6 +369,12 @@
   #f-harita,#lo-harita{position:absolute;inset:0}
   .yer-secili{margin-top:9px;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--murekkep-2);min-height:22px}
   .yer-secili b{font-weight:600;color:var(--murekkep)}
+  .yeni-yer{margin-top:10px;padding:12px;border:1px solid var(--jeton);border-radius:2px;background:rgba(184,128,26,.06)}
+  .yeni-yer-baslik{font-family:var(--font-tabela);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:#8A5E0E;margin-bottom:8px}
+  .yeni-yer input{width:100%;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:2px;color:var(--murekkep);font-family:var(--font-metin);font-size:14px;padding:9px 11px}
+  .yeni-yer input:focus{outline:none;border-color:var(--jeton)}
+  .yeni-yer-vazgec{margin-top:9px;background:none;border:none;color:var(--murekkep-2);cursor:pointer;font-family:var(--font-metin);font-size:12.5px;text-decoration:underline;padding:0}
+  .yeni-yer-vazgec:hover{color:var(--mercan)}
   .yer-secili-nokta{width:11px;height:11px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 34% 30%,#fff 0%,var(--pin-isik) 16%,var(--pin) 55%,var(--pin-koyu) 100%);box-shadow:0 1.5px 2px rgba(74,58,30,.35)}
 
   /* form: çoklu medya listesi */
@@ -593,7 +599,14 @@
         </div>
         <div class="yer-oneri" id="f-oneri" hidden></div>
         <div class="yer-harita-sarma"><div id="f-harita"></div></div>
+        <p class="ipucu" style="margin:7px 0 0">Aradığın yer yoksa haritada boş bir noktaya dokun, yeni mekan ekle.</p>
         <div class="yer-secili" id="f-secili"></div>
+        <div class="yeni-yer" id="f-yeni-yer" hidden>
+          <div class="yeni-yer-baslik">Yeni mekan</div>
+          <input id="f-yeni-ad" maxlength="60" placeholder="Mekanın adı" autocomplete="off">
+          <div class="secim" id="f-yeni-tur" style="margin-top:9px"></div>
+          <button type="button" class="yeni-yer-vazgec" id="f-yeni-vazgec">Vazgeç</button>
+        </div>
       </div>
 
       <div class="alan">
@@ -838,6 +851,7 @@ const yerBul = id => YERLER.find(y => y.id === id);
 
 /* ==================== pinler (asıl içerik) ==================== */
 let sonrakiId = 100;
+let sonrakiYerId = 1;      /* kullanıcının eklediği yeni mekanlar için */
 const SENARYOLAR = ['tek başına','çalışmak için','ilk buluşma','kalabalık grup','hızlı uğrak','uzun oturma'];
 const SIKLIK = ['haftalık uğrak','ayda bir','yılda birkaç','bir kez görülür'];
 
@@ -1275,11 +1289,12 @@ function yerAc(id){
   try{
     if(map) map.jumpTo({center:[y.lng, y.lat], zoom: Math.max(map.getZoom(), 16.5)});
   }catch(e){ console.warn('harita odaklanamadı', e); }
-  const acik = acikMi(y.saatler,t) === true;
+  const acikDurum = acikMi(y.saatler, t);   /* true / false / null (bilinmiyor) */
   const pinleri = PINLER.filter(p => p.yer === id).sort((a,b) => a.saat-b.saat);
 
   $('cekmece-ad').textContent = y.ad;
-  $('cekmece-tur').textContent = `${TUR_AD[y.tur]} · ${y.semt} · ${acik?'şu an açık':'şu an kapalı'}`;
+  $('cekmece-tur').textContent = `${TUR_AD[y.tur]} · ${y.semt} · ` +
+    (acikDurum === null ? 'saat bilgisi yok' : acikDurum ? 'şu an açık' : 'şu an kapalı');
 
   /* --- bölümler ayrı ayrı kurulur, en sonda istenen sırayla birleştirilir --- */
   const uyariBlok = y.uyari
@@ -1287,7 +1302,7 @@ function yerAc(id){
 
   const satir = (e,d,c='') => `<div class="kunye-satir"><span class="kunye-etiket">${e}</span><span class="kunye-deger ${c}">${d}</span></div>`;
   const gunAd = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
-  const bugun = y.saatler.find(s => s[0] === t.getDay());
+  const bugun = y.saatler ? y.saatler.find(s => s[0] === t.getDay()) : null;
   let kunyeBlok = '<div class="bolum-basligi">Künye</div><div class="kunye">';
   kunyeBlok += satir('Pin', `${pinleri.length} kişi pinledi`, 'sayi'+(populerMi(y)?' altin':''));
   kunyeBlok += satir('Rezervasyon', y.rezervasyon || 'gerekmiyor');
@@ -1297,7 +1312,8 @@ function yerAc(id){
   if(y.iyiGelir?.length)
     kunyeBlok += `<div class="kunye-satir"><span class="kunye-etiket">Uygun</span><span class="kunye-deger">
           <span class="g-etiketler" style="justify-content:flex-end">${y.iyiGelir.map(i=>`<span class="etiket">${i}</span>`).join('')}</span></span></div>`;
-  kunyeBlok += satir('Bugün', bugun?`${gunAd[t.getDay()]} ${bugun[1]}–${bugun[2]}`:'kapalı','sayi');
+  kunyeBlok += satir('Bugün',
+    !y.saatler ? 'bilinmiyor' : bugun ? `${gunAd[t.getDay()]} ${bugun[1]}–${bugun[2]}` : 'kapalı', 'sayi');
   kunyeBlok += '</div>';
 
   let hizliBlok = '', ozetBloklari = '';
@@ -1917,6 +1933,59 @@ function formHaritaHazirla(){
     attributionControl: false
   });
   formMap.on('load', () => { formMap.resize(); formPinleriCiz(); });
+  /* boş bir noktaya dokunmak = listede olmayan yeni bir mekan ekle
+     (jeton tıklamaları stopPropagation ile burayı tetiklemiyor) */
+  formMap.on('click', e => {
+    if(fKilitli) return;
+    fYeniYerBasla(e.lngLat.lat, e.lngLat.lng);
+  });
+}
+
+/* ---------- listede olmayan mekan ---------- */
+let fYeniYer = null, formYeniMarker = null;
+
+function fYeniYerBasla(lat, lng){
+  fYeniYer = {lat, lng, ad: '', tur: 'kahve'};
+  fSecilenYer = null;
+  $('f-ara').value = '';
+  $('f-oneri').hidden = true;
+  $('f-secili').innerHTML = '<span>Haritada yeni bir nokta seçtin.</span>';
+  $('f-yeni-ad').value = '';
+  $('f-yeni-tur').innerHTML = Object.keys(TUR_AD).map(t =>
+    `<button type="button" data-t="${t}" aria-pressed="${t==='kahve'}">${TUR_AD[t]}</button>`).join('');
+  $('f-yeni-yer').hidden = false;
+  formYeniMarkerCiz();
+  formPinleriCiz();
+  kontrolEt();
+  $('f-yeni-ad').focus({preventScroll:true});
+}
+
+function formYeniMarkerCiz(){
+  if(!formMap) return;
+  if(!fYeniYer){
+    if(formYeniMarker){ formYeniMarker.remove(); formYeniMarker = null; }
+    return;
+  }
+  const sahte = {tur: fYeniYer.tur};
+  if(!formYeniMarker){
+    const el = document.createElement('div');
+    el.className = 'jeton-marker secili';
+    el.innerHTML = '<div class="jeton-ic"></div>';
+    /* MapLibre konum verilmeden addTo edilemiyor — önce setLngLat */
+    formYeniMarker = new maplibregl.Marker({element: el, anchor:'center'})
+      .setLngLat([fYeniYer.lng, fYeniYer.lat]).addTo(formMap);
+  }
+  formYeniMarker.setLngLat([fYeniYer.lng, fYeniYer.lat]);
+  formYeniMarker.getElement().querySelector('.jeton-ic').innerHTML = jetonSVG(sahte, true, false, true);
+}
+
+function fYeniYerBitir(){
+  fYeniYer = null;
+  $('f-yeni-yer').hidden = true;
+  $('f-secili').innerHTML = '<span>Henüz mekan seçilmedi.</span>';
+  formYeniMarkerCiz();
+  formPinleriCiz();
+  kontrolEt();
 }
 
 function formPinleriCiz(){
@@ -1948,6 +2017,7 @@ function formPinleriCiz(){
 
 function fYerSec(id, haritayiOynat = true){
   fSecilenYer = id;
+  if(fYeniYer){ fYeniYer = null; $('f-yeni-yer').hidden = true; formYeniMarkerCiz(); }
   const y = yerBul(id);
   $('f-ara').value = '';
   $('f-oneri').hidden = true;
@@ -1979,6 +2049,17 @@ function fOnerileriCiz(){
     el.onclick = () => fYerSec(el.dataset.yer));
 }
 $('f-ara').addEventListener('input', fOnerileriCiz);
+$('f-yeni-ad').addEventListener('input', e => {
+  if(fYeniYer){ fYeniYer.ad = e.target.value.trim(); kontrolEt(); }
+});
+$('f-yeni-tur').onclick = e => {
+  const b = e.target.closest('button'); if(!b || !fYeniYer) return;
+  fYeniYer.tur = b.dataset.t;
+  [...$('f-yeni-tur').children].forEach(x => x.setAttribute('aria-pressed', x.dataset.t === fYeniYer.tur));
+  formYeniMarkerCiz();
+  if(fMedyalar.length) fMedyaCiz();
+};
+$('f-yeni-vazgec').onclick = fYeniYerBitir;
 
 function secimKur(kutuId, secenekler, getir, ayarla){
   const kutu = $(kutuId);
@@ -1999,7 +2080,7 @@ const kelimeler = () => ['f-k1','f-k2','f-k3'].map(i => $(i).value.trim().toLowe
 
 function kontrolEt(){
   $('f-paylas').disabled = !(
-    fSecilenYer &&
+    (fSecilenYer || (fYeniYer && fYeniYer.ad)) &&
     fMedyalar.length >= 1 &&
     kelimeler().length === 3 &&
     secSenaryo &&
@@ -2017,6 +2098,9 @@ function ekleAc(yerId, duzenlenecek){
 
   fKilitli = !!duzenlenecek;
   fSecilenYer = null;
+  fYeniYer = null;
+  $('f-yeni-yer').hidden = true;
+  formYeniMarkerCiz();
   $('f-ara').value = '';
   $('f-oneri').hidden = true;
   $('f-ara').disabled = fKilitli;
@@ -2141,6 +2225,20 @@ $('paylas-kopyala').onclick = () => {
   setTimeout(() => { if($('paylas').classList.contains('acik')) $('paylas-kopyala').textContent = 'Linki kopyala'; }, 2000);
 };
 $('f-paylas').onclick = () => {
+  /* listede olmayan bir yere pin atılıyorsa mekanı önce oluştur */
+  if(fYeniYer && fYeniYer.ad){
+    const yeniId = 'yeni-' + (sonrakiYerId++);
+    YERLER.push({
+      id: yeniId, ad: fYeniYer.ad, tur: fYeniYer.tur, semt: 'Kadıköy',
+      lat: fYeniYer.lat, lng: fYeniYer.lng,
+      saatler: null,            /* saat bilgisi yok — "bilinmiyor" olarak gösterilir */
+      kayit: 0, ekleyen: 'bogac'
+    });
+    fSecilenYer = yeniId;
+    fYeniYer = null;
+    $('f-yeni-yer').hidden = true;
+    formYeniMarkerCiz();
+  }
   const veri = {
     yer: fSecilenYer,
     medyalar: fMedyalar.map(m => ({tur: m.tur, not: m.not || null})),
