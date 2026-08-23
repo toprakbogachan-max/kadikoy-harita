@@ -1,69 +1,95 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useMemo, useState } from "react";
+import Harita from "@/components/Harita";
+import HikayeSeridi from "@/components/HikayeSeridi";
+import FiltreCipleri from "@/components/FiltreCipleri";
+import { YERLER, PINLER, type DemoYer } from "@/lib/demo";
+import { acikMi, jetonGradyanlari } from "@/lib/gorsel";
+
+const POPULER_ESIK = 2;
+
+export default function Sayfa() {
+  const [bolge, setBolge] = useState("KADIKÖY");
+  const [filtre, setFiltre] = useState("acik");
+  const [kisiFiltre, setKisiFiltre] = useState<string | null>(null);
+  const [secili, setSecili] = useState<string | null>(null);
+
+  const gorunenler = useMemo<DemoYer[]>(() => {
+    const t = new Date();
+    return YERLER.filter((y) => {
+      if (kisiFiltre && !PINLER.some((p) => p.yer === y.id && p.kisi === kisiFiltre)) return false;
+      if (filtre === "acik") return acikMi(y.saatler, t) === true;
+      if (filtre === "hepsi") return true;
+      if (filtre === "populer") return PINLER.filter((p) => p.yer === y.id).length >= POPULER_ESIK;
+      if (filtre === "kaydettiklerim") return false; // kayıtlar Supabase'e bağlanınca gelecek
+      return y.tur === filtre;
+    });
+  }, [filtre, kisiFiltre]);
+
+  const acikSayisi = useMemo(() => {
+    const t = new Date();
+    return YERLER.filter((y) => acikMi(y.saatler, t)).length;
+  }, []);
+
+  /* hikayeye dokununca kategori filtresi "hepsi"ye geçer, yoksa
+     o kişinin pinlediği yerlerin hepsi görünmeyebilir */
+  const kisiSec = (k: string) => {
+    setKisiFiltre((onceki) => {
+      const yeni = onceki === k ? null : k;
+      if (yeni) setFiltre("hepsi");
+      return yeni;
+    });
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex min-h-screen items-center justify-center bg-[#241E14] p-4">
+      {/* jeton gradyanları — sayfada bir kez */}
+      <svg width="0" height="0" className="absolute">
+        <defs dangerouslySetInnerHTML={{ __html: jetonGradyanlari() }} />
+      </svg>
+
+      <div className="telefon relative flex w-full max-w-[392px] flex-col overflow-clip rounded-[26px] bg-kagit shadow-[0_30px_80px_rgba(0,0,0,.55)] h-[min(96vh,820px)]">
+        <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">
+              {bolge}
+            </h1>
+            <span className="font-sayi text-[13px] text-murekkep2">
+              {new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
+          <div className="mt-2 flex items-center gap-2 text-[12.5px] text-murekkep2">
+            <span className="size-[9px] shrink-0 rounded-full bg-jeton shadow-[0_0_0_3px_rgba(184,128,26,.16)]" />
+            <span>
+              <b className="font-sayi text-[13px] font-bold text-jeton">{acikSayisi}</b> yer şu an açık ·{" "}
+              {PINLER.length} pin
+            </span>
+          </div>
+        </header>
+
+        <HikayeSeridi secili={kisiFiltre} onSec={kisiSec} />
+
+        <div className="relative min-h-0 flex-1 overflow-hidden bg-su">
+          <Harita
+            gorunenler={gorunenler}
+            secili={secili}
+            onYerSec={setSecili}
+            onBolgeDegisti={setBolge}
+          />
+          {gorunenler.length === 0 && (
+            <div className="absolute inset-x-4 top-3.5 z-[2] rounded-sm border border-[var(--cizgi)] bg-yuzey p-3 text-center text-[13px] leading-snug shadow-kagit2">
+              {kisiFiltre
+                ? "Bu kişinin şu filtrede pinlediği yer yok."
+                : filtre === "acik"
+                  ? "Şu an açık hiçbir yer yok. “Hepsi”ne bakabilirsin."
+                  : "Bu kategoride yer yok."}
+            </div>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        <FiltreCipleri secili={filtre} onSec={setFiltre} />
+      </div>
+    </main>
   );
 }

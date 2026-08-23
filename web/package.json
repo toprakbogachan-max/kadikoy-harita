@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "predev": "node scripts/maplibre-worker-kopyala.mjs",
+    "prebuild": "node scripts/maplibre-worker-kopyala.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

@@ -19,3 +19,16 @@ Next.js (App Router) + TypeScript + Tailwind + Supabase + MapLibre.
 ## Tasarım referansı
 
 `../prototip.html` çalışan arayüz prototipi. **Tasarım oradan korunur, yapı burada değişir.**
+
+## Bilinen tuzaklar
+
+- **MapLibre worker**: Karolar bir Web Worker'da çözülüyor; MapLibre worker'ı
+  kendi içinde string URL'den kurduğu için Turbopack bundle'a almıyor ve harita
+  boş kalıyor. Worker `public/maplibre/` altından servis ediliyor
+  (`scripts/maplibre-worker-kopyala.mjs`, predev/prebuild'de çalışır).
+- **Harita kapsayıcısı**: `maplibre-gl.css` `.maplibregl-map{position:relative}`
+  tanımı Tailwind'in `absolute` sınıfını eziyor. Konumlandırma satır içi stille.
+- **Next.js 16**: `middleware.ts` → `proxy.ts` olarak yeniden adlandırıldı
+  (fonksiyon adı da `proxy`). Supabase oturum yenilemesi buna göre yazılmalı.
+- Kök dizindeki `AGENTS.md`: bu Next.js sürümü eğitim verisinden farklı,
+  kod yazmadan önce `node_modules/next/dist/docs/` okunmalı.
