@@ -139,6 +139,43 @@
   .foto svg{opacity:.28}
   .foto::after{content:'demo görsel';position:absolute;bottom:7px;right:8px;font-family:var(--font-sayi);font-size:9px;color:rgba(255,255,255,.62)}
 
+  /* ---------- yorumlar ---------- */
+  .yorum-satir{display:flex;gap:10px;padding:12px 2px;border-bottom:1px solid var(--cizgi-2)}
+  .yorum-govde{flex:1;min-width:0}
+  .yorum-ust{display:flex;align-items:baseline;gap:7px}
+  .yorum-ad{font-weight:600;font-size:13px}
+  .yorum-zaman{font-family:var(--font-sayi);font-size:10.5px;color:var(--murekkep-2)}
+  .yorum-metin{font-size:14px;line-height:1.5;margin-top:3px}
+  .yorum-sil{background:none;border:none;color:var(--murekkep-2);cursor:pointer;font-size:13px;padding:0 2px;align-self:flex-start}
+  .yorum-sil:hover{color:var(--mercan)}
+  .yorum-yaz{gap:8px;align-items:center}
+  .yorum-yaz input{flex:1;min-width:0;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:2px;
+    color:var(--murekkep);font-family:var(--font-metin);font-size:14px;padding:10px 11px}
+  .yorum-yaz input:focus{outline:none;border-color:var(--jeton)}
+  .yorum-yaz .btn{flex:0 0 auto;padding:11px 16px}
+
+  /* ---------- ayarlar / arşiv ---------- */
+  .ayar-baslik{font-family:var(--font-tabela);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--murekkep-2);margin:20px 0 8px}
+  .ayar-satir{display:flex;align-items:center;gap:11px;width:100%;padding:13px 2px;border:none;
+    border-bottom:1px solid var(--cizgi-2);background:none;text-align:left;font-family:var(--font-metin);
+    font-size:14px;color:var(--murekkep)}
+  button.ayar-satir{cursor:pointer}
+  button.ayar-satir:hover{background:rgba(35,52,60,.04)}
+  .ayar-satir svg{flex-shrink:0;color:var(--murekkep-2)}
+  .ayar-ad{flex:1;min-width:0}
+  .ayar-sayi{font-family:var(--font-sayi);font-size:12px;color:var(--murekkep-2);flex-shrink:0}
+  .ayar-aciklama{display:block;font-size:11.5px;color:var(--murekkep-2);margin-top:3px;line-height:1.4}
+  .anahtar{position:relative;flex-shrink:0;width:40px;height:23px;border-radius:12px;border:none;cursor:pointer;
+    background:rgba(35,52,60,.22);transition:background .15s}
+  .anahtar[aria-checked="true"]{background:var(--jeton)}
+  .anahtar span{position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .anahtar[aria-checked="true"] span{transform:translateX(17px)}
+  .ayar-cikis{margin-top:22px;width:100%;padding:12px;border:1px solid var(--cizgi);border-radius:2px;
+    background:var(--yuzey);color:var(--mercan);cursor:pointer;font-family:var(--font-tabela);
+    font-size:12.5px;letter-spacing:.11em;text-transform:uppercase}
+
   /* ---------- "buraya bırakılanlar" karusel başlığı ---------- */
   .bolum-satir{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 6px;padding-top:14px;border-top:1px solid var(--cizgi)}
   /* oklar kartın sağ ve sol kenarında, dikeyde ortalı */
@@ -479,7 +516,14 @@
 
   <!-- ============ PROFİL ============ -->
   <section class="ekran" id="ekran-profil">
-    <header><div class="baslik-satir"><h1 id="profil-basligi">PROFİL</h1></div></header>
+    <header><div class="baslik-satir"><h1 id="profil-basligi">PROFİL</h1>
+      <button class="bildirim-zil" id="ayarlar-ac" aria-label="Ayarlar" hidden>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 14.6a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>
+        </svg>
+      </button>
+    </div></header>
     <div class="profil-govde" id="profil-govde"></div>
   </section>
 
@@ -528,6 +572,37 @@
   </div>
 
   <!-- ============ bildirimler ============ -->
+  <!-- ============ yorumlar ============ -->
+  <div class="cekmece" id="yorumlar" role="dialog" aria-modal="true" aria-labelledby="yorum-baslik">
+    <div class="cekmece-ust">
+      <div><h2 id="yorum-baslik">Yorumlar</h2><div class="cekmece-alt-baslik" id="yorum-alt"></div></div>
+      <button class="kapat" id="yorum-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <div class="cekmece-govde" id="yorum-govde"></div>
+    <div class="cekmece-eylem yorum-yaz">
+      <input id="yorum-girdi" maxlength="500" placeholder="Yorum yaz…" autocomplete="off">
+      <button class="btn btn-birincil" id="yorum-gonder" disabled>Gönder</button>
+    </div>
+  </div>
+
+  <!-- ============ arşiv (kaydettiklerim / beğendiklerim / listelerim) ============ -->
+  <div class="cekmece" id="arsiv" role="dialog" aria-modal="true" aria-labelledby="arsiv-baslik">
+    <div class="cekmece-ust">
+      <div><h2 id="arsiv-baslik"></h2><div class="cekmece-alt-baslik" id="arsiv-alt"></div></div>
+      <button class="kapat" id="arsiv-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <div class="cekmece-govde" id="arsiv-govde"></div>
+  </div>
+
+  <!-- ============ ayarlar ============ -->
+  <div class="cekmece" id="ayarlar" role="dialog" aria-modal="true" aria-labelledby="ayarlar-baslik">
+    <div class="cekmece-ust">
+      <div><h2 id="ayarlar-baslik">Ayarlar</h2><div class="cekmece-alt-baslik">Arşiv ve tercihler</div></div>
+      <button class="kapat" id="ayarlar-kapat" aria-label="Kapat">✕</button>
+    </div>
+    <div class="cekmece-govde" id="ayarlar-govde"></div>
+  </div>
+
   <div class="cekmece" id="bildirimler" role="dialog" aria-modal="true" aria-labelledby="bildirim-baslik">
     <div class="cekmece-ust">
       <div><h2 id="bildirim-baslik">Bildirimler</h2></div>
@@ -952,6 +1027,20 @@ const BEGENDIKLERIM = new Set();
 const KAYITLILAR = new Set(['plak']);
 const TAKIPTEKILER = new Set(['elif','mert']);
 const RAPORLAR = [];
+/* pin_comments karşılığı */
+let YORUMLAR = [
+  {id:1, pin:1,  kisi:'elif',   saat:1,  metin:'Cam kenarı için hafta içi gitmek lazım, hafta sonu imkansız.'},
+  {id:2, pin:1,  kisi:'mert',   saat:6,  metin:'Rezervasyonu 3 gün önceden aldım, yine de arka salona verdiler.'},
+  {id:3, pin:3,  kisi:'zeynep', saat:2,  metin:'Güneye yürüme tüyosu çok işe yaradı, teşekkürler.'},
+  {id:4, pin:15, kisi:'can',    saat:0,  metin:'Fiyat sorma uyarısı sayesinde hesap sürprizi yaşamadım.'},
+  {id:5, pin:2,  kisi:'bogac',  saat:14, metin:'Alt kat gerçekten gürültülü, üst kat şart.'}
+];
+let sonrakiYorumId = 100;
+const yorumlari  = pinId => YORUMLAR.filter(y => y.pin === pinId).sort((a,b) => a.saat - b.saat);
+const yorumSayisi = pinId => YORUMLAR.filter(y => y.pin === pinId).length;
+
+/* ayarlar — prototipte gerçekten etkisi olan tercihler */
+const AYARLAR = {bildirim: true, profilAcik: true, acilistaAcik: true};
 let BILDIRIMLER = [
   {id:1, tur:'begeni', kim:'mert',   pin:1,  saat:1,  okundu:false},
   {id:2, tur:'takip',  kim:'zeynep', saat:4,  okundu:false},
@@ -1538,6 +1627,9 @@ function gonderiIcerik(p){
       <button class="ebtn ${KAYITLILAR.has(y.id)?'dolu-altin':''}" data-kaydet="${y.id}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="${KAYITLILAR.has(y.id)?'currentColor':'none'}" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M6 3.6h12v17l-6-4.2-6 4.2z"/></svg>
         ${KAYITLILAR.has(y.id)?'kaydedildi':'kaydet'}</button>`}
+      <button class="ebtn" data-yorum="${p.id}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20.5 11.5a7.5 8 0 0 1-10.8 7.2L4.5 20.5l1.9-4.9A8 8 0 1 1 20.5 11.5z"/></svg>
+        ${yorumSayisi(p.id)}</button>
       <button class="ebtn" data-yer="${y.id}">haritada gör</button>
       ${!benimMi ? `<button class="ebtn ebtn-sikayet" data-sikayet="${p.id}">şikayet et</button>` : ''}
     </div></div></div>`;
@@ -1631,7 +1723,54 @@ function gonderiIcerikDoldur(id){
     $('gonderi').classList.remove('acik');
     setTimeout(() => sikayetAc(p.id), 320);
   };
+  const yorumBtn = $('gonderi-govde').querySelector('[data-yorum]');
+  if(yorumBtn) yorumBtn.onclick = () => yorumlarAc(p.id);
 }
+
+/* ==================== yorumlar ==================== */
+let yorumHedefPin = null;
+function yorumlarCiz(){
+  const liste = yorumlari(yorumHedefPin);
+  $('yorum-alt').textContent = liste.length ? `${liste.length} yorum` : 'ilk yorumu sen yaz';
+  $('yorum-govde').innerHTML = liste.length ? liste.map(y => {
+    const k = KISILER[y.kisi];
+    return `<div class="yorum-satir">
+      ${avatar(y.kisi,32)}
+      <div class="yorum-govde">
+        <div class="yorum-ust"><span class="yorum-ad">${k.ad}${k.ben?' · sen':''}</span>
+          <span class="yorum-zaman">${zaman(y.saat)}</span></div>
+        <p class="yorum-metin">${y.metin}</p>
+      </div>
+      ${k.ben?`<button class="yorum-sil" data-sil="${y.id}" aria-label="Yorumu sil">✕</button>`:''}
+    </div>`;
+  }).join('') : '<p class="bos-durum" style="padding:20px 4px">Henüz yorum yok. İlk yorumu sen yaz.</p>';
+
+  $('yorum-govde').querySelectorAll('[data-sil]').forEach(b => b.onclick = () => {
+    YORUMLAR = YORUMLAR.filter(x => x.id !== +b.dataset.sil);
+    yorumlarCiz();
+    if($('gonderi').classList.contains('acik')) gonderiIcerikDoldur(yorumHedefPin);
+  });
+}
+function yorumlarAc(pinId){
+  yorumHedefPin = pinId;
+  $('yorum-girdi').value = '';
+  $('yorum-gonder').disabled = true;
+  yorumlarCiz();
+  $('yorumlar').classList.add('acik');
+}
+$('yorum-kapat').onclick = () => $('yorumlar').classList.remove('acik');
+$('yorum-girdi').addEventListener('input', e => {
+  $('yorum-gonder').disabled = !e.target.value.trim();
+});
+$('yorum-gonder').onclick = () => {
+  const metin = $('yorum-girdi').value.trim();
+  if(!metin) return;
+  YORUMLAR.push({id: sonrakiYorumId++, pin: yorumHedefPin, kisi: 'bogac', saat: 0, metin});
+  $('yorum-girdi').value = '';
+  $('yorum-gonder').disabled = true;
+  yorumlarCiz();
+  if($('gonderi').classList.contains('acik')) gonderiIcerikDoldur(yorumHedefPin);
+};
 
 function gonderiAc(id, liste){
   gonderiListesi = liste && liste.length ? liste : [id];
@@ -1774,7 +1913,7 @@ function bildirimRozetGuncelle(){
   const sayi = BILDIRIMLER.filter(b => !b.okundu).length;
   const el = $('bildirim-rozet');
   el.textContent = sayi > 9 ? '9+' : sayi;
-  el.classList.toggle('gorunur', sayi > 0);
+  el.classList.toggle('gorunur', sayi > 0 && AYARLAR.bildirim);
 }
 $('bildirim-ac').onclick = () => {
   cizBildirimler();
@@ -1783,6 +1922,106 @@ $('bildirim-ac').onclick = () => {
   bildirimRozetGuncelle();
 };
 $('bildirim-kapat').onclick = () => $('bildirimler').classList.remove('acik');
+
+/* ==================== arşiv ==================== */
+const ARSIV_BASLIK = {
+  kaydettiklerim: ['Kaydettiklerim', 'mekan'],
+  begendiklerim:  ['Beğendiklerim',  'pin'],
+  listelerim:     ['Listelerim',     'liste']
+};
+function arsivAc(tur){
+  const [baslik, altmetin] = ARSIV_BASLIK[tur];
+  $('arsiv-baslik').textContent = baslik;
+  const g = $('arsiv-govde');
+
+  if(tur === 'kaydettiklerim'){
+    const yerler = [...KAYITLILAR].map(yerBul).filter(Boolean);
+    $('arsiv-alt').textContent = `${yerler.length} ${altmetin}`;
+    g.innerHTML = yerler.length
+      ? `<div class="ara-izgara">${yerler.map((y,i) => yerKart(y,i)).join('')}</div>`
+      : '<p class="bos-durum" style="padding:20px 4px">Henüz mekan kaydetmedin. Bir mekan sayfasında “Kaydet”e dokun.</p>';
+    g.querySelectorAll('[data-yerid]').forEach(el => el.onclick = () => {
+      $('arsiv').classList.remove('acik');
+      ekranGec('harita'); filtre = 'hepsi'; cizCipler(); cizHarita();
+      setTimeout(() => yerAc(el.dataset.yerid), 320);
+    });
+
+  } else if(tur === 'begendiklerim'){
+    const pinler = [...BEGENDIKLERIM].map(id => PINLER.find(p => p.id === id)).filter(Boolean);
+    $('arsiv-alt').textContent = `${pinler.length} ${altmetin}`;
+    g.innerHTML = pinler.length
+      ? `<div class="akis-izgara">${pinler.map((p,i) => akisHucre(p,i)).join('')}</div>`
+      : '<p class="bos-durum" style="padding:20px 4px">Henüz pin beğenmedin.</p>';
+    const idler = pinler.map(p => p.id);
+    g.querySelectorAll('[data-gonderi]').forEach(el => el.onclick = () => {
+      $('arsiv').classList.remove('acik');
+      setTimeout(() => gonderiAc(+el.dataset.gonderi, idler), 320);
+    });
+
+  } else {
+    const listeler = LISTELER.filter(l => l.sahip === 'bogac');
+    $('arsiv-alt').textContent = `${listeler.length} ${altmetin}`;
+    g.innerHTML = listeler.length
+      ? `<div class="liste-serit" style="padding:6px 0 20px;flex-wrap:wrap">${listeler.map(listeKart).join('')}</div>`
+      : '<p class="bos-durum" style="padding:20px 4px">Henüz liste oluşturmadın.</p>';
+    g.querySelectorAll('[data-liste]').forEach(el => el.onclick = () => {
+      $('arsiv').classList.remove('acik');
+      setTimeout(() => listeAc(+el.dataset.liste), 320);
+    });
+  }
+  $('arsiv').classList.add('acik');
+}
+$('arsiv-kapat').onclick = () => $('arsiv').classList.remove('acik');
+
+/* ==================== ayarlar ==================== */
+function ayarlarCiz(){
+  const satir = (tur, ikon, ad, sayi) => `
+    <button class="ayar-satir" data-arsiv="${tur}">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round">${ikon}</svg>
+      <span class="ayar-ad">${ad}</span>
+      <span class="ayar-sayi">${sayi}</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>
+    </button>`;
+  const anahtar = (k, ad, aciklama) => `
+    <div class="ayar-satir">
+      <span class="ayar-ad">${ad}<span class="ayar-aciklama">${aciklama}</span></span>
+      <button class="anahtar" data-ayar="${k}" role="switch" aria-checked="${AYARLAR[k]}" aria-label="${ad}"><span></span></button>
+    </div>`;
+
+  $('ayarlar-govde').innerHTML = `
+    <div class="ayar-baslik">Arşiv</div>
+    ${satir('kaydettiklerim', '<path d="M6 3.6h12v17l-6-4.2-6 4.2z"/>', 'Kaydettiklerim', KAYITLILAR.size)}
+    ${satir('begendiklerim', `<path d="${KALP}"/>`, 'Beğendiklerim', BEGENDIKLERIM.size)}
+    ${satir('listelerim', '<rect x="3.5" y="4" width="17" height="7" rx="1.6"/><rect x="3.5" y="14" width="17" height="6" rx="1.6"/>', 'Listelerim', LISTELER.filter(l => l.sahip==='bogac').length)}
+
+    <div class="ayar-baslik">Tercihler</div>
+    ${anahtar('bildirim', 'Bildirimler', 'Kapalıyken akıştaki zil rozeti görünmez.')}
+    ${anahtar('profilAcik', 'Profilim herkese açık', 'Kapalıyken paylaştığın link çalışmaz.')}
+    ${anahtar('acilistaAcik', 'Açılışta “Şu an açık” filtresi', 'Kapalıyken harita tüm mekanlarla açılır.')}
+
+    <div class="ayar-baslik">Yasal</div>
+    <div class="ayar-satir"><span class="ayar-ad">Kullanım şartları<span class="ayar-aciklama">Henüz yazılmadı — canlıya çıkmadan gerekiyor.</span></span></div>
+    <div class="ayar-satir"><span class="ayar-ad">Gizlilik politikası<span class="ayar-aciklama">Henüz yazılmadı — canlıya çıkmadan gerekiyor.</span></span></div>
+
+    <button class="ayar-cikis" id="ayar-cikis">Çıkış yap</button>`;
+
+  $('ayarlar-govde').querySelectorAll('[data-arsiv]').forEach(b => b.onclick = () => {
+    $('ayarlar').classList.remove('acik');
+    setTimeout(() => arsivAc(b.dataset.arsiv), 320);
+  });
+  $('ayarlar-govde').querySelectorAll('[data-ayar]').forEach(b => b.onclick = () => {
+    const k = b.dataset.ayar;
+    AYARLAR[k] = !AYARLAR[k];
+    b.setAttribute('aria-checked', AYARLAR[k]);
+    if(k === 'bildirim') bildirimRozetGuncelle();
+    if(k === 'acilistaAcik' && !AYARLAR[k] && filtre === 'acik'){
+      filtre = 'hepsi'; cizCipler(); cizHarita();
+    }
+  });
+  $('ayar-cikis').onclick = () => alert('Prototipte oturum yok — gerçek çıkış Supabase Auth ile gelecek.');
+}
+$('ayarlar-ac').onclick = () => { ayarlarCiz(); $('ayarlar').classList.add('acik'); };
+$('ayarlar-kapat').onclick = () => $('ayarlar').classList.remove('acik');
 
 function cizAkis(){
   let sirali;
@@ -1814,6 +2053,7 @@ function cizProfil(){
   const yerleri = [...new Set(pinleri.map(p => p.yer))].map(yerBul);
   const listeleri = LISTELER.filter(l => l.sahip === profilKisi);
   $('profil-basligi').textContent = benim ? 'PROFİL' : kisi.ad.toUpperCase();
+  $('ayarlar-ac').hidden = !benim;   /* ayarlar sadece kendi profilinde */
 
   $('profil-govde').innerHTML = `
     <div class="p-ust">${avatar(profilKisi,62)}
@@ -2214,9 +2454,12 @@ function paylasAc(){
         <div class="hikaye-onizleme-link">kadikoy.app/@${kisi.k}</div>
       </div>
     </div>
-    <p class="ipucu" style="text-align:center;margin-top:0">Instagram story'ye eklendiğinde böyle görünür — linke dokunan doğrudan haritana gelir.</p>
+    ${AYARLAR.profilAcik
+      ? `<p class="ipucu" style="text-align:center;margin-top:0">Instagram story'ye eklendiğinde böyle görünür — linke dokunan doğrudan haritana gelir.</p>`
+      : `<div class="uyari-kutu"><strong>Profilin gizli</strong>Bu link kimsede açılmaz. Ayarlardan “Profilim herkese açık”ı aç.</div>`}
   `;
   $('paylas-kopyala').textContent = 'Linki kopyala';
+  $('paylas-kopyala').disabled = !AYARLAR.profilAcik;
   $('paylas').classList.add('acik');
 }
 $('paylas-kapat').onclick = () => $('paylas').classList.remove('acik');
@@ -2285,6 +2528,9 @@ $('cipler').onclick = e => {
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
   if($('sikayet').classList.contains('acik')) $('sikayet').classList.remove('acik');
+  else if($('yorumlar').classList.contains('acik')) $('yorumlar').classList.remove('acik');
+  else if($('arsiv').classList.contains('acik')) $('arsiv').classList.remove('acik');
+  else if($('ayarlar').classList.contains('acik')) $('ayarlar').classList.remove('acik');
   else if($('bildirimler').classList.contains('acik')) $('bildirimler').classList.remove('acik');
   else if($('liste-olustur').classList.contains('acik')) $('liste-olustur').classList.remove('acik');
   else if($('liste').classList.contains('acik')) $('liste').classList.remove('acik');
