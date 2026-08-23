@@ -292,6 +292,9 @@
   .p-kullanici{font-family:var(--font-sayi);font-size:12px;color:var(--murekkep-2);margin-top:2px}
   .p-bio{padding:0 16px 12px;font-size:13.5px;line-height:1.5}
   /* kendi profilinde ad ve bio dokunmayla düzenlenir */
+  .pd-foto-satir{display:flex;align-items:center;gap:14px}
+  .pd-foto-butonlar{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+  .pd-foto-butonlar .btn{padding:9px 14px}
   .duzenlenebilir{cursor:pointer;border-radius:2px}
   .duzenlenebilir:hover{background:rgba(35,52,60,.04)}
   .p-duzenle-ikon{flex-shrink:0;color:var(--murekkep-2)}
@@ -607,6 +610,17 @@
       <button class="kapat" id="pd-kapat" aria-label="Kapat">✕</button>
     </div>
     <div class="cekmece-govde">
+      <div class="alan">
+        <label>Profil fotoğrafı</label>
+        <div class="pd-foto-satir">
+          <div id="pd-foto-onizleme"></div>
+          <div class="pd-foto-butonlar">
+            <button type="button" class="btn btn-ikincil" id="pd-foto-sec">Fotoğraf seç</button>
+            <button type="button" class="yeni-yer-vazgec" id="pd-foto-kaldir" hidden>Fotoğrafı kaldır</button>
+          </div>
+        </div>
+        <input type="file" id="pd-foto-girdi" accept="image/*" hidden>
+      </div>
       <div class="alan">
         <label for="pd-ad">Görünen ad <span class="zorunlu">*</span></label>
         <input id="pd-ad" maxlength="40" autocomplete="off">
@@ -1132,9 +1146,13 @@ function ozet(yerId){
   };
 }
 const zaman = s => s < 1 ? 'az önce' : s < 24 ? s+' sa' : Math.floor(s/24)+' gün';
+/* profil fotoğrafı varsa onu, yoksa baş harfi göster */
 const avatar = (k, boyut) => {
   const p = KISILER[k];
-  return `<div class="av" style="width:${boyut}px;height:${boyut}px;background:${p.renk};font-size:${boyut*0.42}px">${p.ad[0]}</div>`;
+  const zemin = p.foto
+    ? `background-image:url(${p.foto});background-size:cover;background-position:center`
+    : `background:${p.renk}`;
+  return `<div class="av" style="width:${boyut}px;height:${boyut}px;${zemin};font-size:${boyut*0.42}px">${p.foto?'':p.ad[0]}</div>`;
 };
 const fotoZemin = tur => `linear-gradient(135deg, ${RENK[tur].ana} 0%, ${RENK[tur].golge} 100%)`;
 const simgeSvg = (tur, boyut, renk='#FFFFFF') =>
@@ -2125,8 +2143,55 @@ $('ayarlar-ac').onclick = () => { ayarlarCiz(); $('ayarlar').classList.add('acik
 $('ayarlar-kapat').onclick = () => $('ayarlar').classList.remove('acik');
 
 /* ==================== profil düzenleme ==================== */
+/* Seçilen görseli 256px'e küçültüp data URL'e çeviriyoruz: backend olmadan
+   tarayıcıda gerçek fotoğraf, ham dosyayı taşımadan. */
+let pdFoto = null;
+function fotoyuKucult(dosya, tamam){
+  const okuyucu = new FileReader();
+  okuyucu.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const H = 256;
+      const kisa = Math.min(img.width, img.height);
+      const c = document.createElement('canvas');
+      c.width = c.height = H;
+      const ctx = c.getContext('2d');
+      /* kareye ortalayarak kırp */
+      ctx.drawImage(img, (img.width-kisa)/2, (img.height-kisa)/2, kisa, kisa, 0, 0, H, H);
+      tamam(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => tamam(null);
+    img.src = okuyucu.result;
+  };
+  okuyucu.onerror = () => tamam(null);
+  okuyucu.readAsDataURL(dosya);
+}
+function pdFotoCiz(){
+  const k = KISILER['bogac'];
+  const gecici = {...k, foto: pdFoto};
+  KISILER.__onizleme = gecici;
+  $('pd-foto-onizleme').innerHTML = avatar('__onizleme', 64);
+  delete KISILER.__onizleme;
+  $('pd-foto-kaldir').hidden = !pdFoto;
+  $('pd-foto-sec').textContent = pdFoto ? 'Değiştir' : 'Fotoğraf seç';
+}
+$('pd-foto-sec').onclick = () => $('pd-foto-girdi').click();
+$('pd-foto-girdi').onchange = e => {
+  const d = e.target.files && e.target.files[0];
+  if(!d) return;
+  fotoyuKucult(d, veri => {
+    if(!veri){ alert('Bu görsel okunamadı, başka bir dosya dene.'); return; }
+    pdFoto = veri;
+    pdFotoCiz();
+  });
+  e.target.value = '';   /* aynı dosya tekrar seçilebilsin */
+};
+$('pd-foto-kaldir').onclick = () => { pdFoto = null; pdFotoCiz(); };
+
 function profilDuzenleAc(){
   const k = KISILER['bogac'];
+  pdFoto = k.foto || null;
+  pdFotoCiz();
   $('pd-ad').value = k.ad;
   $('pd-bio').value = k.bio || '';
   $('pd-sayac').textContent = ($('pd-bio').value).length;
@@ -2142,10 +2207,11 @@ $('pd-bio').addEventListener('input', e => { $('pd-sayac').textContent = e.targe
 $('pd-kapat').onclick = () => $('profil-duzenle').classList.remove('acik');
 $('pd-kaydet').onclick = () => {
   const k = KISILER['bogac'];
-  k.ad  = $('pd-ad').value.trim();
-  k.bio = $('pd-bio').value.trim();
+  k.ad   = $('pd-ad').value.trim();
+  k.bio  = $('pd-bio').value.trim();
+  k.foto = pdFoto;
   $('profil-duzenle').classList.remove('acik');
-  /* ad her yerde görünüyor: profil, akış, yorumlar, bildirimler */
+  /* ad ve fotoğraf her yerde görünüyor: profil, akış, hikaye şeridi */
   cizProfil(); cizAkis(); cizHikayeler();
 };
 
