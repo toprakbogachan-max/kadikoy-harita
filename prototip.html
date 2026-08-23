@@ -85,7 +85,8 @@
   .oynat-buyuk span{width:52px;height:52px;border-radius:50%;background:rgba(20,15,8,.5);display:grid;place-items:center;backdrop-filter:blur(2px)}
 
   .harita-bos{position:absolute;left:16px;right:16px;top:14px;z-index:2;background:var(--yuzey);border:1px solid var(--cizgi);border-radius:2px;padding:11px 13px;box-shadow:var(--golge-2);font-size:13px;color:var(--murekkep);line-height:1.4;text-align:center}
-  .telefon:has(.cekmece.acik) #maplibre-harita{pointer-events:none}
+  /* tam ekran çekmece haritayı kilitler; yarım kademede harita kullanılabilir kalır */
+  .telefon:has(.cekmece.acik:not(.yarim)) #maplibre-harita{pointer-events:none}
   .jeton-marker{cursor:pointer}
   .jeton-marker:focus-visible{outline:none}
   .jeton-ic{display:block;transition:transform .16s}
@@ -248,8 +249,15 @@
   .ara-hucre-alt{font-family:var(--font-sayi);font-size:9px;color:rgba(35,52,60,.55);text-align:center}
 
   /* ---------- çekmeceler ---------- */
-  .cekmece{position:absolute;inset:0;background:var(--kagit);transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;z-index:20}
+  .cekmece{position:absolute;inset:0;background:var(--kagit);transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1),top .3s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;z-index:20}
   .cekmece.acik{transform:translateY(0)}
+  /* google maps tarzı yarım kademe: sayfa aşağıda açılır, harita üstte görünür kalır */
+  .cekmece.yarim{top:56%;border-radius:14px 14px 0 0;box-shadow:0 -8px 24px rgba(74,58,30,.18)}
+  .cekmece.yarim .cekmece-govde{overflow:hidden}
+  .tutamac{display:none;width:100%;padding:9px 0 3px;border:none;background:none;cursor:grab;flex-shrink:0;touch-action:none}
+  .cekmece.yarim .tutamac,.cekmece.tam .tutamac{display:block}
+  .tutamac span{display:block;width:38px;height:4px;margin:0 auto;border-radius:2px;background:rgba(35,52,60,.22)}
+  .tutamac:active{cursor:grabbing}
   .cekmece-ust{padding:15px 16px;border-bottom:1px solid var(--cizgi);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-shrink:0}
   .kapat{background:var(--yuzey);border:1px solid var(--cizgi);color:var(--murekkep);width:30px;height:30px;border-radius:2px;cursor:pointer;flex-shrink:0;font-size:15px;line-height:1}
   .gonderi-sayac{font-family:var(--font-sayi);font-size:11.5px;color:var(--murekkep-2)}
@@ -390,6 +398,7 @@
 
   <!-- ============ mekan detayı ============ -->
   <div class="cekmece" id="cekmece" role="dialog" aria-modal="true" aria-labelledby="cekmece-ad">
+    <button class="tutamac" id="cekmece-tutamac" aria-label="Sayfayı genişlet"><span></span></button>
     <div class="cekmece-ust">
       <div><h2 id="cekmece-ad"></h2><div class="cekmece-alt-baslik" id="cekmece-tur"></div></div>
       <button class="kapat" id="kapat" aria-label="Kapat">✕</button>
@@ -1208,11 +1217,52 @@ function yerAc(id){
     $('cekmece').classList.remove('acik');
     setTimeout(() => gonderiAc(+el.dataset.gonderi, pinIdler), 320);
   });
+  /* ilk açılışta yarım kademe; zaten açıksa kullanıcının kademesi korunur */
+  if(!$('cekmece').classList.contains('acik')) cekmeceKademe('yarim');
   $('cekmece').classList.add('acik');
   $('kapat').focus({preventScroll:true});
   cizHarita();
 }
-$('kapat').onclick = () => { $('cekmece').classList.remove('acik'); secili=null; cizHarita(); };
+/* ---------- mekan sayfası: yarım / tam kademe (google maps tarzı) ---------- */
+function cekmeceKademe(k){
+  const c = $('cekmece');
+  c.classList.toggle('yarim', k === 'yarim');
+  c.classList.toggle('tam', k === 'tam');
+  $('cekmece-tutamac').setAttribute('aria-label', k === 'yarim' ? 'Sayfayı genişlet' : 'Sayfayı küçült');
+  if(k === 'yarim') $('cekmece-govde').scrollTop = 0;
+}
+function cekmeceKapat(){
+  const c = $('cekmece');
+  c.classList.remove('acik');
+  secili = null; cizHarita();
+  setTimeout(() => c.classList.remove('yarim','tam'), 340);
+}
+$('kapat').onclick = cekmeceKapat;
+
+(function(){
+  const tut = $('cekmece-tutamac');
+  const ESIK = 30;
+  let basY = null;
+  const yarimMi = () => $('cekmece').classList.contains('yarim');
+  const bitir = y => {
+    if(basY === null) return;
+    const delta = y - basY;
+    basY = null;
+    if(delta < -ESIK) cekmeceKademe('tam');
+    else if(delta > ESIK){ yarimMi() ? cekmeceKapat() : cekmeceKademe('yarim'); }
+    else cekmeceKademe(yarimMi() ? 'tam' : 'yarim');   // kısa dokunuş = geçiş yap
+  };
+  tut.addEventListener('touchstart', e => { basY = e.touches[0].clientY; }, {passive:true});
+  tut.addEventListener('touchend',  e => bitir(e.changedTouches[0].clientY), {passive:true});
+  tut.addEventListener('mousedown', e => { basY = e.clientY; e.preventDefault(); });
+  window.addEventListener('mouseup', e => { if(basY !== null) bitir(e.clientY); });
+
+  /* yarım kademedeyken başlığa dokunmak da genişletir (kapat butonu hariç) */
+  document.querySelector('#cekmece .cekmece-ust').addEventListener('click', e => {
+    if(e.target.closest('#kapat')) return;
+    if(yarimMi()) cekmeceKademe('tam');
+  });
+})();
 $('kaydet-yer').onclick = () => {
   if(!secili) return;
   KAYITLILAR.has(secili) ? KAYITLILAR.delete(secili) : KAYITLILAR.add(secili);
@@ -1876,7 +1926,7 @@ document.addEventListener('keydown', e => {
   else if($('paylas').classList.contains('acik')) $('paylas').classList.remove('acik');
   else if($('ekle').classList.contains('acik')) $('ekle').classList.remove('acik');
   else if($('gonderi').classList.contains('acik')) $('gonderi').classList.remove('acik');
-  else if($('cekmece').classList.contains('acik')){ $('cekmece').classList.remove('acik'); secili=null; cizHarita(); }
+  else if($('cekmece').classList.contains('acik')) cekmeceKapat();
 });
 
 cizCipler(); cizSekme(); haritaHazirla(); cizHarita(); cizAkis(); bildirimRozetGuncelle();
