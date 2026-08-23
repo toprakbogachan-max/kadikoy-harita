@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Tasarım dili — prototip.html'den taşındı.
+   Metafor: mantar pano. Harita pano, mekanlar toplu iğne,
+   yorumlar iğnelenmiş post-it'ler. (BRIEF.md → Tasarım dili)
+   ============================================================ */
+@theme {
+  --color-kagit:     #F6F1E4;   /* uygulama zemini — kağıt */
+  --color-pano:      #E9DFC9;   /* mantar pano */
+  --color-yuzey:     #FFFDF6;   /* kabartılmış yüzey */
+  --color-murekkep:  #23343C;   /* ana metin */
+  --color-murekkep2: #75858C;   /* soluk metin */
+  --color-jeton:     #B8801A;   /* pirinç — vurgu */
+  --color-mercan:    #B8452F;   /* uyarı */
+  --color-su:        #D2DFE2;
+
+  /* kategori renkleri: pin jetonları ve post-it kağıtları buradan türer */
+  --color-yemek:  #E0271C;
+  --color-kahve:  #DE9B2E;
+  --color-bar:    #7360C4;
+  --color-tatli:  #DC6389;
+  --color-kultur: #329179;
+  --color-park:   #569E4C;
+
+  --font-tabela: Oswald, "Arial Narrow", sans-serif;   /* tabela / etiket */
+  --font-metin:  Karla, "Segoe UI", sans-serif;        /* metin */
+  --font-sayi:   "JetBrains Mono", ui-monospace, monospace;
+  --font-el:     Kalam, "Segoe Print", cursive;        /* el yazısı — post-it notları */
+
+  --shadow-kagit:  0 2px 6px rgba(74, 58, 30, 0.10);
+  --shadow-kagit2: 0 6px 18px rgba(74, 58, 30, 0.16);
+}
+
+:root {
+  --cizgi:   rgba(35, 52, 60, 0.13);
+  --cizgi-2: rgba(35, 52, 60, 0.07);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--color-kagit);
+  color: var(--color-murekkep);
+  font-family: var(--font-metin);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* mantar pano dokusu — ince noktalı */
+.pano-doku {
+  background-color: var(--color-pano);
+  background-image: radial-gradient(rgba(120, 96, 52, 0.13) 1px, transparent 1px);
+  background-size: 7px 7px;
+}
