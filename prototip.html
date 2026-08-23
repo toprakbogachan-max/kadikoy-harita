@@ -434,7 +434,11 @@
     <div class="harita-sarma">
       <div id="maplibre-harita" aria-label="Kadıköy haritası"></div>
       <button class="harita-ekle" id="harita-ekle" aria-label="Pin at">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <!-- artı, konum iğnesinin içinde: sağ üstteki yakınlaştırma +'sıyla karışmasın -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21.5s7-6.3 7-11.2a7 7 0 1 0-14 0c0 4.9 7 11.2 7 11.2z" stroke-width="1.9"/>
+          <path d="M12 7.1v6.2M8.9 10.2h6.2" stroke-width="2.2"/>
+        </svg>
       </button>
       <div class="harita-bos" id="harita-bos" hidden></div>
     </div>
