@@ -179,7 +179,9 @@
   .reels-alt .ebtn.dolu{color:#FF8A7A}
   .reels-alt .ebtn.dolu-altin{color:#F2C879}
   .reels-alt .ebtn-sikayet{color:rgba(255,255,255,.45)}
-  .reels-medya .medya-ok{z-index:4}
+  /* oklar alt panelin (z-index:5) ÜSTÜNDE olmalı, yoksa panelin şeffaf üst
+     kısmı tıklamayı yutuyor; biraz da yukarı alındı */
+  .reels-medya .medya-ok{z-index:8;top:44%}
   /* sayaç ve noktalar üstte — alt paneli kapatmasınlar */
   .reels-medya .medya-sayac{top:74px;right:14px;z-index:7}
   .reels-medya .medya-noktalar{position:absolute;left:0;right:0;top:78px;z-index:7;margin:0}
@@ -1665,6 +1667,18 @@ function gonderiGec(yon){
   g.addEventListener('touchend', e => bitir(e.changedTouches[0].clientY), {passive:true});
   g.addEventListener('mousedown', e => { fareBasili = true; basY = e.clientY; });
   window.addEventListener('mouseup', e => { if(fareBasili){ fareBasili = false; bitir(e.clientY); } });
+
+  /* masaüstü: trackpad / fare tekerleği ile kaydırma.
+     Tek jest birden çok wheel olayı ürettiği için zaman kilidi var. */
+  let sonTeker = 0;
+  g.addEventListener('wheel', e => {
+    if(!$('gonderi').classList.contains('acik')) return;
+    if(Math.abs(e.deltaY) < 12) return;
+    const simdiMs = Date.now();
+    if(simdiMs - sonTeker < 550) return;
+    sonTeker = simdiMs;
+    gonderiGec(e.deltaY > 0 ? 1 : -1);   /* aşağı kaydır = sonraki pin */
+  }, {passive:true});
 })();
 document.addEventListener('keydown', e => {
   if(!$('gonderi').classList.contains('acik')) return;
