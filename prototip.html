@@ -139,6 +139,14 @@
   .foto svg{opacity:.28}
   .foto::after{content:'demo görsel';position:absolute;bottom:7px;right:8px;font-family:var(--font-sayi);font-size:9px;color:rgba(255,255,255,.62)}
 
+  /* ---------- "buraya bırakılanlar" karusel başlığı ---------- */
+  .bolum-satir{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 6px;padding-top:14px;border-top:1px solid var(--cizgi)}
+  .pin-pager{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .pin-ok{width:26px;height:26px;border-radius:2px;border:1px solid var(--cizgi);background:var(--yuzey);color:var(--murekkep);cursor:pointer;display:grid;place-items:center}
+  .pin-ok:hover:not(:disabled){border-color:var(--murekkep-2)}
+  .pin-ok:disabled{opacity:.3;cursor:default}
+  .pin-pager-sayac{font-family:var(--font-sayi);font-size:11px;color:var(--murekkep-2);min-width:28px;text-align:center}
+
   /* ---------- medya karuseli: oklarla gezinme + her medyanın kendi notu ---------- */
   .medya-ok{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:none;background:rgba(20,15,8,.5);color:#fff;cursor:pointer;display:grid;place-items:center;z-index:3;transition:background .15s}
   .medya-ok:hover:not(:disabled){background:rgba(20,15,8,.72)}
@@ -1166,28 +1174,30 @@ function yerAc(id){
   $('cekmece-ad').textContent = y.ad;
   $('cekmece-tur').textContent = `${TUR_AD[y.tur]} · ${y.semt} · ${acik?'şu an açık':'şu an kapalı'}`;
 
-  let h = '';
-  if(y.uyari) h += `<div class="uyari-kutu"><strong>Gitmeden önce</strong>${y.uyari}</div>`;
+  /* --- bölümler ayrı ayrı kurulur, en sonda istenen sırayla birleştirilir --- */
+  const uyariBlok = y.uyari
+    ? `<div class="uyari-kutu"><strong>Gitmeden önce</strong>${y.uyari}</div>` : '';
 
-  h += '<div class="kunye">';
   const satir = (e,d,c='') => `<div class="kunye-satir"><span class="kunye-etiket">${e}</span><span class="kunye-deger ${c}">${d}</span></div>`;
-  h += satir('Pin', `${pinleri.length} kişi pinledi`, 'sayi'+(populerMi(y)?' altin':''));
-  h += satir('Rezervasyon', y.rezervasyon || 'gerekmiyor');
-  if(y.fiyat)       h += satir('Kişi başı','≈ '+y.fiyat+' ₺','sayi');
-  if(y.enIyiSaat)   h += satir('En iyi saat', y.enIyiSaat);
-  if(y.sadeceNakit) h += satir('Ödeme','sadece nakit');
-  if(y.iyiGelir?.length)
-    h += `<div class="kunye-satir"><span class="kunye-etiket">Uygun</span><span class="kunye-deger">
-          <span class="g-etiketler" style="justify-content:flex-end">${y.iyiGelir.map(i=>`<span class="etiket">${i}</span>`).join('')}</span></span></div>`;
   const gunAd = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
   const bugun = y.saatler.find(s => s[0] === t.getDay());
-  h += satir('Bugün', bugun?`${gunAd[t.getDay()]} ${bugun[1]}–${bugun[2]}`:'kapalı','sayi');
-  h += '</div>';
+  let kunyeBlok = '<div class="bolum-basligi">Künye</div><div class="kunye">';
+  kunyeBlok += satir('Pin', `${pinleri.length} kişi pinledi`, 'sayi'+(populerMi(y)?' altin':''));
+  kunyeBlok += satir('Rezervasyon', y.rezervasyon || 'gerekmiyor');
+  if(y.fiyat)       kunyeBlok += satir('Kişi başı','≈ '+y.fiyat+' ₺','sayi');
+  if(y.enIyiSaat)   kunyeBlok += satir('En iyi saat', y.enIyiSaat);
+  if(y.sadeceNakit) kunyeBlok += satir('Ödeme','sadece nakit');
+  if(y.iyiGelir?.length)
+    kunyeBlok += `<div class="kunye-satir"><span class="kunye-etiket">Uygun</span><span class="kunye-deger">
+          <span class="g-etiketler" style="justify-content:flex-end">${y.iyiGelir.map(i=>`<span class="etiket">${i}</span>`).join('')}</span></span></div>`;
+  kunyeBlok += satir('Bugün', bugun?`${gunAd[t.getDay()]} ${bugun[1]}–${bugun[2]}`:'kapalı','sayi');
+  kunyeBlok += '</div>';
 
+  let hizliBlok = '', ozetBloklari = '';
   const oz = ozet(id);
   if(oz){
     const kayitGosterilen = y.kayit + (KAYITLILAR.has(y.id) ? 1 : 0);
-    h += `<div class="ozet">
+    hizliBlok = `<div class="ozet">
       <div class="ozet-baslik">Hızlı bakış</div>
       <div class="hizli-ust">
         <span class="puan-buyuk">${oz.ortalama.toFixed(1)}</span>
@@ -1211,8 +1221,9 @@ function yerAc(id){
           </div>
         </div>`;
       }).join('')}</div>
-    </div>
-    <div class="ozet">
+    </div>`;
+
+    ozetBloklari = `<div class="ozet">
       <div class="ozet-baslik">Bu mekan üç kelimeyle</div>
       <div class="kelimeler" style="margin-top:0">${oz.kelimeler.map(([k,n]) =>
         `<span class="kelime">${k}${n>1?' ×'+n:''}</span>`).join('')}</div>
@@ -1231,26 +1242,30 @@ function yerAc(id){
       <div class="puan-not" style="margin-top:9px">${oz.tekrarEvet}/${oz.adet} kişi tekrar gider dedi</div>
     </div>`;
     if(oz.degisseler.length){
-      h += `<div class="bolum-basligi">Bir şey değişse</div>
+      ozetBloklari += `<div class="bolum-basligi">Bir şey değişse</div>
         <ul class="degisse-liste">${oz.degisseler.map(d =>
           `<li>${d.metin}<span class="g-alt-ad" style="display:block;margin-top:3px">@${KISILER[d.kisi].k}</span></li>`).join('')}</ul>`;
     }
   }
-  h += `<div class="bolum-basligi">Buraya bırakılanlar</div>`;
-  h += pinleri.length ? pinleri.map((p,i) => `
-      <div class="mini-gonderi" style="${igneStil(yerBul(p.yer).tur)};transform:rotate(${egim(i)}deg)">
-        <div class="g-ust">${avatar(p.kisi,30)}
-          <div><div class="g-ad">${KISILER[p.kisi].ad}</div>
-          <div class="g-alt-ad">@${KISILER[p.kisi].k} · ${zaman(p.saat)}</div></div>
-          ${p.puan!=null?`<span class="puan">${p.puan}<span>/10</span></span>`:''}</div>
-        <p class="g-metin" style="margin-top:0">${p.metin}</p>
-        ${p.kelimeler?`<div class="kelimeler">${p.kelimeler.map(k=>`<span class="kelime">${k}</span>`).join('')}</div>`:''}
-        ${p.fiyat?`<div class="g-etiketler"><span class="etiket">kişi başı ${p.fiyat}₺ ödedi</span></div>`:''}
-      </div>`).join('')
-    : '<p class="bos-durum">Buraya henüz kimse pin atmamış. İlk sen ol.</p>';
+
+  /* pinler karusel olarak çizilir; içerik mekanPinCiz() ile doldurulur */
+  const pinBlok = pinleri.length
+    ? `<div class="bolum-satir">
+         <div class="bolum-basligi" style="margin:0;padding:0;border:none">Buraya bırakılanlar</div>
+         <div class="pin-pager" id="mekan-pin-pager"></div>
+       </div>
+       <div id="mekan-pinler"></div>`
+    : `<div class="bolum-basligi">Buraya bırakılanlar</div>
+       <p class="bos-durum">Buraya henüz kimse pin atmamış. İlk sen ol.</p>`;
+
+  /* İSTENEN SIRA: uyarı (brief kararı, hep en üstte) → hızlı bakış →
+     buraya bırakılanlar → künye → diğer özetler */
+  const h = uyariBlok + hizliBlok + pinBlok + kunyeBlok + ozetBloklari;
 
   $('cekmece-govde').innerHTML = h;
   $('kaydet-yer').textContent = KAYITLILAR.has(id) ? 'Kaydedildi ✓' : 'Kaydet';
+  mekanPinIndex = 0;
+  mekanPinCiz(pinleri);
   $('cekmece-govde').querySelectorAll('[data-gonderi]').forEach(el => el.onclick = () => {
     const pinIdler = pinleri.map(p => p.id);
     $('cekmece').classList.remove('acik');
@@ -1262,6 +1277,41 @@ function yerAc(id){
   $('kapat').focus({preventScroll:true});
   cizHarita();
 }
+/* "Buraya bırakılanlar" karuseli — tek tek, oklarla gezilir */
+let mekanPinIndex = 0;
+function mekanPinCiz(pinleri){
+  const kap = $('mekan-pinler'), pager = $('mekan-pin-pager');
+  if(!kap || !pinleri.length) return;
+  mekanPinIndex = Math.max(0, Math.min(mekanPinIndex, pinleri.length - 1));
+  const p = pinleri[mekanPinIndex], coklu = pinleri.length > 1;
+
+  pager.innerHTML = coklu ? `
+    <button class="pin-ok" data-yon="-1" ${mekanPinIndex===0?'disabled':''} aria-label="Önceki pin">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg></button>
+    <span class="pin-pager-sayac">${mekanPinIndex+1}/${pinleri.length}</span>
+    <button class="pin-ok" data-yon="1" ${mekanPinIndex===pinleri.length-1?'disabled':''} aria-label="Sonraki pin">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>` : '';
+
+  kap.innerHTML = `
+    <div class="mini-gonderi" data-gonderi="${p.id}" style="${igneStil(yerBul(p.yer).tur)};transform:rotate(0deg);cursor:pointer">
+      <div class="g-ust">${avatar(p.kisi,30)}
+        <div><div class="g-ad">${KISILER[p.kisi].ad}</div>
+        <div class="g-alt-ad">@${KISILER[p.kisi].k} · ${zaman(p.saat)}</div></div>
+        ${p.puan!=null?`<span class="puan">${p.puan}<span>/10</span></span>`:''}</div>
+      <p class="g-metin" style="margin-top:0">${p.metin}</p>
+      ${p.kelimeler?`<div class="kelimeler">${p.kelimeler.map(k=>`<span class="kelime">${k}</span>`).join('')}</div>`:''}
+      ${p.fiyat?`<div class="g-etiketler"><span class="etiket">kişi başı ${p.fiyat}₺ ödedi</span></div>`:''}
+    </div>`;
+
+  pager.querySelectorAll('[data-yon]').forEach(b => b.onclick = () => {
+    mekanPinIndex += +b.dataset.yon; mekanPinCiz(pinleri);
+  });
+  kap.querySelector('[data-gonderi]').onclick = () => {
+    $('cekmece').classList.remove('acik');
+    setTimeout(() => gonderiAc(p.id, pinleri.map(x => x.id)), 320);
+  };
+}
+
 /* ---------- mekan sayfası: yarım / tam kademe (google maps tarzı) ---------- */
 function cekmeceKademe(k){
   const c = $('cekmece');
