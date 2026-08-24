@@ -63,12 +63,24 @@ create table if not exists places (
   phone         text,
   website       text,
   status        content_status not null default 'published',
+  -- Referans görseli: yalnızca serbest lisanslı kaynaklardan (Wikimedia Commons).
+  -- Kullanıcı fotoğrafı DEĞİL — o pin_media'da durur. Arayüz bunu "kapak" olarak
+  -- gösterir ve cover_credit'i görünür yerde yazmak ZORUNDA (CC-BY / CC-BY-SA gereği).
+  cover_url     text,
+  cover_credit  text,
   created_by    uuid references profiles(id) on delete set null,
   -- türetilmiş sayaçlar
   pin_count     integer not null default 0,
   save_count    integer not null default 0,
   created_at    timestamptz not null default now()
 );
+
+-- Şema daha önce kurulmuşsa: create table if not exists yeni sütun eklemez,
+-- bu yüzden sonradan gelen alanlar ayrıca alter ile de yazılır. Dosya
+-- baştan sona tekrar çalıştırılabilir kalsın diye hepsi "if not exists".
+alter table places add column if not exists cover_url    text;
+alter table places add column if not exists cover_credit text;
+
 create index if not exists places_geo_gist on places using gist (geo);
 create index if not exists places_category_idx on places (category) where status = 'published';
 create index if not exists places_name_trgm on places using gin (name gin_trgm_ops);
@@ -114,7 +126,10 @@ create table if not exists pins (
   body        text not null check (char_length(body) between 15 and 1000),  -- somut not
   words       text[] not null check (array_length(words, 1) = 3),           -- üç kelime
   scenario    text not null,                                               -- geliş senaryosu
-  rating      smallint not null check (rating between 1 and 10),            -- "bana hitap puanı"
+  -- Prototip yarım puan gösteriyor (8.5/10), o yüzden smallint değil numeric.
+  -- İkinci koşul yarım adımı zorunlu kılar: 8.5 geçer, 8.3 geçmez.
+  rating      numeric(3,1) not null
+                check (rating >= 1 and rating <= 10 and rating * 2 = floor(rating * 2)),
   -- (fotoğraf/video zorunluluğu pin_media + assert_pin_has_media trigger'ında)
 
   -- ---- isteğe bağlı alanlar ----
@@ -138,6 +153,12 @@ comment on column pins.words is
   'Uc kelime. Serbest metin oldugu icin zamanla dagilir; 200 pinden sonra otomatik tamamlama gerekecek.';
 comment on column pins.improve is
   '"Bir sey degisse" — mekanin yapilacaklar listesi olarak gosteriliyor.';
+
+-- Şema daha önce smallint ile kurulduysa create table çalışmaz; tipi burada taşı.
+alter table pins alter column rating type numeric(3,1);
+alter table pins drop constraint if exists pins_rating_check;
+alter table pins add  constraint pins_rating_check
+  check (rating >= 1 and rating <= 10 and rating * 2 = floor(rating * 2));
 
 create index if not exists pins_words_idx on pins using gin (words);
 create index if not exists pins_place_idx on pins (place_id, created_at desc) where status = 'published';
@@ -300,6 +321,56 @@ create trigger trg_saves_count after insert or delete on saves
   for each row execute function bump_counter();
 
 -- ============================================================
+--  5b. KAYIT AKIŞI — auth.users satırından profiles satırı
+-- ============================================================
+-- Supabase kayıt olan kişiyi auth.users'a yazar, profiles'ı bizim açmamız gerekir.
+-- Bu trigger olmadan kayıt olan kullanıcının profili olmaz; pins.author_id →
+-- profiles(id) yabancı anahtarı hemen kırılır. security definer, çünkü RLS'in
+-- üstünde çalışıp yeni satırı açması gerekiyor.
+
+create or replace function kullanici_adi_sadelestir(ham text)
+returns text language sql immutable as $$
+  select left(
+    regexp_replace(
+      translate(lower(coalesce(ham, '')), 'çğıöşüâîû', 'cgiosuaiu'),
+      '[^a-z0-9_]', '', 'g'),
+    24);
+$$;
+
+create or replace function handle_new_user()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  istenen text;
+  aday    text;
+  n       integer := 0;
+begin
+  istenen := kullanici_adi_sadelestir(new.raw_user_meta_data->>'username');
+  -- username check'i en az 3 karakter istiyor; boş/kısa gelirse kimlikten üret
+  if length(istenen) < 3 then
+    istenen := 'kullanici' || substr(replace(new.id::text, '-', ''), 1, 6);
+  end if;
+
+  -- username unique: doluysa sonuna sayı ekleyerek boş bir tane bul
+  aday := istenen;
+  while exists (select 1 from profiles where username = aday) loop
+    n := n + 1;
+    aday := left(istenen, 21) || n::text;
+  end loop;
+
+  insert into profiles (id, username, display_name)
+  values (new.id, aday,
+          coalesce(nullif(new.raw_user_meta_data->>'display_name', ''), aday))
+  on conflict (id) do nothing;
+  return new;
+end $$;
+
+drop trigger if exists trg_auth_user_created on auth.users;
+create trigger trg_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
+
+
+-- ============================================================
 --  6. AÇIK MI? (Europe/Istanbul, gece yarısını aşan saatler dahil)
 -- ============================================================
 create or replace function is_open_now(hours jsonb, at_time timestamptz default now())
@@ -372,9 +443,9 @@ returns jsonb language sql stable as $$
   select jsonb_build_object(
     'pin_count',      (select count(*) from p),
     'rating_avg',     (select round(avg(rating)::numeric, 1) from p),
-    -- 1..10 kovalari: [n1, n2, ... n10]
+    -- 1..10 kovalari: [n1, n2, ... n10]  — yarım puanlar aşağı yuvarlanır (8.5 → 8)
     'rating_buckets', (select coalesce(jsonb_agg(x.c order by x.g), '[]'::jsonb)
-                       from (select g, (select count(*) from p where p.rating = g) c
+                       from (select g, (select count(*) from p where floor(p.rating) = g) c
                              from generate_series(1,10) g) x),
     'following_avg',  (select round(avg(rating)::numeric, 1)
                        from p where in_viewer is not null and author_id in (select id from takip)),
@@ -450,7 +521,10 @@ create policy p_list_items_read on list_items for select using (true);
 create policy p_sources_none  on place_sources for select using (false);
 
 -- yazma: herkes serbest ama sadece kendi adına
-create policy p_profiles_write on profiles for update using (id = auth.uid());
+create policy p_profiles_write  on profiles for update using (id = auth.uid());
+-- Trigger security definer olduğu için normalde buna gerek yok; istemci kendi
+-- profilini elle oluşturmak isterse diye duruyor. Başkasının adına açamaz.
+create policy p_profiles_insert on profiles for insert with check (id = auth.uid());
 create policy p_places_insert  on places for insert with check (auth.uid() is not null);
 create policy p_facts_write    on place_facts for all
   using (auth.uid() is not null) with check (auth.uid() is not null);
