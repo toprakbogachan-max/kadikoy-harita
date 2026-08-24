@@ -492,6 +492,10 @@ $$;
 -- ============================================================
 --  9. RLS
 -- ============================================================
+-- Postgres'te "create policy if not exists" YOK. Şema dosyası baştan sona
+-- yeniden çalıştırılabilir kalsın diye her policy önce düşürülüp yeniden
+-- kuruluyor. Aksi halde ikinci çalıştırma 42710 "already exists" ile patlar.
+-- ============================================================
 alter table profiles      enable row level security;
 alter table places        enable row level security;
 alter table place_facts   enable row level security;
@@ -507,49 +511,76 @@ alter table list_items    enable row level security;
 alter table reports       enable row level security;
 
 -- okuma
+drop policy if exists p_profiles_read on profiles;
 create policy p_profiles_read on profiles for select using (true);
+drop policy if exists p_places_read on places;
 create policy p_places_read   on places   for select using (status = 'published');
+drop policy if exists p_facts_read on place_facts;
 create policy p_facts_read    on place_facts for select using (true);
+drop policy if exists p_pins_read on pins;
 create policy p_pins_read     on pins     for select using (status = 'published');
+drop policy if exists p_media_read on pin_media;
 create policy p_media_read    on pin_media for select using (true);
+drop policy if exists p_likes_read on pin_likes;
 create policy p_likes_read    on pin_likes for select using (true);
+drop policy if exists p_comments_read on pin_comments;
 create policy p_comments_read on pin_comments for select using (status = 'published');
+drop policy if exists p_follows_read on follows;
 create policy p_follows_read  on follows  for select using (true);
+drop policy if exists p_lists_read on lists;
 create policy p_lists_read    on lists    for select using (is_public or owner_id = auth.uid());
+drop policy if exists p_list_items_read on list_items;
 create policy p_list_items_read on list_items for select using (true);
 -- scraper kaynakları kullanıcıya kapalı (service_role bypass eder)
+drop policy if exists p_sources_none on place_sources;
 create policy p_sources_none  on place_sources for select using (false);
 
 -- yazma: herkes serbest ama sadece kendi adına
+drop policy if exists p_profiles_write on profiles;
 create policy p_profiles_write  on profiles for update using (id = auth.uid());
 -- Trigger security definer olduğu için normalde buna gerek yok; istemci kendi
 -- profilini elle oluşturmak isterse diye duruyor. Başkasının adına açamaz.
+drop policy if exists p_profiles_insert on profiles;
 create policy p_profiles_insert on profiles for insert with check (id = auth.uid());
+drop policy if exists p_places_insert on places;
 create policy p_places_insert  on places for insert with check (auth.uid() is not null);
+drop policy if exists p_facts_write on place_facts;
 create policy p_facts_write    on place_facts for all
   using (auth.uid() is not null) with check (auth.uid() is not null);
 
+drop policy if exists p_pins_insert on pins;
 create policy p_pins_insert on pins for insert with check (author_id = auth.uid());
+drop policy if exists p_pins_update on pins;
 create policy p_pins_update on pins for update using (author_id = auth.uid());
+drop policy if exists p_pins_delete on pins;
 create policy p_pins_delete on pins for delete using (author_id = auth.uid());
 
+drop policy if exists p_media_write on pin_media;
 create policy p_media_write on pin_media for all
   using (exists (select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()))
   with check (exists (select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()));
 
+drop policy if exists p_likes_write on pin_likes;
 create policy p_likes_write on pin_likes for all
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists p_comments_insert on pin_comments;
 create policy p_comments_insert on pin_comments for insert with check (author_id = auth.uid());
+drop policy if exists p_comments_delete on pin_comments;
 create policy p_comments_delete on pin_comments for delete using (author_id = auth.uid());
+drop policy if exists p_follows_write on follows;
 create policy p_follows_write on follows for all
   using (follower_id = auth.uid()) with check (follower_id = auth.uid());
+drop policy if exists p_saves_write on saves;
 create policy p_saves_write on saves for all
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists p_lists_write on lists;
 create policy p_lists_write on lists for all
   using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+drop policy if exists p_list_items_write on list_items;
 create policy p_list_items_write on list_items for all
   using (exists (select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()))
   with check (exists (select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()));
+drop policy if exists p_reports_insert on reports;
 create policy p_reports_insert on reports for insert with check (auth.uid() is not null);
 
 -- ============================================================
