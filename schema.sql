@@ -157,7 +157,7 @@ create table if not exists pin_media (
 );
 
 comment on column pin_media.caption is
-  'Karusel'de o gorselin/videonun hemen altinda gosterilir.';
+  'Karusel''de o gorselin/videonun hemen altinda gosterilir.';
 create index if not exists pin_media_pin_idx on pin_media (pin_id, ordering);
 
 -- Fotoğraf zorunlu: pin yayına girerken en az 1 medya olsun
