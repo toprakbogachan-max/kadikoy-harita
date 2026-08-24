@@ -43,8 +43,25 @@ slug `demo-*` · e-posta `@demo.invalid` · medya yolu `demo://*`
 
 Demo hesap şifresi: `demo12345`
 
+## Panoya alma
+
+SQL Editor'a yapıştırmak için **mutlaka** bu scripti kullan:
+
+```
+./scripts/tohum/panoya.sh scripts/tohum/tohum-mekanlar-1.sql
+```
+
+Düz `pbcopy` KULLANMA — aşağıdaki tuzağa bak.
+
 ## Bilinen tuzaklar
 
+- **pbcopy + locale:** `pbcopy` girdiyi kabuğun locale'ine göre yorumlar.
+  `LC_CTYPE` ayarlı değilse UTF-8 baytlarını MacRoman sanar ve panoya bozuk
+  metin koyar: `Çiya` → `√áiya`. **`pbpaste` aynı yanlışı tersine çevirdiği
+  için terminaldeki kontrol sorunu göstermez** — bozukluk ancak tarayıcıya
+  yapıştırınca ortaya çıkar. Bu şekilde 1052 mekan adı bozuk kaydedildi ve
+  4 parçanın hepsi yeniden çalıştırılarak düzeltildi. `panoya.sh` hem
+  `LC_CTYPE=UTF-8` veriyor hem de doğrulamayı AppleScript ile yapıyor.
 - **Türkçe İ:** `"İ".toLowerCase()` tek harf değil, `i` + U+0307 verir. Naif bir
   `[^a-z0-9]` temizliği o noktayı ayraç sanıp "İsmail" → "i-smail" yapar.
   `ortak.mjs` bunu NFD ile çözer — slug üretiminde mutlaka onu kullan.
