@@ -58,7 +58,13 @@ export default function Harita({ gorunenler, secili, onYerSec, onBolgeDegisti }:
       style: HARITA_STILI,
       center: [29.033, 40.985],
       zoom: 14.3,
-      attributionControl: { compact: true },
+      /* Stilin kendi atfı karoları kredilendirir. Mekan kayıtları da (isim,
+         konum, çalışma saati) OpenStreetMap'ten geliyor ve ODbL atıf şart
+         koşuyor — o yüzden ayrıca yazılıyor. */
+      attributionControl: {
+        compact: true,
+        customAttribution: "Mekanlar © OpenStreetMap katkıcıları",
+      },
     });
     harita.current = m;
     if (process.env.NODE_ENV === "development") {
@@ -66,6 +72,17 @@ export default function Harita({ gorunenler, secili, onYerSec, onBolgeDegisti }:
     }
     m.on("error", (e) => console.error("MapLibre hatası:", e?.error?.message ?? e));
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+    /* MapLibre compact atfı ilk çizimde AÇIK geliyor ve telefon genişliğinde
+       haritanın altını iki satır kaplıyor. Katlayıp "ⓘ" düğmesine indiriyoruz;
+       dokununca yine açılıyor. Atıf erişilebilir kalıyor — ODbL bunu istiyor,
+       görünürlük şartını haritalarda yaygın olan bu düğme karşılıyor.
+       MapLibre başlangıç durumu için API vermiyor, sınıfı elle kaldırmak gerek. */
+    m.once("idle", () => {
+      kapsayici.current
+        ?.querySelector(".maplibregl-ctrl-attrib")
+        ?.classList.remove("maplibregl-compact-show");
+    });
 
     /* Snapchat Map tarzı: başlık haritanın baktığı yere göre değişir.
        Ad, kendi mekanlarımızdan değil haritanın kendi etiket verisinden okunur. */
