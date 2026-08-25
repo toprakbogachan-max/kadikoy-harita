@@ -62,3 +62,30 @@ body {
 .jeton-marker:hover .jeton-ic { transform: scale(1.12); }
 .jeton-marker.secili .jeton-ic { transform: scale(1.22); }
 .halka { transition: opacity .15s; }
+
+/* ---------- kullanıcının kendi konumu ----------
+   Jeton dilinden ayrı bilerek: bu bir mekan değil, sen. Mavi/çelik tonu
+   pirinç jetonlarla karışmasın diye seçildi. */
+.benim-konum { position: relative; width: 22px; height: 22px; }
+.benim-konum-nokta {
+  position: absolute; inset: 5px;
+  border-radius: 50%;
+  background: #2F6FB8;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(20, 15, 8, .45);
+}
+.benim-konum-hale {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: rgba(47, 111, 184, .22);
+  animation: konum-nabiz 2.4s ease-out infinite;
+}
+@keyframes konum-nabiz {
+  0%   { transform: scale(.7); opacity: .85; }
+  70%  { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+/* Hareket azaltma tercihi olanlarda nabız atmasın */
+@media (prefers-reduced-motion: reduce) {
+  .benim-konum-hale { animation: none; opacity: .5; }
+}

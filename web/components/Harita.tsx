@@ -12,6 +12,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
    Çözüm: worker public/ altından servis ediliyor (scripts/maplibre-worker-kopyala.mjs). */
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 import type { Yer } from "@/lib/model";
+import type { Konum } from "@/lib/konum";
 import { jetonSVG } from "@/lib/gorsel";
 
 const HARITA_STILI =
@@ -38,15 +39,20 @@ interface Props {
   onBolgeDegisti: (ad: string) => void;
   /** Harita durunca yeni merkez + görünür yarıçap — sorgu buna göre tazelenir */
   onAlanDegisti: (a: { lat: number; lng: number; yaricapM: number }) => void;
+  /** kullanıcının kendi konumu — null ise işaret çizilmiyor */
+  konum?: Konum | null;
+  /** konuma odaklanma isteği; sayı artınca harita oraya uçuyor */
+  konumaGit?: number;
 }
 
 export default function Harita({
-  gorunenler, secili, onYerSec, onBolgeDegisti, onAlanDegisti,
+  gorunenler, secili, onYerSec, onBolgeDegisti, onAlanDegisti, konum, konumaGit = 0,
 }: Props) {
   const kapsayici = useRef<HTMLDivElement>(null);
   const harita = useRef<maplibregl.Map | null>(null);
   const markerlar = useRef<Record<string, maplibregl.Marker>>({});
   const yerAdKatmanlari = useRef<string[]>([]);
+  const benimIsaret = useRef<maplibregl.Marker | null>(null);
   /* callback'ler her render'da değişebilir; marker'ları yeniden kurmamak için
      ref'te tutulur. Yazma render sırasında değil efektte: render aşaması saf
      kalmalı, yoksa React eşzamanlı modda render'ı atıp tekrarladığında ref
@@ -173,8 +179,51 @@ export default function Harita({
       m.remove();
       harita.current = null;
       markerlar.current = {};
+      benimIsaret.current = null;
     };
   }, []);
+
+  /* ---- kullanıcının kendi konumu ---- */
+  useEffect(() => {
+    const m = harita.current;
+    if (!m) return;
+
+    if (!konum) {
+      benimIsaret.current?.remove();
+      benimIsaret.current = null;
+      return;
+    }
+
+    if (!benimIsaret.current) {
+      const el = document.createElement("div");
+      el.className = "benim-konum";
+      el.setAttribute("aria-label", "Buradasın");
+      /* Dış halka doğruluk payını değil "beni gör" vurgusunu taşıyor;
+         gerçek doğruluk yarıçapı metre cinsinden, zoom'a göre değişir ve
+         DOM marker'ıyla ölçeklenemez. Halkayı sabit tutup doğruluğu
+         arayüzde yazıyla veriyoruz. */
+      el.innerHTML =
+        '<span class="benim-konum-hale"></span><span class="benim-konum-nokta"></span>';
+      benimIsaret.current = new maplibregl.Marker({ element: el, anchor: "center" });
+    }
+    benimIsaret.current.setLngLat([konum.lng, konum.lat]).addTo(m);
+  }, [konum]);
+
+  /* konuma odaklan — sayı her arttığında */
+  useEffect(() => {
+    const m = harita.current;
+    if (!m || !konum || !konumaGit) return;
+    try {
+      /* stop() şart: yarım kalmış bir animasyon haritayı "hareket ediyor"
+         durumunda bırakıyor ve sonraki flyTo çağrılarını sessizce yutuyor.
+         Animasyon requestAnimationFrame'e bağlı — sekme arka plandayken ya
+         da düşük güç modunda kare üretilmeyince bitmiyor. */
+      m.stop();
+      m.flyTo({ center: [konum.lng, konum.lat], zoom: Math.max(m.getZoom(), 15.5), duration: 900 });
+    } catch (e) {
+      console.warn("konuma uçulamadı", e);
+    }
+  }, [konumaGit, konum]);
 
   /* ---- jeton pinleri çiz / güncelle ---- */
   useEffect(() => {

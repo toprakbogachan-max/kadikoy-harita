@@ -18,11 +18,13 @@ import Ayarlar from "@/components/Ayarlar";
 import ListeOlustur from "@/components/ListeOlustur";
 import PaylasimKarti from "@/components/PaylasimKarti";
 import Bildirimler from "@/components/Bildirimler";
+import KonumDugmesi from "@/components/KonumDugmesi";
 import { useVeri } from "@/lib/kanca";
 import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim, okunmamisBildirim } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { jetonGradyanlari } from "@/lib/gorsel";
+import { useKonum, kadikoydeMi } from "@/lib/konum";
 
 /* Haritanın açılış merkezi — Kadıköy iskelesi civarı */
 const MERKEZ = { lat: 40.9885, lng: 29.0295, yaricapM: 2500 };
@@ -71,6 +73,12 @@ function Uygulama() {
   const [paylasAcik, setPaylasAcik] = useState(false);
   const [listeAcik, setListeAcik] = useState(false);
   const [bildirimAcik, setBildirimAcik] = useState(false);
+
+  /* Kullanıcının kendi konumu. Cihazdan çıkmıyor — sunucuya gönderilmiyor,
+     kaydedilmiyor; yalnızca haritayı kaydırmak ve yakındaki mekanları
+     sormak için kullanılıyor. */
+  const { durum: konumDurumu, konum, baslat: konumBaslat, kapat: konumKapat } = useKonum();
+  const [konumaGit, setKonumaGit] = useState(0);
   const { ben } = useOturum();
 
   /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
@@ -187,6 +195,16 @@ function Uygulama() {
                 onYerSec={setSecili}
                 onBolgeDegisti={setBolge}
                 onAlanDegisti={alaniGuncelle}
+                konum={konum}
+                konumaGit={konumaGit}
+              />
+              <KonumDugmesi
+                durum={konumDurumu}
+                konum={konum}
+                kadikoyDisinda={!!konum && !kadikoydeMi(konum)}
+                onIste={() => { konumBaslat(); setKonumaGit((n) => n + 1); }}
+                onGit={() => setKonumaGit((n) => n + 1)}
+                onKapat={konumKapat}
               />
               <Durum
                 yukleniyor={yukleniyor}
