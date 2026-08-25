@@ -47,13 +47,17 @@ export default function Profil({
   kullaniciAdi,
   onYerAc,
   onGirisIste,
+  onPaylas,
+  onAyarlar,
 }: {
   /** boşsa oturumdaki kişi gösterilir */
   kullaniciAdi?: string;
   onYerAc: (id: string) => void;
   onGirisIste: () => void;
+  onPaylas: () => void;
+  onAyarlar: () => void;
 }) {
-  const { ben: oturumKisi, cikisYap } = useOturum();
+  const { ben: oturumKisi } = useOturum();
   const hedef = kullaniciAdi ?? oturumKisi?.k ?? "";
   const benimMi = (id: string) => oturumKisi?.id === id;
 
@@ -131,14 +135,17 @@ export default function Profil({
       <div className="mb-3.5 flex gap-2 px-4">
         {benim ? (
           <>
-            <button className="flex-1 rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white">
+            <button
+              onClick={onPaylas}
+              className="flex-1 rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white"
+            >
               Haritamı paylaş
             </button>
             <button
-              onClick={cikisYap}
+              onClick={onAyarlar}
               className="flex-1 rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em]"
             >
-              Çıkış yap
+              Ayarlar
             </button>
           </>
         ) : (

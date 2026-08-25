@@ -274,12 +274,13 @@ export async function pinYorumlari(pinId: string): Promise<Yorum[]> {
 
 /* ---------- kişiler ---------- */
 
-const PROFIL_SECIM = "id, username, display_name, bio, avatar_url, pin_count, follower_count, following_count";
+const PROFIL_SECIM = "id, username, display_name, bio, avatar_url, pin_count, follower_count, following_count, is_public";
 
 interface HamProfil {
   id: string; username: string; display_name: string; bio: string | null;
   avatar_url: string | null; pin_count: number;
   follower_count: number; following_count: number;
+  is_public?: boolean;
 }
 
 /* `ben` burada işaretlenmiyor: veri katmanı oturumu bilmiyor. Kim olduğunu
@@ -287,7 +288,7 @@ interface HamProfil {
 const profilCevir = (p: HamProfil): Kisi => ({
   id: p.id, ad: p.display_name, k: p.username, bio: p.bio ?? "",
   foto: p.avatar_url, takipci: p.follower_count, takip: p.following_count,
-  pinSayisi: p.pin_count,
+  pinSayisi: p.pin_count, acikMi: p.is_public ?? true,
 });
 
 export async function benimProfilim(): Promise<Kisi | null> {
@@ -698,4 +699,122 @@ export function medyaUrl(yol: string): string | null {
   /* Tohum verisi demo:// ile işaretli — gerçek dosya yok, arayüz degrade çiziyor */
   if (!yol || yol.startsWith("demo://")) return null;
   return db.storage.from("pin-media").getPublicUrl(yol).data.publicUrl;
+}
+
+/* ---------- arşiv ---------- */
+
+/** Beğendiğim pinler — arşiv ekranı */
+export async function begendiklerim(): Promise<Pin[]> {
+  const id = await benimKimligim();
+  if (!id) return [];
+  const { data: begeniler } = await db.from("pin_likes")
+    .select("pin_id").eq("user_id", id).order("created_at", { ascending: false });
+  const idler = (begeniler ?? []).map((b) => b.pin_id);
+  if (!idler.length) return [];
+  const { data, error } = await db.from("pins").select(PIN_SECIM).in("id", idler);
+  if (error) throw error;
+  return (data as unknown as HamPin[]).map(pinCevir);
+}
+
+/** Kaydettiğim mekanlar — koordinatsız, arşiv listesi için yeterli */
+export async function kaydettigimYerler(): Promise<Yer[]> {
+  const id = await benimKimligim();
+  if (!id) return [];
+  const { data, error } = await db.from("saves")
+    .select("created_at, places ( id, slug, name, category, neighborhood, pin_count, cover_url )")
+    .eq("user_id", id).order("created_at", { ascending: false });
+  if (error) throw error;
+  interface Ham { places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; pin_count: number; cover_url: string | null } }
+  return (data as unknown as Ham[]).filter((s) => s.places).map((s): Yer => ({
+    id: s.places.id, slug: s.places.slug, ad: s.places.name, tur: s.places.category,
+    semt: s.places.neighborhood ?? "Kadıköy", lat: 0, lng: 0, saatler: null,
+    pinSayisi: s.places.pin_count, kapak: s.places.cover_url,
+  }));
+}
+
+/* ---------- listeler ---------- */
+
+export async function listeOlustur(
+  baslik: string, not: string, yerIdler: string[],
+): Promise<string> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  if (baslik.trim().length < 2) throw new Error("Listeye bir başlık yaz.");
+  if (!yerIdler.length) throw new Error("En az bir mekan seç.");
+
+  /* slug kişi başına benzersiz — unique (owner_id, slug) */
+  const taban = aramaMetni(baslik).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "liste";
+  let slug = taban;
+  let liste: { id: string } | null = null;
+  for (let d = 0; d < 5 && !liste; d++) {
+    const { data, error } = await db.from("lists")
+      .insert({ owner_id: id, slug, title: baslik.trim(), intro: not.trim() || null })
+      .select("id").single();
+    if (!error) { liste = data; break; }
+    if (error.code !== "23505") throw error;
+    slug = `${taban}-${Math.random().toString(36).slice(2, 5)}`;
+  }
+  if (!liste) throw new Error("Liste oluşturulamadı, başlığı biraz değiştir.");
+
+  const { error } = await db.from("list_items").insert(
+    yerIdler.map((y, i) => ({ list_id: liste.id, place_id: y, ordering: i })),
+  );
+  if (error) {
+    await db.from("lists").delete().eq("id", liste.id);   /* boş liste bırakma */
+    throw error;
+  }
+  return liste.id;
+}
+
+export async function listeSil(listeId: string) {
+  const { error } = await db.from("lists").delete().eq("id", listeId);
+  if (error) throw error;
+}
+
+/* ---------- profil düzenleme ---------- */
+
+export async function profilGuncelle(alanlar: {
+  ad?: string; bio?: string; acikMi?: boolean; avatarUrl?: string | null;
+}) {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  const yama: Record<string, unknown> = {};
+  if (alanlar.ad !== undefined) {
+    if (!alanlar.ad.trim()) throw new Error("Görünen ad boş olamaz.");
+    yama.display_name = alanlar.ad.trim();
+  }
+  /* Şemadaki check: bio en fazla 200 karakter */
+  if (alanlar.bio !== undefined) yama.bio = alanlar.bio.trim().slice(0, 200) || null;
+  if (alanlar.acikMi !== undefined) yama.is_public = alanlar.acikMi;
+  if (alanlar.avatarUrl !== undefined) yama.avatar_url = alanlar.avatarUrl;
+  const { error } = await db.from("profiles").update(yama).eq("id", id);
+  if (error) throw error;
+}
+
+/**
+ * Avatar yükler ve profile bağlar.
+ *
+ * Dosya adına zaman damgası konuyor: aynı ada yazsaydık CDN eski görseli
+ * önbellekten servis eder, kullanıcı fotoğrafını değiştirdiğini göremezdi.
+ * Eski dosya sonradan siliniyor.
+ */
+export async function avatarYukle(dosya: Blob, uzanti = "jpg"): Promise<string> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  const yol = `${id}/${Date.now()}.${uzanti}`;
+  const { error } = await db.storage.from("avatars")
+    .upload(yol, dosya, { contentType: dosya.type || "image/jpeg", upsert: false });
+  if (error) throw new Error(`Fotoğraf yüklenemedi: ${error.message}`);
+
+  const url = db.storage.from("avatars").getPublicUrl(yol).data.publicUrl;
+  await profilGuncelle({ avatarUrl: url });
+
+  /* aynı klasördeki eski avatarları temizle */
+  const { data: eskiler } = await db.storage.from("avatars").list(id);
+  const silinecek = (eskiler ?? [])
+    .filter((f) => `${id}/${f.name}` !== yol)
+    .map((f) => `${id}/${f.name}`);
+  if (silinecek.length) await db.storage.from("avatars").remove(silinecek);
+
+  return url;
 }

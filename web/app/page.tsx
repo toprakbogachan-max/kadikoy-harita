@@ -14,6 +14,9 @@ import { KisilerSaglayici } from "@/lib/kisiler-baglam";
 import { OturumSaglayici, useOturum } from "@/lib/oturum";
 import Giris from "@/components/Giris";
 import PinFormu from "@/components/PinFormu";
+import Ayarlar from "@/components/Ayarlar";
+import ListeOlustur from "@/components/ListeOlustur";
+import PaylasimKarti from "@/components/PaylasimKarti";
 import { useVeri } from "@/lib/kanca";
 import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
@@ -63,6 +66,9 @@ function Uygulama() {
   const [pinFormu, setPinFormu] = useState<{ acik: boolean; yer: Yer | null }>({ acik: false, yer: null });
   /* pin atıldıktan sonra listeleri tazelemek için */
   const [tazele, setTazele] = useState(0);
+  const [ayarlarAcik, setAyarlarAcik] = useState(false);
+  const [paylasAcik, setPaylasAcik] = useState(false);
+  const [listeAcik, setListeAcik] = useState(false);
   const { ben } = useOturum();
 
   /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
@@ -209,7 +215,13 @@ function Uygulama() {
                 </h1>
               </div>
             </header>
-            <Profil kullaniciAdi={profilKisi} onYerAc={haritadaAc} onGirisIste={() => setGirisAcik(true)} />
+            <Profil
+              kullaniciAdi={profilKisi}
+              onYerAc={haritadaAc}
+              onGirisIste={() => setGirisAcik(true)}
+              onPaylas={() => setPaylasAcik(true)}
+              onAyarlar={() => setAyarlarAcik(true)}
+            />
           </>
         )}
 
@@ -237,6 +249,24 @@ function Uygulama() {
         )}
 
         {girisAcik && <Giris onKapat={() => setGirisAcik(false)} />}
+
+        {ayarlarAcik && (
+          <Ayarlar
+            onKapat={() => setAyarlarAcik(false)}
+            onYerAc={(id) => { setAyarlarAcik(false); haritadaAc(id); }}
+            onGonderiAc={(id, liste) => { setAyarlarAcik(false); setGonderi({ id, liste }); }}
+            onListeOlustur={() => setListeAcik(true)}
+          />
+        )}
+
+        {listeAcik && (
+          <ListeOlustur
+            onKapat={() => setListeAcik(false)}
+            onOlusturuldu={() => { setListeAcik(false); setTazele((n) => n + 1); }}
+          />
+        )}
+
+        {paylasAcik && <PaylasimKarti onKapat={() => setPaylasAcik(false)} />}
 
         {pinFormu.acik && (
           <PinFormu

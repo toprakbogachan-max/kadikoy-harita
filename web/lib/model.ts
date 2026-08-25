@@ -68,6 +68,8 @@ export interface Kisi {
   takipci: number;
   takip: number;
   pinSayisi: number;
+  /** profiles.is_public — kapalıysa profili yalnızca sahibi görür */
+  acikMi?: boolean;
   ben?: boolean;
 }
 
