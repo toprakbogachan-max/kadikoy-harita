@@ -14,11 +14,25 @@ export const metadata: Metadata = {
   title: "Kadıköy Harita",
   description:
     "Gitmeden ne bilmen lazım, sana uygun mu — Kadıköy'ü pinleyenlerin haritası.",
+  /* iOS manifest'teki simgeyi kullanmıyor, apple-touch-icon'a bakıyor */
+  icons: { apple: "/apple-touch-icon.png", icon: "/simge-192.png" },
+  appleWebApp: {
+    capable: true,          // ana ekrandan tam ekran açılsın
+    title: "Kadıköy",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  /* Çift dokunuşla yakınlaşmayı kapatıyoruz: harita kendi yakınlaştırmasını
+     yönetiyor, tarayıcınınki üstüne binince kullanılamaz hale geliyor. */
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#241E14",
+  /* Çentikli ekranlarda tam ekran; güvenli alanı CSS'te bırakıyoruz */
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

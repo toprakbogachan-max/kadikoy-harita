@@ -140,12 +140,26 @@ function Uygulama() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#241E14] p-4">
+    /* min-h-dvh, min-h-screen değil: iOS Safari'de 100vh adres çubuğunun
+       altında kalıyor, sayfanın bir kısmı görünmüyordu. dvh çubuk açılıp
+       kapandıkça güncelleniyor.
+       Güvenli alan dolgusu çentikli ekranlar için — viewportFit: "cover"
+       içeriği çentiğin altına kadar uzatıyor. */
+    <main
+      className="flex min-h-dvh items-center justify-center bg-[#241E14] p-4"
+      style={{
+        paddingTop: "max(1rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+      }}
+    >
       <svg width="0" height="0" className="absolute">
         <defs dangerouslySetInnerHTML={{ __html: jetonGradyanlari() }} />
       </svg>
 
-      <div className="relative flex h-[min(96vh,820px)] w-full max-w-[392px] flex-col overflow-clip rounded-[26px] bg-kagit shadow-[0_30px_80px_rgba(0,0,0,.55)]">
+      {/* Yükseklik dvh üzerinden: telefonda çerçeve ekranı doldursun, masaüstünde
+          820px'de dursun. overflow-clip (hidden değil) — hidden kaydırma
+          kapsayıcısı oluşturup çekmeceler açılınca çerçeveyi kaydırıyordu. */}
+      <div className="relative flex h-[min(96dvh,820px)] w-full max-w-[392px] flex-col overflow-clip rounded-[26px] bg-kagit shadow-[0_30px_80px_rgba(0,0,0,.55)]">
         {ekran === "harita" && (
           <>
             <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
