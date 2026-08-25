@@ -82,21 +82,72 @@ export async function yerleriGetir(s: YerSorgusu): Promise<Yer[]> {
   }));
 }
 
-/** Tek mekan — detay sayfası için, kapak ve saatler dahil */
-export async function yerGetir(id: string): Promise<Yer | null> {
+/** Mekan künyesi — place_facts satırı, alanların hepsi isteğe bağlı */
+export interface Kunye {
+  rezervasyon: string | null;
+  rezervasyonNotu: string | null;
+  enIyiSaat: string | null;
+  kisiBasi: number | null;
+  sadeceNakit: boolean | null;
+  iyiGelir: string[] | null;
+  uyari: string | null;
+}
+
+export interface YerDetay extends Yer {
+  adres: string | null;
+  telefon: string | null;
+  site: string | null;
+  kaydeden: number;
+  kunye: Kunye | null;
+}
+
+/**
+ * Tek mekan — detay sayfası için. place_facts gömülü geliyor (place_id hem
+ * birincil anahtar hem places'e bağlı, PostgREST tek istekte getiriyor).
+ *
+ * lat/lng burada YOK: geo sütunu geography tipinde, PostgREST'ten sayı olarak
+ * okunamıyor (bu yüzden places_nearby st_y/st_x döndürüyor). Detay sayfasının
+ * koordinata ihtiyacı da yok — haritayı marker'a tıklanan yer zaten odakladı.
+ */
+export async function yerGetir(id: string): Promise<YerDetay | null> {
   const { data, error } = await db
     .from("places")
-    .select("id, slug, name, category, neighborhood, opening_hours, pin_count, cover_url, cover_credit")
+    .select(`id, slug, name, category, neighborhood, address, phone, website,
+             opening_hours, pin_count, save_count, cover_url, cover_credit,
+             place_facts ( needs_booking, booking_note, best_time, price_per_person,
+                           cash_only, good_for, warning )`)
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
+
+  interface HamKunye {
+    needs_booking: boolean | null; booking_note: string | null; best_time: string | null;
+    price_per_person: number | null; cash_only: boolean | null;
+    good_for: string[] | null; warning: string | null;
+  }
+  const ham = data.place_facts as HamKunye | HamKunye[] | null;
+  const f = (Array.isArray(ham) ? ham[0] : ham) ?? null;
+
   return {
     id: data.id, slug: data.slug, ad: data.name, tur: data.category,
     semt: data.neighborhood ?? "Kadıköy", lat: 0, lng: 0,
     saatler: saatleriCevir(data.opening_hours),
     pinSayisi: data.pin_count,
+    kaydeden: data.save_count,
     kapak: data.cover_url, kapakKredi: data.cover_credit,
+    adres: data.address, telefon: data.phone, site: data.website,
+    kunye: f
+      ? {
+          rezervasyon: f.needs_booking === null ? null : f.needs_booking ? "gerekiyor" : "gerekmiyor",
+          rezervasyonNotu: f.booking_note,
+          enIyiSaat: f.best_time,
+          kisiBasi: f.price_per_person,
+          sadeceNakit: f.cash_only,
+          iyiGelir: f.good_for,
+          uyari: f.warning,
+        }
+      : null,
   };
 }
 

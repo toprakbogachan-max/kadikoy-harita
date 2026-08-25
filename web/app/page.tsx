@@ -8,6 +8,7 @@ import AltMenu, { type Ekran } from "@/components/AltMenu";
 import Akis from "@/components/Akis";
 import GonderiDetay from "@/components/GonderiDetay";
 import Profil from "@/components/Profil";
+import MekanSayfasi from "@/components/MekanSayfasi";
 import { KisilerSaglayici } from "@/lib/kisiler-baglam";
 import { useVeri } from "@/lib/kanca";
 import { yerleriGetir, kisininYerleri, ozetSayilar } from "@/lib/veri";
@@ -159,6 +160,15 @@ function Uygulama() {
               Arama ekranı henüz taşınmadı — prototipte çalışıyor.
             </div>
           </>
+        )}
+
+        {/* Mekan sayfası yalnızca haritadayken; akış/profil üstüne binmesin */}
+        {secili && ekran === "harita" && !gonderi && (
+          <MekanSayfasi
+            yerId={secili}
+            onKapat={() => setSecili(null)}
+            onGonderiAc={(id, liste) => setGonderi({ id, liste })}
+          />
         )}
 
         {gonderi && (
