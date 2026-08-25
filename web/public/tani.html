@@ -1,0 +1,89 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tanı</title>
+<style>
+  /* Bilerek eski CSS: bu sayfa en eski Safari'de bile açılmalı */
+  body { font: 15px -apple-system, sans-serif; margin: 0; padding: 16px;
+         background: #fff; color: #111; }
+  h1 { font-size: 18px; margin: 0 0 12px; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 18px; }
+  td { padding: 6px 4px; border-bottom: 1px solid #ddd; vertical-align: top;
+       font-size: 13px; word-break: break-word; }
+  td:first-child { color: #666; width: 44%; }
+  .ok { color: #197a3d; font-weight: bold; }
+  .yok { color: #b3261e; font-weight: bold; }
+  pre { background: #f4f4f4; padding: 10px; font-size: 11px; overflow-x: auto;
+        white-space: pre-wrap; word-break: break-word; }
+</style>
+
+<h1>Kadıköy Harita — tanı</h1>
+<table id="t"></table>
+<h1>Yakalanan hatalar</h1>
+<pre id="h">(yok)</pre>
+
+<script>
+/* Hataları sayfa yüklenmeden önce yakalamaya başla */
+var hatalar = [];
+window.onerror = function (m, k, s, sut, e) {
+  hatalar.push(m + "  @" + (k || "?") + ":" + s + ":" + sut +
+               (e && e.stack ? "\n" + e.stack.slice(0, 300) : ""));
+  yaz();
+};
+window.addEventListener("unhandledrejection", function (o) {
+  hatalar.push("Promise: " + (o.reason && o.reason.message ? o.reason.message : o.reason));
+  yaz();
+});
+function yaz() {
+  document.getElementById("h").textContent = hatalar.length ? hatalar.join("\n\n") : "(yok)";
+}
+
+function destek(ozellik, dene) {
+  var v;
+  try { v = dene(); } catch (e) { v = false; }
+  return [ozellik, v ? "VAR" : "YOK", v];
+}
+
+var satirlar = [
+  ["Tarayıcı", navigator.userAgent, null],
+  ["Ekran", window.innerWidth + " × " + window.innerHeight, null],
+  destek("CSS @property", function () { return CSS.supports("(--x: 1)") && typeof CSSPropertyRule !== "undefined"; }),
+  destek("CSS color-mix()", function () { return CSS.supports("color", "color-mix(in srgb, red, blue)"); }),
+  destek("CSS oklch()", function () { return CSS.supports("color", "oklch(50% 0.1 200)"); }),
+  destek("CSS :has()", function () { return CSS.supports("selector(:has(a))"); }),
+  destek("WebGL2 (harita için)", function () {
+    var c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  }),
+  destek("Web Worker", function () { return typeof Worker !== "undefined"; }),
+  destek("fetch", function () { return typeof fetch === "function"; }),
+  destek("structuredClone", function () { return typeof structuredClone === "function"; }),
+  destek("Array.at()", function () { return typeof [].at === "function"; }),
+  destek("Object.hasOwn", function () { return typeof Object.hasOwn === "function"; }),
+  destek("crypto.randomUUID", function () { return crypto && typeof crypto.randomUUID === "function"; })
+];
+
+var t = document.getElementById("t");
+for (var i = 0; i < satirlar.length; i++) {
+  var s = satirlar[i];
+  var tr = document.createElement("tr");
+  var a = document.createElement("td"); a.textContent = s[0];
+  var b = document.createElement("td"); b.textContent = s[1];
+  if (s[2] === true) b.className = "ok";
+  if (s[2] === false) b.className = "yok";
+  tr.appendChild(a); tr.appendChild(b); t.appendChild(tr);
+}
+
+/* Uygulamanın kendi sayfasını arka planda çekip hata var mı bak */
+fetch("/")
+  .then(function (r) { return r.text().then(function (m) {
+    var tr = document.createElement("tr");
+    var a = document.createElement("td"); a.textContent = "Ana sayfa yanıtı";
+    var b = document.createElement("td");
+    b.textContent = "HTTP " + r.status + " · " + m.length + " bayt · " +
+                    (m.indexOf("KADIKÖY") > -1 ? "içerik VAR" : "içerik YOK");
+    b.className = r.ok ? "ok" : "yok";
+    tr.appendChild(a); tr.appendChild(b); t.appendChild(tr);
+  }); })
+  .catch(function (e) { hatalar.push("ana sayfa çekilemedi: " + e.message); yaz(); });
+</script>
