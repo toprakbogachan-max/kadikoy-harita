@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { Kisi } from "./model";
 import { kisileriGetir } from "./veri";
 import { useVeri } from "./kanca";
+import { useOturum } from "./oturum";
 
 /**
  * Kişi kayıtları uygulamanın her yerinde lazım: avatar, hikaye şeridi, akıştaki
@@ -16,7 +17,18 @@ const Baglam = createContext<Record<string, Kisi>>({});
 
 export function KisilerSaglayici({ children }: { children: React.ReactNode }) {
   const { veri } = useVeri(kisileriGetir, [], {} as Record<string, Kisi>);
-  return <Baglam.Provider value={veri}>{children}</Baglam.Provider>;
+  const { kullanici } = useOturum();
+
+  /* `ben` işaretini burada koyuyoruz: veri katmanı oturumu bilmiyor, oturum
+     da profilleri. İkisini birleştiren tek yer burası. */
+  const kisiler = useMemo(() => {
+    if (!kullanici) return veri;
+    const k = { ...veri };
+    if (k[kullanici.id]) k[kullanici.id] = { ...k[kullanici.id], ben: true };
+    return k;
+  }, [veri, kullanici]);
+
+  return <Baglam.Provider value={kisiler}>{children}</Baglam.Provider>;
 }
 
 export const useKisiler = () => useContext(Baglam);

@@ -284,7 +284,16 @@ create table if not exists reports (
 -- ============================================================
 --  5. SAYAÇ TRIGGER'LARI
 -- ============================================================
-create or replace function bump_counter() returns trigger language plpgsql as $$
+-- security definer ŞART: trigger'ın içindeki UPDATE'ler de RLS'e tabi.
+-- Elif, Bogaç'ın pinini beğenince trigger `update pins set like_count...`
+-- çalıştırıyor ama p_pins_update policy'si author_id = auth.uid() istiyor —
+-- güncelleme HATA VERMEDEN 0 satırı etkiliyor, sayaç olduğu yerde kalıyor.
+-- Aynı sorun saves → places.save_count'ta da var (places'ta UPDATE policy'si
+-- hiç yok). Sayaçlar yalnızca kendi içeriğinde doğru görünüyordu.
+-- search_path sabitleniyor: security definer fonksiyonda arama yolu
+-- saldırgan tarafından değiştirilebilir olmamalı.
+create or replace function bump_counter() returns trigger
+language plpgsql security definer set search_path = public, pg_temp as $$
 begin
   if tg_table_name = 'pins' then
     if tg_op = 'INSERT' then

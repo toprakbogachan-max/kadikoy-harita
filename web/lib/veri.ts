@@ -16,8 +16,14 @@ import type { PlaceCategory, OpeningPeriod, PlaceSummary, NearbyPlace } from "./
 
 const db = createClient();
 
-/* Kimlik gelene kadar "ben" sabit. Auth eklenince auth.getUser() olacak. */
-export const BENIM_KULLANICI_ADIM = "bogac";
+/**
+ * "Ben kimim" artık sabit değil, oturumdan geliyor (lib/oturum.tsx).
+ * Bu yardımcı, oturumu okuyamayan yerler için (veri katmanı React değil).
+ */
+async function benimKimligim(): Promise<string | null> {
+  const { data } = await db.auth.getUser();
+  return data.user?.id ?? null;
+}
 
 /* ---------- çeviriciler ---------- */
 
@@ -276,16 +282,27 @@ interface HamProfil {
   follower_count: number; following_count: number;
 }
 
+/* `ben` burada işaretlenmiyor: veri katmanı oturumu bilmiyor. Kim olduğunu
+   bilen taraf (kisiler-baglam) oturumdaki kimlikle karşılaştırıp işaretliyor. */
 const profilCevir = (p: HamProfil): Kisi => ({
   id: p.id, ad: p.display_name, k: p.username, bio: p.bio ?? "",
   foto: p.avatar_url, takipci: p.follower_count, takip: p.following_count,
-  pinSayisi: p.pin_count, ben: p.username === BENIM_KULLANICI_ADIM,
+  pinSayisi: p.pin_count,
 });
 
 export async function benimProfilim(): Promise<Kisi | null> {
+  const id = await benimKimligim();
+  if (!id) return null;
+  return profilimiGetirId(id);
+}
+
+/** Profil, auth kimliğinden. Trigger daha yazmadıysa null döner. */
+export async function profilimiGetirId(id: string): Promise<Kisi | null> {
   const { data } = await db.from("profiles").select(PROFIL_SECIM)
-    .eq("username", BENIM_KULLANICI_ADIM).maybeSingle();
-  return data ? profilCevir(data as HamProfil) : null;
+    .eq("id", id).maybeSingle();
+  if (!data) return null;
+  const k = profilCevir(data as HamProfil);
+  return { ...k, ben: true };
 }
 
 export async function profilGetir(kullaniciAdi: string): Promise<Kisi | null> {
@@ -461,4 +478,96 @@ export async function populerler(): Promise<{ kisiler: Kisi[]; yerler: Yer[] }> 
       pinSayisi: x.pin_count, kapak: x.cover_url,
     })),
   };
+}
+
+/* ---------- yazma işlemleri ----------
+   Hepsi RLS altında: policy'ler author_id/user_id = auth.uid() istiyor,
+   yani oturum yoksa istek zaten reddedilir. Arayüz de öncesinde soruyor. */
+
+export async function begeniDegistir(pinId: string, begenildi: boolean) {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  if (begenildi) {
+    const { error } = await db.from("pin_likes").delete()
+      .eq("pin_id", pinId).eq("user_id", id);
+    if (error) throw error;
+  } else {
+    const { error } = await db.from("pin_likes").insert({ pin_id: pinId, user_id: id });
+    if (error) throw error;
+  }
+}
+
+export async function begendimMi(pinId: string): Promise<boolean> {
+  const id = await benimKimligim();
+  if (!id) return false;
+  const { data } = await db.from("pin_likes").select("pin_id")
+    .eq("pin_id", pinId).eq("user_id", id).maybeSingle();
+  return !!data;
+}
+
+export async function kayitDegistir(yerId: string, kayitli: boolean) {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  if (kayitli) {
+    const { error } = await db.from("saves").delete()
+      .eq("place_id", yerId).eq("user_id", id);
+    if (error) throw error;
+  } else {
+    const { error } = await db.from("saves").insert({ place_id: yerId, user_id: id });
+    if (error) throw error;
+  }
+}
+
+export async function kayitliMi(yerId: string): Promise<boolean> {
+  const id = await benimKimligim();
+  if (!id) return false;
+  const { data } = await db.from("saves").select("place_id")
+    .eq("place_id", yerId).eq("user_id", id).maybeSingle();
+  return !!data;
+}
+
+/** Kaydettiklerim — haritadaki "kaydettiklerim" filtresi ve arşiv ekranı */
+export async function kaydettiklerim(): Promise<string[]> {
+  const id = await benimKimligim();
+  if (!id) return [];
+  const { data } = await db.from("saves").select("place_id").eq("user_id", id);
+  return (data ?? []).map((s) => s.place_id);
+}
+
+export async function yorumYaz(pinId: string, metin: string) {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  const g = metin.trim();
+  /* Şemadaki check ile aynı sınır — sunucuya boşuna gitmesin */
+  if (g.length < 1 || g.length > 500) throw new Error("Yorum 1–500 karakter olmalı.");
+  const { error } = await db.from("pin_comments")
+    .insert({ pin_id: pinId, author_id: id, body: g });
+  if (error) throw error;
+}
+
+export async function yorumSil(yorumId: string) {
+  const { error } = await db.from("pin_comments").delete().eq("id", yorumId);
+  if (error) throw error;
+}
+
+export async function takipDegistir(kisiId: string, takipte: boolean) {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  if (takipte) {
+    const { error } = await db.from("follows").delete()
+      .eq("follower_id", id).eq("following_id", kisiId);
+    if (error) throw error;
+  } else {
+    const { error } = await db.from("follows")
+      .insert({ follower_id: id, following_id: kisiId });
+    if (error) throw error;
+  }
+}
+
+export async function takiptemiyim(kisiId: string): Promise<boolean> {
+  const id = await benimKimligim();
+  if (!id) return false;
+  const { data } = await db.from("follows").select("following_id")
+    .eq("follower_id", id).eq("following_id", kisiId).maybeSingle();
+  return !!data;
 }

@@ -11,8 +11,10 @@ import Profil from "@/components/Profil";
 import MekanSayfasi from "@/components/MekanSayfasi";
 import AraEkrani from "@/components/AraEkrani";
 import { KisilerSaglayici } from "@/lib/kisiler-baglam";
+import { OturumSaglayici, useOturum } from "@/lib/oturum";
+import Giris from "@/components/Giris";
 import { useVeri } from "@/lib/kanca";
-import { yerleriGetir, kisininYerleri, ozetSayilar, BENIM_KULLANICI_ADIM } from "@/lib/veri";
+import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { jetonGradyanlari } from "@/lib/gorsel";
@@ -35,10 +37,13 @@ const KATEGORILER: PlaceCategory[] = [
 ];
 
 export default function Sayfa() {
+  /* Sıra önemli: KisilerSaglayici "ben kimim"i oturumdan okuyor. */
   return (
-    <KisilerSaglayici>
-      <Uygulama />
-    </KisilerSaglayici>
+    <OturumSaglayici>
+      <KisilerSaglayici>
+        <Uygulama />
+      </KisilerSaglayici>
+    </OturumSaglayici>
   );
 }
 
@@ -50,8 +55,11 @@ function Uygulama() {
   const [secili, setSecili] = useState<string | null>(null);
   const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
   const [alan, setAlan] = useState(MERKEZ);
-  /* Profil artık başkasının da olabilir — aramadan bir kişiye gidilebiliyor */
-  const [profilKisi, setProfilKisi] = useState(BENIM_KULLANICI_ADIM);
+  /* Profil artık başkasının da olabilir — aramadan bir kişiye gidilebiliyor.
+     undefined = oturumdaki kişi. */
+  const [profilKisi, setProfilKisi] = useState<string | undefined>(undefined);
+  const [girisAcik, setGirisAcik] = useState(false);
+  const { ben } = useOturum();
 
   /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
      parametre olarak gidiyor, 1052 mekanı tarayıcıya indirip elemekten iyi. */
@@ -65,8 +73,19 @@ function Uygulama() {
   }), [filtre, alan]);
 
   const { veri: gorunenler, yukleniyor, hata } = useVeri<Yer[]>(
-    () => (kisiFiltre ? kisininYerleri(kisiFiltre, sorgu) : yerleriGetir(sorgu)),
-    [sorgu, kisiFiltre],
+    async () => {
+      if (kisiFiltre) return kisininYerleri(kisiFiltre, sorgu);
+      if (filtre === "kaydettiklerim") {
+        const idler = new Set(await kaydettiklerim());
+        if (!idler.size) return [];
+        /* saves yalnızca place_id tutuyor; koordinat places_nearby'den gelmek
+           zorunda (geo sütunu PostgREST'ten okunamıyor), geniş çekip süzüyoruz */
+        const hepsi = await yerleriGetir({ ...sorgu, yaricapM: 4000, limit: 1500, kategori: null, sadeceAcik: false });
+        return hepsi.filter((y) => idler.has(y.id));
+      }
+      return yerleriGetir(sorgu);
+    },
+    [sorgu, kisiFiltre, filtre, ben?.id],
     [],
   );
 
@@ -147,7 +166,7 @@ function Uygulama() {
                   kisiFiltre
                     ? "Bu kişinin şu filtrede pinlediği yer yok."
                     : filtre === "kaydettiklerim"
-                      ? "Kaydettiklerin giriş yapınca gelecek."
+                      ? ben ? "Henüz bir yer kaydetmedin." : "Kaydettiklerini görmek için giriş yap."
                       : filtre === "acik"
                         ? "Şu an açık hiçbir yer yok. “Hepsi”ne bakabilirsin."
                         : "Bu kategoride yer yok."
@@ -172,9 +191,9 @@ function Uygulama() {
           <>
             <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
               <div className="flex items-center gap-2.5">
-                {profilKisi !== BENIM_KULLANICI_ADIM && (
+                {profilKisi !== undefined && (
                   <button
-                    onClick={() => setProfilKisi(BENIM_KULLANICI_ADIM)}
+                    onClick={() => setProfilKisi(undefined)}
                     aria-label="Kendi profiline dön"
                     className="shrink-0 border-none bg-transparent p-0 text-[18px] leading-none text-murekkep2"
                   >
@@ -182,11 +201,11 @@ function Uygulama() {
                   </button>
                 )}
                 <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">
-                  {profilKisi === BENIM_KULLANICI_ADIM ? "PROFİL" : "@" + profilKisi}
+                  {profilKisi === undefined ? "PROFİL" : "@" + profilKisi}
                 </h1>
               </div>
             </header>
-            <Profil kullaniciAdi={profilKisi} onYerAc={haritadaAc} />
+            <Profil kullaniciAdi={profilKisi} onYerAc={haritadaAc} onGirisIste={() => setGirisAcik(true)} />
           </>
         )}
 
@@ -208,8 +227,11 @@ function Uygulama() {
             yerId={secili}
             onKapat={() => setSecili(null)}
             onGonderiAc={(id, liste) => setGonderi({ id, liste })}
+            onGirisIste={() => setGirisAcik(true)}
           />
         )}
+
+        {girisAcik && <Giris onKapat={() => setGirisAcik(false)} />}
 
         {gonderi && (
           <GonderiDetay
@@ -217,10 +239,11 @@ function Uygulama() {
             liste={gonderi.liste}
             onKapat={() => setGonderi(null)}
             onPinDegisti={(id) => setGonderi((g) => (g ? { ...g, id } : g))}
+            onGirisIste={() => setGirisAcik(true)}
           />
         )}
 
-        <AltMenu ekran={ekran} onGec={setEkran} onPinAt={() => alert("Pin formu henüz taşınmadı.")} />
+        <AltMenu ekran={ekran} onGec={setEkran} onPinAt={() => (ben ? alert("Pin formu henüz taşınmadı.") : setGirisAcik(true))} />
       </div>
     </main>
   );

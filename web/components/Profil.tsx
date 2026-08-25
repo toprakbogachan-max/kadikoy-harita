@@ -2,8 +2,10 @@
 
 import { RENK } from "@/lib/paleti";
 import { igneStil, egim, fotoZemin, simgeSvg } from "@/lib/gorsel";
+import { useState } from "react";
 import { useVeri } from "@/lib/kanca";
-import { profilGetir, kisininPinleri, kisininListeleri, kisininYerleri, BENIM_KULLANICI_ADIM } from "@/lib/veri";
+import { profilGetir, kisininPinleri, kisininListeleri, kisininYerleri, takipDegistir, takiptemiyim } from "@/lib/veri";
+import { useOturum } from "@/lib/oturum";
 import type { Yer, Pin, Kisi, Liste } from "@/lib/model";
 import Avatar from "./Avatar";
 
@@ -42,14 +44,21 @@ function MiniHarita({ yerler }: { yerler: Yer[] }) {
 }
 
 export default function Profil({
-  kullaniciAdi = BENIM_KULLANICI_ADIM,
+  kullaniciAdi,
   onYerAc,
+  onGirisIste,
 }: {
+  /** boşsa oturumdaki kişi gösterilir */
   kullaniciAdi?: string;
   onYerAc: (id: string) => void;
+  onGirisIste: () => void;
 }) {
+  const { ben: oturumKisi, cikisYap } = useOturum();
+  const hedef = kullaniciAdi ?? oturumKisi?.k ?? "";
+  const benimMi = (id: string) => oturumKisi?.id === id;
+
   const { veri: kisi } = useVeri<Kisi | null>(
-    () => profilGetir(kullaniciAdi), [kullaniciAdi], null);
+    () => (hedef ? profilGetir(hedef) : Promise.resolve(null)), [hedef], null);
 
   /* Profil gelmeden pin/liste sorgusu atılamaz (id lazım); kisi null iken
      boş dizi dönen sorgular çalışıp anında bitiyor. */
@@ -58,11 +67,29 @@ export default function Profil({
     () => (kimlik ? kisininPinleri(kimlik) : Promise.resolve([])), [kimlik], []);
   const { veri: listeleri } = useVeri<Liste[]>(
     () => (kimlik ? kisininListeleri(kimlik) : Promise.resolve([])), [kimlik], []);
+  const { veri: takipte, yukleniyor: takipYukleniyor } = useVeri<boolean>(
+    () => (kimlik && !benimMi(kimlik) ? takiptemiyim(kimlik) : Promise.resolve(false)),
+    [kimlik, oturumKisi?.id], false);
+  const [takipYerel, setTakipYerel] = useState<boolean | null>(null);
+
   const { veri: yerleri } = useVeri<Yer[]>(
     () => (kimlik
       ? kisininYerleri(kimlik, { lat: 40.9885, lng: 29.0295 })
       : Promise.resolve([])), [kimlik], []);
 
+  if (!hedef) {
+    return (
+      <div className="min-h-0 flex-1 bg-kagit p-4">
+        <p className="mb-3 text-[13.5px] leading-relaxed text-murekkep2">
+          Kendi haritanı görmek için giriş yap.
+        </p>
+        <button onClick={onGirisIste}
+          className="rounded-sm border-none bg-jeton px-3.5 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white">
+          Giriş yap
+        </button>
+      </div>
+    );
+  }
   if (!kisi) {
     return (
       <div className="min-h-0 flex-1 bg-kagit p-4 text-[13px] text-murekkep2">
@@ -70,7 +97,8 @@ export default function Profil({
       </div>
     );
   }
-  const benim = !!kisi.ben;
+  const benim = oturumKisi?.id === kisi.id;
+  const takipDurumu = takipYerel ?? takipte;
 
   const baslik = "px-4 pb-2.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2";
 
@@ -101,12 +129,39 @@ export default function Profil({
       </div>
 
       <div className="mb-3.5 flex gap-2 px-4">
-        <button className="flex-1 rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white">
-          {benim ? "Haritamı paylaş" : "Takip et"}
-        </button>
-        <button className="flex-1 rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em]">
-          {benim ? "Pin at" : "Akışa dön"}
-        </button>
+        {benim ? (
+          <>
+            <button className="flex-1 rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white">
+              Haritamı paylaş
+            </button>
+            <button
+              onClick={cikisYap}
+              className="flex-1 rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em]"
+            >
+              Çıkış yap
+            </button>
+          </>
+        ) : (
+          <button
+            disabled={takipYukleniyor}
+            onClick={async () => {
+              if (!oturumKisi) return onGirisIste();
+              /* İyimser güncelleme: sunucu yanıtını beklemeden düğme değişiyor,
+                 hata olursa geri alınıyor. */
+              const su = takipDurumu;
+              setTakipYerel(!su);
+              try { await takipDegistir(kisi.id, su); }
+              catch (e) { setTakipYerel(su); alert(e instanceof Error ? e.message : String(e)); }
+            }}
+            className={`flex-1 rounded-sm px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] ${
+              takipDurumu
+                ? "border border-[var(--cizgi)] bg-yuzey text-murekkep"
+                : "border-none bg-jeton text-white"
+            } disabled:opacity-50`}
+          >
+            {takipDurumu ? "Takiptesin" : "Takip et"}
+          </button>
+        )}
       </div>
 
       <div className={baslik}>{benim ? "Senin" : kisi.ad + "’in"} Kadıköy haritası</div>

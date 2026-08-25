@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { fotoZemin, simgeSvg, zaman } from "@/lib/gorsel";
 import { useVeri } from "@/lib/kanca";
-import { pinGetir } from "@/lib/veri";
+import { pinGetir, begeniDegistir, begendimMi, kayitDegistir, kayitliMi } from "@/lib/veri";
+import { useOturum } from "@/lib/oturum";
 import { useKisi } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
@@ -14,6 +15,7 @@ interface Props {
   liste: string[];
   onKapat: () => void;
   onPinDegisti: (id: string) => void;
+  onGirisIste: () => void;
 }
 
 /**
@@ -22,9 +24,14 @@ interface Props {
  *  - yatay (oklar / ←→)               → aynı pinin medyaları arası
  * Her medyanın kendi notu görselin altında görünür.
  */
-export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Props) {
+export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGirisIste }: Props) {
+  const { ben } = useOturum();
   const [medyaIndex, setMedyaIndex] = useState(0);
   const [yorumlarAcik, setYorumlarAcik] = useState(false);
+  /* İyimser durum: sunucu yanıtını beklemeden düğme değişiyor, hata olursa
+     geri alınıyor. Sosyal uygulamada beğeni gecikmesi hemen göze batıyor. */
+  const [begeniYerel, setBegeniYerel] = useState<boolean | null>(null);
+  const [kayitYerel, setKayitYerel] = useState<boolean | null>(null);
   const govde = useRef<HTMLDivElement>(null);
 
   const pinIndex = Math.max(0, liste.indexOf(pinId));
@@ -42,6 +49,11 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
 
   const kisi = useKisi(p?.kisi);
 
+  const { veri: begenimSunucu } = useVeri<boolean>(
+    () => (ben && p ? begendimMi(p.id) : Promise.resolve(false)), [p?.id, ben?.id], false);
+  const { veri: kayitSunucu } = useVeri<boolean>(
+    () => (ben && p ? kayitliMi(p.yer) : Promise.resolve(false)), [p?.yer, ben?.id], false);
+
   /* Pin değişince medya başa döner. Efekt yerine React'in "prop değişince
      state'i ayarla" kalıbı — efektte setState basamaklı render üretiyor ve
      bir kare boyunca yanlış medya gösteriliyordu. */
@@ -50,6 +62,8 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
     setOncekiPin(pinId);
     setMedyaIndex(0);
     setYorumlarAcik(false);
+    setBegeniYerel(null);
+    setKayitYerel(null);
   }
 
   const pinGec = (yon: number) => {
@@ -112,6 +126,8 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
   if (!p || !kisi) return null;
 
   const medya = p.medyalar;
+  const begendim = begeniYerel ?? begenimSunucu;
+  const kayitli = kayitYerel ?? kayitSunucu;
   const m = medya[Math.min(medyaIndex, medya.length - 1)];
   const coklu = medya.length > 1;
 
@@ -242,9 +258,16 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
           {/* eylem çubuğu — beğeni ve kaydetme yazma işlemi, kimlik bekliyor */}
           <div className="mt-3 flex items-center gap-4 border-t border-white/15 pt-2.5">
             <Eylem
-              etiket={`${p.begeni}`}
+              etiket={`${p.begeni + (begendim && !begenimSunucu ? 1 : !begendim && begenimSunucu ? -1 : 0)}`}
               aria="Beğen"
-              onTikla={() => alert("Beğenmek için giriş gerekiyor — auth henüz eklenmedi.")}
+              dolu={begendim}
+              onTikla={async () => {
+                if (!ben) return onGirisIste();
+                const su = begendim;
+                setBegeniYerel(!su);
+                try { await begeniDegistir(p.id, su); }
+                catch (e) { setBegeniYerel(su); alert(e instanceof Error ? e.message : String(e)); }
+              }}
               ikon={<path d="M12 20.4 4.2 12.9a4.9 4.9 0 0 1 7-6.9l.8.8.8-.8a4.9 4.9 0 0 1 7 6.9z" />}
             />
             <Eylem
@@ -254,31 +277,44 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
               ikon={<path d="M20.5 11.5a7.5 8 0 0 1-10.8 7.2L4.5 20.5l1.9-4.9A8 8 0 1 1 20.5 11.5z" />}
             />
             <Eylem
-              etiket="kaydet"
+              etiket={kayitli ? "kaydedildi" : "kaydet"}
               aria="Kaydet"
-              onTikla={() => alert("Kaydetmek için giriş gerekiyor — auth henüz eklenmedi.")}
+              dolu={kayitli}
+              onTikla={async () => {
+                if (!ben) return onGirisIste();
+                const su = kayitli;
+                setKayitYerel(!su);
+                try { await kayitDegistir(p.yer, su); }
+                catch (e) { setKayitYerel(su); alert(e instanceof Error ? e.message : String(e)); }
+              }}
               ikon={<path d="M6 3.6h12v17l-6-4.2-6 4.2z" />}
             />
           </div>
         </div>
       </div>
 
-      {yorumlarAcik && <Yorumlar pinId={p.id} onKapat={() => setYorumlarAcik(false)} />}
+      {yorumlarAcik && (
+        <Yorumlar pinId={p.id} onKapat={() => setYorumlarAcik(false)} onGirisIste={onGirisIste} />
+      )}
     </div>
   );
 }
 
 /** Reels alt çubuğundaki tek eylem düğmesi. */
 function Eylem({
-  etiket, aria, ikon, onTikla,
-}: { etiket: string; aria: string; ikon: React.ReactNode; onTikla: () => void }) {
+  etiket, aria, ikon, onTikla, dolu,
+}: { etiket: string; aria: string; ikon: React.ReactNode; onTikla: () => void; dolu?: boolean }) {
   return (
     <button
       onClick={onTikla}
       aria-label={aria}
-      className="flex items-center gap-1.5 border-none bg-transparent p-0 text-[12.5px] text-white/90"
+      aria-pressed={dolu}
+      className={`flex items-center gap-1.5 border-none bg-transparent p-0 text-[12.5px] ${
+        dolu ? "text-[#F2C879]" : "text-white/90"
+      }`}
     >
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill={dolu ? "currentColor" : "none"}
+           stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
         {ikon}
       </svg>
       {etiket}

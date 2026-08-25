@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useVeri } from "@/lib/kanca";
-import { yerGetir, yerinPinleri, mekanOzeti, type YerDetay } from "@/lib/veri";
+import { yerGetir, yerinPinleri, mekanOzeti, kayitDegistir, kayitliMi, type YerDetay } from "@/lib/veri";
+import { useOturum } from "@/lib/oturum";
 import { useKisiler } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
 import type { PlaceSummary } from "@/lib/types";
@@ -16,6 +17,7 @@ interface Props {
   yerId: string;
   onKapat: () => void;
   onGonderiAc: (pinId: string, liste: string[]) => void;
+  onGirisIste: () => void;
 }
 
 const GUN_AD = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
@@ -29,7 +31,8 @@ const GUN_AD = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
  * Bölüm sırası BRIEF kararı: uyarı → hızlı bakış → buraya bırakılanlar →
  * künye → özetler. Önce "buraya gitmeli miyim", sonra ayrıntı.
  */
-export default function MekanSayfasi({ yerId, onKapat, onGonderiAc }: Props) {
+export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste }: Props) {
+  const { ben } = useOturum();
   const [kademe, setKademe] = useState<Kademe>("yarim");
   const [pinIndex, setPinIndex] = useState(0);
   const kapatDugmesi = useRef<HTMLButtonElement>(null);
@@ -39,6 +42,10 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc }: Props) {
   const { veri: ozet } = useVeri<PlaceSummary | null>(
     () => mekanOzeti(yerId), [yerId], null);
   const kisiler = useKisiler();
+  const { veri: kayitSunucu } = useVeri<boolean>(
+    () => (ben ? kayitliMi(yerId) : Promise.resolve(false)), [yerId, ben?.id], false);
+  const [kayitYerel, setKayitYerel] = useState<boolean | null>(null);
+  const kayitli = kayitYerel ?? kayitSunucu;
 
   /* mekan değişince karusel ve kademe başa döner */
   const [oncekiYer, setOncekiYer] = useState(yerId);
@@ -46,6 +53,7 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc }: Props) {
     setOncekiYer(yerId);
     setPinIndex(0);
     setKademe("yarim");
+    setKayitYerel(null);
   }
 
   useEffect(() => {
@@ -331,16 +339,25 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc }: Props) {
 
       <div className="flex shrink-0 gap-2 border-t border-[var(--cizgi)] bg-yuzey p-3">
         <button
-          onClick={() => alert("Pin formu henüz taşınmadı.")}
+          onClick={() => (ben ? alert("Pin formu henüz taşınmadı.") : onGirisIste())}
           className="flex-1 rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white"
         >
           Buraya pin at
         </button>
         <button
-          onClick={() => alert("Kaydetmek için giriş gerekiyor — auth henüz eklenmedi.")}
-          className="flex-1 rounded-sm border border-[var(--cizgi)] bg-kagit px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em]"
+          onClick={async () => {
+            if (!ben) return onGirisIste();
+            const su = kayitli;
+            setKayitYerel(!su);
+            try { await kayitDegistir(yerId, su); }
+            catch (e) { setKayitYerel(su); alert(e instanceof Error ? e.message : String(e)); }
+          }}
+          aria-pressed={kayitli}
+          className={`flex-1 rounded-sm px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] ${
+            kayitli ? "border-none bg-[#3B2C12] text-white" : "border border-[var(--cizgi)] bg-kagit"
+          }`}
         >
-          Kaydet
+          {kayitli ? "Kaydedildi ✓" : "Kaydet"}
         </button>
       </div>
     </div>
