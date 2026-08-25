@@ -1,8 +1,10 @@
 "use client";
 
-import { KISILER, PINLER, LISTELER, YERLER, yerBul } from "@/lib/demo";
-import { RENK, type DemoYer } from "@/lib/demo";
+import { RENK } from "@/lib/paleti";
 import { igneStil, egim, fotoZemin, simgeSvg } from "@/lib/gorsel";
+import { useVeri } from "@/lib/kanca";
+import { profilGetir, kisininPinleri, kisininListeleri, kisininYerleri, BENIM_KULLANICI_ADIM } from "@/lib/veri";
+import type { Yer, Pin, Kisi, Liste } from "@/lib/model";
 import Avatar from "./Avatar";
 
 /* profil mini haritası — elle çizilmiş Kadıköy soyutlaması (gerçek harita değil,
@@ -11,7 +13,7 @@ const X0 = 29.01, XS = 0.05, Y0 = 41.005, YS = 0.04;
 const svgX = (lng: number) => ((lng - X0) / XS) * 100;
 const svgY = (lat: number) => ((Y0 - lat) / YS) * 100;
 
-function MiniHarita({ yerler }: { yerler: DemoYer[] }) {
+function MiniHarita({ yerler }: { yerler: Yer[] }) {
   return (
     <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className="block aspect-[16/10] w-full">
       <rect width="100" height="100" fill="#D2DFE2" />
@@ -40,25 +42,42 @@ function MiniHarita({ yerler }: { yerler: DemoYer[] }) {
 }
 
 export default function Profil({
-  kisiId,
+  kullaniciAdi = BENIM_KULLANICI_ADIM,
   onYerAc,
 }: {
-  kisiId: string;
+  kullaniciAdi?: string;
   onYerAc: (id: string) => void;
 }) {
-  const kisi = KISILER[kisiId];
-  if (!kisi) return null;
+  const { veri: kisi } = useVeri<Kisi | null>(
+    () => profilGetir(kullaniciAdi), [kullaniciAdi], null);
+
+  /* Profil gelmeden pin/liste sorgusu atılamaz (id lazım); kisi null iken
+     boş dizi dönen sorgular çalışıp anında bitiyor. */
+  const kimlik = kisi?.id ?? "";
+  const { veri: pinleri } = useVeri<Pin[]>(
+    () => (kimlik ? kisininPinleri(kimlik) : Promise.resolve([])), [kimlik], []);
+  const { veri: listeleri } = useVeri<Liste[]>(
+    () => (kimlik ? kisininListeleri(kimlik) : Promise.resolve([])), [kimlik], []);
+  const { veri: yerleri } = useVeri<Yer[]>(
+    () => (kimlik
+      ? kisininYerleri(kimlik, { lat: 40.9885, lng: 29.0295 })
+      : Promise.resolve([])), [kimlik], []);
+
+  if (!kisi) {
+    return (
+      <div className="min-h-0 flex-1 bg-kagit p-4 text-[13px] text-murekkep2">
+        Profil yükleniyor…
+      </div>
+    );
+  }
   const benim = !!kisi.ben;
-  const pinleri = PINLER.filter((p) => p.kisi === kisiId).sort((a, b) => a.saat - b.saat);
-  const yerleri = [...new Set(pinleri.map((p) => p.yer))].map(yerBul).filter(Boolean) as DemoYer[];
-  const listeleri = LISTELER.filter((l) => l.sahip === kisiId);
 
   const baslik = "px-4 pb-2.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2";
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto bg-kagit">
       <div className="flex items-center gap-3.5 p-4">
-        <Avatar kisi={kisiId} boyut={62} />
+        <Avatar kisi={kisi.id} boyut={62} />
         <div className="flex-1">
           <div className="text-[19px] font-semibold leading-tight">{kisi.ad}</div>
           <div className="mt-0.5 font-sayi text-[12px] text-murekkep2">@{kisi.k}</div>
@@ -69,7 +88,7 @@ export default function Profil({
 
       <div className="flex px-4 pb-3.5">
         {[
-          [pinleri.length, "pin"],
+          [kisi.pinSayisi, "pin"],
           [yerleri.length, "mekan"],
           [kisi.takipci, "takipçi"],
           [kisi.takip, "takip"],
@@ -99,7 +118,7 @@ export default function Profil({
       {listeleri.length ? (
         <div className="flex gap-3 overflow-x-auto px-4 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {listeleri.map((l, i) => {
-            const ilk = l.yerler.slice(0, 3).map(yerBul).filter(Boolean) as DemoYer[];
+            const ilk = l.yerler.slice(0, 3);
             return (
               <div
                 key={l.id}
@@ -135,23 +154,21 @@ export default function Profil({
       {pinleri.length ? (
         <div className="grid grid-cols-2 gap-3 px-4 pb-5">
           {pinleri.map((p, i) => {
-            const y = yerBul(p.yer);
-            if (!y) return null;
             return (
               <button
                 key={p.id}
-                onClick={() => onYerAc(y.id)}
-                style={{ ...igneStil(y.tur), transform: `rotate(${egim(i)}deg)` }}
+                onClick={() => onYerAc(p.yer)}
+                style={{ ...igneStil(p.yerTuru), transform: `rotate(${egim(i)}deg)` }}
                 className="relative aspect-[0.86] rounded-sm border-none bg-[var(--kag)] p-[3px] shadow-kagit"
               >
                 <span className="absolute -top-[5px] left-1/2 z-[2] size-2.5 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
                 <div
                   className="relative grid size-full place-items-center overflow-hidden rounded-sm"
-                  style={{ background: fotoZemin(y.tur) }}
+                  style={{ background: fotoZemin(p.yerTuru) }}
                 >
-                  <div className="opacity-30" dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 34) }} />
+                  <div className="opacity-30" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 34) }} />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(0,0,0,.6)] to-transparent px-2 pb-[7px] pt-4 text-left text-[11.5px] font-semibold leading-tight text-white">
-                    {y.ad}
+                    {p.yerAdi}
                   </div>
                 </div>
               </button>

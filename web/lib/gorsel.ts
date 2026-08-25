@@ -2,7 +2,8 @@
  * Görsel yardımcılar — prototipteki jeton pin ve post-it dilinin karşılığı.
  * Tasarım kararları BRIEF.md → "Tasarım dili" bölümünden gelir.
  */
-import { RENK, KAGIT, SIMGE, type DemoYer } from "./demo";
+import { RENK, KAGIT, SIMGE } from "./paleti";
+import type { Yer } from "./model";
 
 /** post-it kağıdı + toplu iğne renkleri, kategoriden türer */
 export function igneStil(tur: string): React.CSSProperties {
@@ -64,7 +65,7 @@ const ALEV =
  * Açık = kategori renginde, kapalı = gri. Popüler = altın halka + alev rozeti.
  */
 export function jetonSVG(
-  y: Pick<DemoYer, "tur">,
+  y: Pick<Yer, "tur">,
   acik: boolean,
   populer: boolean,
   secili: boolean,
@@ -103,3 +104,17 @@ export const jetonGradyanlari = () =>
       </radialGradient>`,
     )
     .join("");
+
+/**
+ * Kişi rengi — kullanıcı adından türer.
+ *
+ * profiles tablosunda renk sütunu yok ve olmasına gerek de yok: renk veri
+ * değil sunum. Deterministik olması önemli — aynı kişi her yerde, her açılışta
+ * aynı rengi alsın diye kullanıcı adının karması kullanılıyor.
+ * Doygunluk/parlaklık sabit tutuluyor ki beyaz baş harf her tonda okunsun.
+ */
+export function kisiRengi(kullaniciAdi: string): string {
+  let h = 0;
+  for (const c of kullaniciAdi) h = (h * 31 + c.codePointAt(0)!) >>> 0;
+  return `hsl(${h % 360} 46% 42%)`;
+}

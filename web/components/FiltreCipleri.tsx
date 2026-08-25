@@ -1,6 +1,6 @@
 "use client";
 
-import { RENK, KAGIT, TUR_AD } from "@/lib/demo";
+import { RENK, KAGIT, TUR_AD } from "@/lib/paleti";
 import { egim } from "@/lib/gorsel";
 
 /** kategori olmayan filtreler için ayrı kağıt temaları */

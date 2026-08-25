@@ -1,11 +1,9 @@
 "use client";
 
-import { KISILER, PINLER } from "@/lib/demo";
-import { egim } from "@/lib/gorsel";
+import { egim, kisiRengi } from "@/lib/gorsel";
+import { useVeri } from "@/lib/kanca";
+import { hikayeSeridi, type HikayeKisi } from "@/lib/veri";
 import Avatar from "./Avatar";
-
-/* takip edilenler — Supabase gelince follows tablosundan okunacak */
-const TAKIPTEKILER = new Set(["elif", "mert"]);
 
 interface Props {
   secili: string | null;
@@ -15,26 +13,26 @@ interface Props {
 /**
  * Instagram story mantığında yuvarlak post-it'ler: takip ettiklerinin pinleri.
  * Dokununca harita o kişinin pinlediği yerlere filtrelenir.
+ *
+ * Takip listesi artık sabit değil — follows tablosundan geliyor.
  */
 export default function HikayeSeridi({ secili, onSec }: Props) {
-  const enSonSaat = (k: string) =>
-    Math.min(Infinity, ...PINLER.filter((p) => p.kisi === k).map((p) => p.saat));
+  const { veri: kisiler } = useVeri<HikayeKisi[]>(hikayeSeridi, [], []);
 
-  const kisiler = Object.entries(KISILER)
-    .filter(([k, p]) => p.ben || TAKIPTEKILER.has(k))
-    .sort(
-      (a, b) => (b[1].ben ? 1 : 0) - (a[1].ben ? 1 : 0) || enSonSaat(a[0]) - enSonSaat(b[0]),
-    );
+  /* Şerit yüklenirken de yer kaplasın, yoksa harita yukarı zıplıyor */
+  if (!kisiler.length) {
+    return <div className="pano-doku h-[92px] shrink-0 border-b border-[var(--cizgi)]" />;
+  }
 
   return (
     <div className="pano-doku flex shrink-0 gap-3.5 overflow-x-auto border-b border-[var(--cizgi)] px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {kisiler.map(([k, p], i) => {
-        const yeni = enSonSaat(k) < 24; /* son 24 saatte yeni pin */
-        const aktif = secili === k;
+      {kisiler.map((p, i) => {
+        const yeni = p.sonPinSaat < 24; /* son 24 saatte yeni pin */
+        const aktif = secili === p.id;
         return (
           <button
-            key={k}
-            onClick={() => onSec(k)}
+            key={p.id}
+            onClick={() => onSec(p.id)}
             aria-pressed={aktif}
             className="flex w-[58px] shrink-0 flex-col items-center gap-1.5 border-none bg-transparent p-0"
           >
@@ -43,7 +41,7 @@ export default function HikayeSeridi({ secili, onSec }: Props) {
               style={{
                 transform: `rotate(${aktif ? 0 : egim(i)}deg)`,
                 boxShadow: yeni
-                  ? `var(--shadow-kagit), 0 0 0 2.5px ${p.renk}`
+                  ? `var(--shadow-kagit), 0 0 0 2.5px ${kisiRengi(p.k)}`
                   : "var(--shadow-kagit)",
                 outline: aktif ? "2px solid var(--color-jeton)" : undefined,
                 outlineOffset: aktif ? 2 : undefined,
@@ -51,7 +49,7 @@ export default function HikayeSeridi({ secili, onSec }: Props) {
             >
               {/* toplu iğne */}
               <span className="absolute -top-[5px] left-1/2 size-[11px] -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,#F5C87C_16%,#DE9B2E_55%,#8E5C11_100%)]" />
-              <Avatar kisi={k} boyut={42} />
+              <Avatar kisi={p.id} boyut={42} />
             </div>
             <span
               className={`max-w-[58px] truncate font-tabela text-[10px] uppercase tracking-[0.05em] ${aktif ? "text-murekkep" : "text-murekkep2"}`}

@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PINLER, KISILER, yerBul, medyalari } from "@/lib/demo";
 import { fotoZemin, simgeSvg, zaman } from "@/lib/gorsel";
+import { useVeri } from "@/lib/kanca";
+import { pinGetir } from "@/lib/veri";
+import { useKisi } from "@/lib/kisiler-baglam";
+import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
 
 interface Props {
-  pinId: number;
-  liste: number[];
+  pinId: string;
+  liste: string[];
   onKapat: () => void;
-  onPinDegisti: (id: number) => void;
+  onPinDegisti: (id: string) => void;
 }
 
 /**
@@ -23,10 +26,28 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
   const govde = useRef<HTMLDivElement>(null);
 
   const pinIndex = Math.max(0, liste.indexOf(pinId));
-  const p = PINLER.find((x) => x.id === pinId);
+  /* Tek pin ayrı çekiliyor: akış listesi bellekte olsa da Reels'e doğrudan
+     bağlantıyla da girilebilmeli (ileride /pin/[id] rotası). */
+  const { veri: gelen } = useVeri<Pin | null>(() => pinGetir(pinId), [pinId], null);
 
-  /* pin değişince medya başa döner */
-  useEffect(() => setMedyaIndex(0), [pinId]);
+  /* Yeni pin yüklenirken `gelen` null oluyor ve bileşen tamamen kapanıyordu —
+     hızlı bağlantıda göze çarpmıyor ama yavaş ağda dikey kaydırmanın her
+     adımında ekran siyaha düşer. Son yüklenen pini tutup onu göstermeye
+     devam ediyoruz; yalnızca ilk açılışta gerçekten boş kalıyor. */
+  const [sonPin, setSonPin] = useState<Pin | null>(null);
+  if (gelen && gelen !== sonPin) setSonPin(gelen);
+  const p = gelen ?? sonPin;
+
+  const kisi = useKisi(p?.kisi);
+
+  /* Pin değişince medya başa döner. Efekt yerine React'in "prop değişince
+     state'i ayarla" kalıbı — efektte setState basamaklı render üretiyor ve
+     bir kare boyunca yanlış medya gösteriliyordu. */
+  const [oncekiPin, setOncekiPin] = useState(pinId);
+  if (oncekiPin !== pinId) {
+    setOncekiPin(pinId);
+    setMedyaIndex(0);
+  }
 
   const pinGec = (yon: number) => {
     const yeni = pinIndex + yon;
@@ -39,7 +60,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
     const el = (e: KeyboardEvent) => {
       if (e.key === "Escape") return onKapat();
       if (!p) return;
-      const son = medyalari(p).length - 1;
+      const son = p.medyalar.length - 1;
       if (e.key === "ArrowUp") pinGec(-1);
       else if (e.key === "ArrowDown") pinGec(1);
       else if (e.key === "ArrowLeft") setMedyaIndex((i) => Math.max(0, i - 1));
@@ -85,12 +106,9 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
     };
   });
 
-  if (!p) return null;
-  const y = yerBul(p.yer);
-  const kisi = KISILER[p.kisi];
-  if (!y || !kisi) return null;
+  if (!p || !kisi) return null;
 
-  const medya = medyalari(p);
+  const medya = p.medyalar;
   const m = medya[Math.min(medyaIndex, medya.length - 1)];
   const coklu = medya.length > 1;
 
@@ -127,9 +145,9 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
         {/* medya tam ekranı kaplar */}
         <div
           className="absolute inset-0 grid place-items-center"
-          style={{ background: fotoZemin(y.tur) }}
+          style={{ background: fotoZemin(p.yerTuru) }}
         >
-          <div className="opacity-[0.22]" dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 120) }} />
+          <div className="opacity-[0.22]" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 120) }} />
           {m.tur === "video" && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <span className="grid size-[52px] place-items-center rounded-full bg-[rgba(20,15,8,.5)] text-[22px] text-white">▶</span>
@@ -194,13 +212,13 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
           </div>
 
           <div className="mb-2.5 inline-flex items-center gap-1.5 border-b border-[rgba(242,200,121,.4)] pb-0.5 font-tabela text-[11.5px] uppercase tracking-[0.06em] text-[#F2C879]">
-            {y.ad} · {y.semt}
+            {p.yerAdi} · {p.yerSemt}
           </div>
 
           {/* aktif medyanın kendi notu */}
           {m.not && <p className="mb-2 font-el text-[15px] leading-snug text-white/90">{m.not}</p>}
 
-          {p.kelimeler && (
+          {p.kelimeler.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {p.kelimeler.map((k) => (
                 <span key={k} className="rounded-sm border border-white/45 px-2 py-1 font-el text-[13px] font-bold leading-none">

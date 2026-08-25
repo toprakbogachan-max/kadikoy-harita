@@ -8,35 +8,64 @@ import AltMenu, { type Ekran } from "@/components/AltMenu";
 import Akis from "@/components/Akis";
 import GonderiDetay from "@/components/GonderiDetay";
 import Profil from "@/components/Profil";
-import { YERLER, PINLER, type DemoYer } from "@/lib/demo";
-import { acikMi, jetonGradyanlari } from "@/lib/gorsel";
+import { KisilerSaglayici } from "@/lib/kisiler-baglam";
+import { useVeri } from "@/lib/kanca";
+import { yerleriGetir, kisininYerleri, ozetSayilar } from "@/lib/veri";
+import type { Yer } from "@/lib/model";
+import type { PlaceCategory } from "@/lib/types";
+import { jetonGradyanlari } from "@/lib/gorsel";
 
-const POPULER_ESIK = 2;
+/* Haritanın açılış merkezi — Kadıköy iskelesi civarı */
+const MERKEZ = { lat: 40.9885, lng: 29.0295 };
+
+/* Yarıçap Kadıköy'ü kapsıyor; sınır ekrandaki marker sayısını makul tutmak için.
+   Harita gezdikçe yeniden sorgulamak sonraki adım. */
+const YARICAP_M = 2500;
+const MARKER_SINIRI = 160;
+
+/** Filtre çipi → places_nearby parametresi. "kaydettiklerim" auth bekliyor. */
+const KATEGORILER: PlaceCategory[] = [
+  "kahve", "yemek", "bar", "tatli", "kultur", "park", "otel", "magaza",
+];
 
 export default function Sayfa() {
+  return (
+    <KisilerSaglayici>
+      <Uygulama />
+    </KisilerSaglayici>
+  );
+}
+
+function Uygulama() {
   const [ekran, setEkran] = useState<Ekran>("harita");
   const [bolge, setBolge] = useState("KADIKÖY");
   const [filtre, setFiltre] = useState("acik");
   const [kisiFiltre, setKisiFiltre] = useState<string | null>(null);
   const [secili, setSecili] = useState<string | null>(null);
-  const [gonderi, setGonderi] = useState<{ id: number; liste: number[] } | null>(null);
+  const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
 
-  const gorunenler = useMemo<DemoYer[]>(() => {
-    const t = new Date();
-    return YERLER.filter((y) => {
-      if (kisiFiltre && !PINLER.some((p) => p.yer === y.id && p.kisi === kisiFiltre)) return false;
-      if (filtre === "acik") return acikMi(y.saatler, t) === true;
-      if (filtre === "hepsi") return true;
-      if (filtre === "populer") return PINLER.filter((p) => p.yer === y.id).length >= POPULER_ESIK;
-      if (filtre === "kaydettiklerim") return false; // kayıtlar Supabase'e bağlanınca gelecek
-      return y.tur === filtre;
-    });
-  }, [filtre, kisiFiltre]);
+  /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
+     parametre olarak gidiyor, 1052 mekanı tarayıcıya indirip elemekten iyi. */
+  const sorgu = useMemo(() => ({
+    lat: MERKEZ.lat,
+    lng: MERKEZ.lng,
+    yaricapM: YARICAP_M,
+    limit: MARKER_SINIRI,
+    kategori: KATEGORILER.includes(filtre as PlaceCategory) ? (filtre as PlaceCategory) : null,
+    sadeceAcik: filtre === "acik",
+  }), [filtre]);
 
-  const acikSayisi = useMemo(() => {
-    const t = new Date();
-    return YERLER.filter((y) => acikMi(y.saatler, t)).length;
-  }, []);
+  const { veri: gorunenler, yukleniyor, hata } = useVeri<Yer[]>(
+    () => (kisiFiltre ? kisininYerleri(kisiFiltre, sorgu) : yerleriGetir(sorgu)),
+    [sorgu, kisiFiltre],
+    [],
+  );
+
+  const { veri: sayilar } = useVeri(
+    () => ozetSayilar(MERKEZ.lat, MERKEZ.lng, YARICAP_M),
+    [],
+    { acikYer: 0, pinSayisi: 0 },
+  );
 
   /* hikayeye dokununca kategori filtresi "hepsi"ye geçer, yoksa
      o kişinin pinlediği yerlerin hepsi görünmeyebilir */
@@ -73,8 +102,8 @@ export default function Sayfa() {
               <div className="mt-2 flex items-center gap-2 text-[12.5px] text-murekkep2">
                 <span className="size-[9px] shrink-0 rounded-full bg-jeton shadow-[0_0_0_3px_rgba(184,128,26,.16)]" />
                 <span>
-                  <b className="font-sayi text-[13px] font-bold text-jeton">{acikSayisi}</b> yer şu an açık ·{" "}
-                  {PINLER.length} pin
+                  <b className="font-sayi text-[13px] font-bold text-jeton">{sayilar.acikYer}</b> yer şu an açık ·{" "}
+                  {sayilar.pinSayisi} pin
                 </span>
               </div>
             </header>
@@ -83,17 +112,20 @@ export default function Sayfa() {
 
             <div className="relative min-h-0 flex-1 overflow-hidden bg-su">
               <Harita gorunenler={gorunenler} secili={secili} onYerSec={setSecili} onBolgeDegisti={setBolge} />
-              {gorunenler.length === 0 && (
-                <div className="absolute inset-x-4 top-3.5 z-[2] rounded-sm border border-[var(--cizgi)] bg-yuzey p-3 text-center text-[13px] leading-snug shadow-kagit2">
-                  {kisiFiltre
+              <Durum
+                yukleniyor={yukleniyor}
+                hata={hata}
+                bos={gorunenler.length === 0}
+                mesaj={
+                  kisiFiltre
                     ? "Bu kişinin şu filtrede pinlediği yer yok."
                     : filtre === "kaydettiklerim"
-                      ? "Kaydettiklerin Supabase bağlanınca gelecek."
+                      ? "Kaydettiklerin giriş yapınca gelecek."
                       : filtre === "acik"
                         ? "Şu an açık hiçbir yer yok. “Hepsi”ne bakabilirsin."
-                        : "Bu kategoride yer yok."}
-                </div>
-              )}
+                        : "Bu kategoride yer yok."
+                }
+              />
             </div>
 
             <FiltreCipleri secili={filtre} onSec={setFiltre} />
@@ -114,7 +146,7 @@ export default function Sayfa() {
             <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
               <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">PROFİL</h1>
             </header>
-            <Profil kisiId="bogac" onYerAc={haritadaAc} />
+            <Profil onYerAc={haritadaAc} />
           </>
         )}
 
@@ -141,5 +173,21 @@ export default function Sayfa() {
         <AltMenu ekran={ekran} onGec={setEkran} onPinAt={() => alert("Pin formu henüz taşınmadı.")} />
       </div>
     </main>
+  );
+}
+
+/** Harita üstündeki tek satırlık bilgi şeridi — yükleniyor / hata / boş sonuç. */
+function Durum({
+  yukleniyor, hata, bos, mesaj,
+}: { yukleniyor: boolean; hata: string | null; bos: boolean; mesaj: string }) {
+  if (!yukleniyor && !hata && !bos) return null;
+  return (
+    <div className="absolute inset-x-4 top-3.5 z-[2] rounded-sm border border-[var(--cizgi)] bg-yuzey p-3 text-center text-[13px] leading-snug shadow-kagit2">
+      {hata
+        ? `Mekanlar yüklenemedi: ${hata}`
+        : yukleniyor
+          ? "Mekanlar yükleniyor…"
+          : mesaj}
+    </div>
   );
 }
