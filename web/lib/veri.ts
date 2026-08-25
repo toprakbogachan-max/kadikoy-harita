@@ -86,6 +86,8 @@ export async function yerleriGetir(s: YerSorgusu): Promise<Yer[]> {
     uzaklik: p.distance_m,
     uyari: p.warning,
     fiyat: p.price_per_person,
+    kapak: kapakSec(p.cover_path, p.cover_url).url,
+    kapakKredi: null,   /* liste ekranlarında atıf gösterilmiyor, detayda gösteriliyor */
   }));
 }
 
@@ -120,7 +122,7 @@ export async function yerGetir(id: string): Promise<YerDetay | null> {
   const { data, error } = await db
     .from("places")
     .select(`id, slug, name, category, neighborhood, address, phone, website,
-             opening_hours, pin_count, save_count, cover_url, cover_credit,
+             opening_hours, pin_count, save_count, cover_url, cover_credit, cover_path,
              place_facts ( needs_booking, booking_note, best_time, price_per_person,
                            cash_only, good_for, warning )`)
     .eq("id", id)
@@ -142,7 +144,9 @@ export async function yerGetir(id: string): Promise<YerDetay | null> {
     saatler: saatleriCevir(data.opening_hours),
     pinSayisi: data.pin_count,
     kaydeden: data.save_count,
-    kapak: data.cover_url, kapakKredi: data.cover_credit,
+    /* Pin fotoğrafı varsa kredi göstermiyoruz — kullanıcının kendi fotoğrafı */
+    kapak: kapakSec(data.cover_path, data.cover_url).url,
+    kapakKredi: kapakSec(data.cover_path, data.cover_url).kredi ? data.cover_credit : null,
     adres: data.address, telefon: data.phone, site: data.website,
     kunye: f
       ? {
@@ -437,7 +441,7 @@ export async function mekanAra(q: string, limit = 24): Promise<Yer[]> {
   if (n.length < 2) return [];
   const { data, error } = await db
     .from("places")
-    .select("id, slug, name, category, neighborhood, pin_count, cover_url")
+    .select("id, slug, name, category, neighborhood, pin_count, cover_url, cover_path")
     .eq("status", "published")
     .ilike("search_text", `%${n}%`)
     .order("pin_count", { ascending: false })
@@ -446,7 +450,7 @@ export async function mekanAra(q: string, limit = 24): Promise<Yer[]> {
   return (data ?? []).map((p): Yer => ({
     id: p.id, slug: p.slug, ad: p.name, tur: p.category,
     semt: p.neighborhood ?? "Kadıköy", lat: 0, lng: 0, saatler: null,
-    pinSayisi: p.pin_count, kapak: p.cover_url,
+    pinSayisi: p.pin_count, kapak: kapakSec(p.cover_path, p.cover_url).url,
   }));
 }
 
@@ -467,7 +471,7 @@ export async function populerler(): Promise<{ kisiler: Kisi[]; yerler: Yer[] }> 
   const [{ data: p }, { data: y }] = await Promise.all([
     db.from("profiles").select(PROFIL_SECIM)
       .order("follower_count", { ascending: false }).limit(8),
-    db.from("places").select("id, slug, name, category, neighborhood, pin_count, cover_url")
+    db.from("places").select("id, slug, name, category, neighborhood, pin_count, cover_url, cover_path")
       .eq("status", "published")
       .order("pin_count", { ascending: false }).limit(9),
   ]);
@@ -476,7 +480,7 @@ export async function populerler(): Promise<{ kisiler: Kisi[]; yerler: Yer[] }> 
     yerler: (y ?? []).map((x): Yer => ({
       id: x.id, slug: x.slug, ad: x.name, tur: x.category,
       semt: x.neighborhood ?? "Kadıköy", lat: 0, lng: 0, saatler: null,
-      pinSayisi: x.pin_count, kapak: x.cover_url,
+      pinSayisi: x.pin_count, kapak: kapakSec(x.cover_path, x.cover_url).url,
     })),
   };
 }
@@ -694,6 +698,24 @@ export async function pinAt(y: YeniPin): Promise<string> {
   return pin.id;
 }
 
+/**
+ * Mekan kapağı — önce en çok beğenilen pinin fotoğrafı, o yoksa Wikimedia
+ * referans görseli. İkisi de yoksa null; arayüz degrade + kategori simgesi
+ * çiziyor.
+ *
+ * Sıra önemli: kullanıcı fotoğrafı her zaman öne geçer. Mekanı temsil eden
+ * şey oraya gidenlerin çektiği fotoğraf; Wikimedia görseli yalnızca henüz
+ * pin gelmemiş yerler için yedek.
+ */
+export function kapakSec(
+  pinYolu: string | null | undefined,
+  wikimediaUrl: string | null | undefined,
+): { url: string | null; kredi: boolean } {
+  const pin = pinYolu ? medyaUrl(pinYolu) : null;
+  if (pin) return { url: pin, kredi: false };
+  return { url: wikimediaUrl ?? null, kredi: !!wikimediaUrl };
+}
+
 /** Storage yolundan görüntülenebilir URL. Kova public, imzalamaya gerek yok. */
 export function medyaUrl(yol: string): string | null {
   /* Tohum verisi demo:// ile işaretli — gerçek dosya yok, arayüz degrade çiziyor */
@@ -721,14 +743,15 @@ export async function kaydettigimYerler(): Promise<Yer[]> {
   const id = await benimKimligim();
   if (!id) return [];
   const { data, error } = await db.from("saves")
-    .select("created_at, places ( id, slug, name, category, neighborhood, pin_count, cover_url )")
+    .select("created_at, places ( id, slug, name, category, neighborhood, pin_count, cover_url, cover_path )")
     .eq("user_id", id).order("created_at", { ascending: false });
   if (error) throw error;
-  interface Ham { places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; pin_count: number; cover_url: string | null } }
+  interface Ham { places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; pin_count: number; cover_url: string | null; cover_path: string | null } }
   return (data as unknown as Ham[]).filter((s) => s.places).map((s): Yer => ({
     id: s.places.id, slug: s.places.slug, ad: s.places.name, tur: s.places.category,
     semt: s.places.neighborhood ?? "Kadıköy", lat: 0, lng: 0, saatler: null,
-    pinSayisi: s.places.pin_count, kapak: s.places.cover_url,
+    pinSayisi: s.places.pin_count,
+    kapak: kapakSec(s.places.cover_path, s.places.cover_url).url,
   }));
 }
 

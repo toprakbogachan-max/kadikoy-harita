@@ -25,7 +25,11 @@ export interface Yer {
   uzaklik?: number;
   uyari?: string | null;
   fiyat?: number | null;
-  /** serbest lisanslı referans görseli — kullanıcı fotoğrafı DEĞİL */
+  /**
+   * Kapak görseli — mekanı temsil eden fotoğraf.
+   * Önce en çok beğenilen pinin fotoğrafı, o yoksa Wikimedia referans görseli.
+   * `kapakKredi` yalnızca ikincisinde dolu olur (CC-BY atıf zorunluluğu).
+   */
   kapak?: string | null;
   /** CC-BY ailesi bunu görünür yerde göstermeyi şart koşar */
   kapakKredi?: string | null;

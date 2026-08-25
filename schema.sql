@@ -429,8 +429,45 @@ begin
 end $$;
 
 -- ============================================================
+--  6b. MEKAN KAPAĞI — en çok beğenilen pinden
+-- ============================================================
+-- Mekanın kapak fotoğrafını kimse "seçmiyor": oraya gidenlerin bıraktığı
+-- pinlerden en çok beğenileni kendiliğinden kapak oluyor. Herkesin
+-- koyabilmesi "son yükleyen kazanır" olurdu; sadece editör ölçeklenmezdi.
+-- Wikimedia'dan gelen places.cover_url yedek kalıyor (park/anıt gibi henüz
+-- pin gelmemiş yerler boş görünmesin diye).
+
+create or replace function place_cover_path(in_place uuid) returns text
+language sql stable as $$
+  select m.storage_path
+  from pins p
+  join pin_media m on m.pin_id = p.id and m.kind = 'photo'
+  where p.place_id = in_place
+    and p.status = 'published'
+    and m.storage_path not like 'demo://%'   -- tohum verisinin sahte yolları
+  order by p.like_count desc, p.created_at desc, m.ordering
+  limit 1;
+$$;
+
+-- PostgREST "hesaplanan alan": tablo tipini alan fonksiyon, sorguda normal
+-- sütun gibi seçilebiliyor (select=id,name,cover_path). Liste ekranlarında
+-- mekan başına ayrı sorgu atmaya gerek kalmıyor.
+create or replace function cover_path(places) returns text
+language sql stable as $$
+  select place_cover_path($1.id);
+$$;
+
+create index if not exists pins_place_begeni_idx
+  on pins (place_id, like_count desc) where status = 'published';
+
+-- ============================================================
 --  7. HARİTA SORGUSU — konum + filtre + pin sayısı tek çağrıda
 -- ============================================================
+-- Dönüş tipi değişiyor; create or replace bunu yapamaz (42P13).
+-- İmzayı tam yazmak şart, yoksa hangi aşırı yükleme düşürüleceği belirsiz.
+drop function if exists places_nearby(
+  double precision, double precision, integer, place_category, boolean, integer);
+
 create or replace function places_nearby(
   in_lat double precision,
   in_lng double precision,
@@ -441,13 +478,15 @@ create or replace function places_nearby(
 ) returns table (
   id uuid, slug text, name text, category place_category, neighborhood text,
   lat double precision, lng double precision, distance_m double precision,
-  is_open boolean, pin_count integer, warning text, price_per_person integer
+  is_open boolean, pin_count integer, warning text, price_per_person integer,
+  cover_path text, cover_url text
 ) language sql stable as $$
   select p.id, p.slug, p.name, p.category, p.neighborhood,
          st_y(p.geo::geometry), st_x(p.geo::geometry),
          st_distance(p.geo, st_point(in_lng, in_lat)::geography),
          is_open_now(p.opening_hours),
-         p.pin_count, f.warning, f.price_per_person
+         p.pin_count, f.warning, f.price_per_person,
+         place_cover_path(p.id), p.cover_url
   from places p
   left join place_facts f on f.place_id = p.id
   where p.status = 'published'

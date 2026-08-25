@@ -112,7 +112,12 @@ export default function AraEkrani({ onYerAc, onKisiAc }: Props) {
                 className="relative flex aspect-[0.92] flex-col items-center justify-center gap-[5px] rounded-sm border-none bg-[var(--kag)] px-[5px] pb-[7px] pt-2.5 shadow-kagit"
               >
                 <span className="absolute -top-[5px] left-1/2 size-2.5 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
-                <div dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 26, RENK[y.tur]?.ana) }} />
+                {y.kapak ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={y.kapak} alt="" className="size-[26px] rounded-sm object-cover" />
+                ) : (
+                  <div dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 26, RENK[y.tur]?.ana) }} />
+                )}
                 <span className="line-clamp-2 break-words text-center text-[11.5px] font-semibold leading-tight">
                   {y.ad}
                 </span>

@@ -46,6 +46,10 @@ export interface NearbyPlace extends Pick<Place, "id" | "slug" | "name" | "categ
   is_open: boolean | null;      // null = saat bilgisi yok
   warning: string | null;
   price_per_person: number | null;
+  /** en çok beğenilen pinin fotoğraf yolu (Storage) — yoksa null */
+  cover_path: string | null;
+  /** Wikimedia referans görseli — yalnızca pin fotoğrafı yokken kullanılır */
+  cover_url: string | null;
 }
 
 export interface PinMedia {

@@ -124,18 +124,25 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
 
       <div className={`min-h-0 flex-1 ${kademe === "yarim" ? "overflow-hidden" : "overflow-y-auto"}`}>
         {/* ---- kapak: yalnızca serbest lisanslı referans görseli ---- */}
+        {/* Kapak: önce en çok beğenilen pinin fotoğrafı, o yoksa Wikimedia
+            referans görseli. Atıf yalnızca ikincisinde gösteriliyor —
+            kullanıcının kendi fotoğrafı için kredi satırı anlamsız. */}
         {yer.kapak && (
           <figure className="m-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={yer.kapak}
-              alt={`${yer.ad} — Wikimedia Commons`}
+              alt={yer.kapakKredi ? `${yer.ad} — Wikimedia Commons` : yer.ad}
               className="block h-[168px] w-full object-cover"
             />
-            {/* CC-BY ailesi atfı GÖRÜNÜR yerde göstermeyi şart koşuyor */}
-            {yer.kapakKredi && (
+            {yer.kapakKredi ? (
+              /* CC-BY ailesi atfı GÖRÜNÜR yerde göstermeyi şart koşuyor */
               <figcaption className="bg-[rgba(35,52,60,.05)] px-4 py-1.5 text-[10px] leading-snug text-murekkep2">
                 Görsel: {yer.kapakKredi}
+              </figcaption>
+            ) : (
+              <figcaption className="bg-[rgba(35,52,60,.05)] px-4 py-1.5 text-[10px] leading-snug text-murekkep2">
+                En çok beğenilen pinden
               </figcaption>
             )}
           </figure>
