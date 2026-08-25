@@ -43,6 +43,14 @@ create table if not exists profiles (
 );
 create index if not exists profiles_username_trgm on profiles using gin (username gin_trgm_ops);
 
+-- Profiller için de aynısı: "bogac" araması "Bogaç"ı bulsun.
+alter table profiles add column if not exists search_text text
+  generated always as (
+    lower(translate(display_name || ' ' || username,
+                    'ÇĞİÖŞÜÂÎÛçğıöşüâîû', 'CGIOSUAIUcgiosuaiu'))
+  ) stored;
+create index if not exists profiles_search_trgm on profiles using gin (search_text gin_trgm_ops);
+
 -- ============================================================
 --  2. MEKANLAR (kanonik kayıt — aynı yere 50 pin atılınca 50 mekan olmasın)
 -- ============================================================
@@ -80,6 +88,22 @@ create table if not exists places (
 -- baştan sona tekrar çalıştırılabilir kalsın diye hepsi "if not exists".
 alter table places add column if not exists cover_url    text;
 alter table places add column if not exists cover_credit text;
+
+-- ---------- aksansız arama ----------
+-- ilike büyük/küçük harfi çözüyor ama aksanı çözmüyor: "ciya" araması
+-- "Çiya Sofrası"nı bulamıyor, "ismail" araması "Ali İsmail Korkmaz Parkı"nı
+-- bulamıyor. Türkçe klavyesi olmayan ya da hızlı yazan kullanıcı hiçbir şey
+-- bulamaz. Çözüm: türetilmiş sütunda Türkçe harfler ASCII'ye indiriliyor,
+-- istemci de sorguyu aynı şekilde indirip karşılaştırıyor.
+--
+-- translate ÖNCE, lower SONRA olmalı: lower('İ') Türkçe olmayan collation'da
+-- tek harf değil "i" + U+0307 (birleşen nokta) veriyor.
+alter table places add column if not exists search_text text
+  generated always as (
+    lower(translate(name || ' ' || coalesce(neighborhood, ''),
+                    'ÇĞİÖŞÜÂÎÛçğıöşüâîû', 'CGIOSUAIUcgiosuaiu'))
+  ) stored;
+create index if not exists places_search_trgm on places using gin (search_text gin_trgm_ops);
 
 create index if not exists places_geo_gist on places using gist (geo);
 create index if not exists places_category_idx on places (category) where status = 'published';

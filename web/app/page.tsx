@@ -9,9 +9,10 @@ import Akis from "@/components/Akis";
 import GonderiDetay from "@/components/GonderiDetay";
 import Profil from "@/components/Profil";
 import MekanSayfasi from "@/components/MekanSayfasi";
+import AraEkrani from "@/components/AraEkrani";
 import { KisilerSaglayici } from "@/lib/kisiler-baglam";
 import { useVeri } from "@/lib/kanca";
-import { yerleriGetir, kisininYerleri, ozetSayilar } from "@/lib/veri";
+import { yerleriGetir, kisininYerleri, ozetSayilar, BENIM_KULLANICI_ADIM } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { jetonGradyanlari } from "@/lib/gorsel";
@@ -44,6 +45,8 @@ function Uygulama() {
   const [kisiFiltre, setKisiFiltre] = useState<string | null>(null);
   const [secili, setSecili] = useState<string | null>(null);
   const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
+  /* Profil artık başkasının da olabilir — aramadan bir kişiye gidilebiliyor */
+  const [profilKisi, setProfilKisi] = useState(BENIM_KULLANICI_ADIM);
 
   /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
      parametre olarak gidiyor, 1052 mekanı tarayıcıya indirip elemekten iyi. */
@@ -145,9 +148,22 @@ function Uygulama() {
         {ekran === "profil" && (
           <>
             <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
-              <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">PROFİL</h1>
+              <div className="flex items-center gap-2.5">
+                {profilKisi !== BENIM_KULLANICI_ADIM && (
+                  <button
+                    onClick={() => setProfilKisi(BENIM_KULLANICI_ADIM)}
+                    aria-label="Kendi profiline dön"
+                    className="shrink-0 border-none bg-transparent p-0 text-[18px] leading-none text-murekkep2"
+                  >
+                    ‹
+                  </button>
+                )}
+                <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">
+                  {profilKisi === BENIM_KULLANICI_ADIM ? "PROFİL" : "@" + profilKisi}
+                </h1>
+              </div>
             </header>
-            <Profil onYerAc={haritadaAc} />
+            <Profil kullaniciAdi={profilKisi} onYerAc={haritadaAc} />
           </>
         )}
 
@@ -156,9 +172,10 @@ function Uygulama() {
             <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
               <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">ARA</h1>
             </header>
-            <div className="pano-doku min-h-0 flex-1 p-4 text-[13px] leading-relaxed text-murekkep2">
-              Arama ekranı henüz taşınmadı — prototipte çalışıyor.
-            </div>
+            <AraEkrani
+              onYerAc={haritadaAc}
+              onKisiAc={(k) => { setProfilKisi(k); setEkran("profil"); }}
+            />
           </>
         )}
 

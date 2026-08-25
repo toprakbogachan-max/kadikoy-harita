@@ -10,6 +10,7 @@
  * schema.sql'deki 27 policy'de tanımlı.
  */
 import { createClient } from "./supabase/client";
+import { aramaMetni } from "./metin";
 import type { Yer, Pin, Kisi, Yorum, Liste, Medya } from "./model";
 import type { PlaceCategory, OpeningPeriod, PlaceSummary, NearbyPlace } from "./types";
 
@@ -404,4 +405,60 @@ export async function pinGetir(id: string): Promise<Pin | null> {
     .from("pins").select(PIN_SECIM).eq("id", id).maybeSingle();
   if (error) throw error;
   return data ? pinCevir(data as unknown as HamPin) : null;
+}
+
+/* ---------- arama ---------- */
+
+/**
+ * Mekan araması. Sorgu, şemadaki search_text sütunuyla AYNI biçime indiriliyor
+ * (aramaMetni ↔ SQL translate+lower) — yoksa "ciya" yazan kullanıcı
+ * "Çiya Sofrası"nı bulamaz. pg_trgm GIN indeksi ilike'ı hızlandırıyor.
+ */
+export async function mekanAra(q: string, limit = 24): Promise<Yer[]> {
+  const n = aramaMetni(q.trim());
+  if (n.length < 2) return [];
+  const { data, error } = await db
+    .from("places")
+    .select("id, slug, name, category, neighborhood, pin_count, cover_url")
+    .eq("status", "published")
+    .ilike("search_text", `%${n}%`)
+    .order("pin_count", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((p): Yer => ({
+    id: p.id, slug: p.slug, ad: p.name, tur: p.category,
+    semt: p.neighborhood ?? "Kadıköy", lat: 0, lng: 0, saatler: null,
+    pinSayisi: p.pin_count, kapak: p.cover_url,
+  }));
+}
+
+export async function kisiAra(q: string, limit = 12): Promise<Kisi[]> {
+  const n = aramaMetni(q.trim());
+  if (n.length < 2) return [];
+  const { data, error } = await db
+    .from("profiles").select(PROFIL_SECIM)
+    .ilike("search_text", `%${n}%`)
+    .order("follower_count", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return ((data ?? []) as HamProfil[]).map(profilCevir);
+}
+
+/** Arama kutusu boşken gösterilenler */
+export async function populerler(): Promise<{ kisiler: Kisi[]; yerler: Yer[] }> {
+  const [{ data: p }, { data: y }] = await Promise.all([
+    db.from("profiles").select(PROFIL_SECIM)
+      .order("follower_count", { ascending: false }).limit(8),
+    db.from("places").select("id, slug, name, category, neighborhood, pin_count, cover_url")
+      .eq("status", "published")
+      .order("pin_count", { ascending: false }).limit(9),
+  ]);
+  return {
+    kisiler: ((p ?? []) as HamProfil[]).map(profilCevir),
+    yerler: (y ?? []).map((x): Yer => ({
+      id: x.id, slug: x.slug, ad: x.name, tur: x.category,
+      semt: x.neighborhood ?? "Kadıköy", lat: 0, lng: 0, saatler: null,
+      pinSayisi: x.pin_count, kapak: x.cover_url,
+    })),
+  };
 }
