@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { igneStil, egim, fotoZemin, simgeSvg } from "@/lib/gorsel";
 import { useVeri } from "@/lib/kanca";
-import { akisGetir, type AkisSekmesi } from "@/lib/veri";
+import { akisGetir, medyaUrl, type AkisSekmesi } from "@/lib/veri";
 import { useKisiler } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
@@ -68,6 +68,8 @@ export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste:
               const medya = p.medyalar;
               const video = medya[0].tur === "video";
               const coklu = medya.length > 1;
+              /* ızgarada video oynatmıyoruz; kapak yalnızca fotoğraftan */
+              const kapak = video ? null : medyaUrl(medya[0].yol);
               return (
                 <button
                   key={p.id}
@@ -79,8 +81,14 @@ export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste:
                   <div
                     className="relative grid size-full place-items-center overflow-hidden rounded-sm"
                     style={{ background: fotoZemin(p.yerTuru) }}
-                    dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 32) }}
-                  />
+                  >
+                    {kapak ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={kapak} alt="" className="size-full object-cover" />
+                    ) : (
+                      <span dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 32) }} />
+                    )}
+                  </div>
                   {/* beğeni sol üstte */}
                   <span className="absolute left-2 top-2 z-[1] flex items-center gap-[3px] rounded-sm bg-[rgba(20,15,8,.5)] px-[5px] py-[2px] font-sayi text-[9px] text-white">
                     ♥ {p.begeni}

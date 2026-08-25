@@ -571,3 +571,131 @@ export async function takiptemiyim(kisiId: string): Promise<boolean> {
     .eq("follower_id", id).eq("following_id", kisiId).maybeSingle();
   return !!data;
 }
+
+/* ---------- pin atma ---------- */
+
+export interface YeniMedya {
+  dosya: File;
+  not: string;
+}
+
+export interface YeniPin {
+  yerId: string;
+  metin: string;
+  kelimeler: [string, string, string];
+  senaryo: string;
+  puan: number;
+  medyalar: YeniMedya[];
+  degisse?: string;
+  siklik?: string;
+  tekrar?: string;
+  fiyat?: number;
+}
+
+/**
+ * Yeni mekan — kullanıcının haritada boş bir noktaya dokunup eklediği yer.
+ *
+ * opening_hours BİLEREK null: saatini bilmiyoruz. Şema bunu "kapalı" değil
+ * "bilinmiyor" sayıyor, arayüz de öyle gösteriyor.
+ */
+export async function yerOlustur(
+  ad: string, tur: PlaceCategory, lat: number, lng: number, semt?: string,
+): Promise<string> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+
+  /* slug çakışırsa sona kısa bir ek — places.slug unique */
+  const taban = aramaMetni(ad).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50)
+    || "mekan";
+  let slug = taban;
+  for (let deneme = 0; deneme < 5; deneme++) {
+    const { data, error } = await db.from("places").insert({
+      slug, name: ad.trim(), category: tur,
+      neighborhood: semt ?? "Kadıköy",
+      geo: `SRID=4326;POINT(${lng} ${lat})`,
+      opening_hours: null,
+      created_by: id,
+    }).select("id").single();
+
+    if (!error) return data.id;
+    /* 23505 = unique ihlali; slug tutulmuş, yeni ek dene */
+    if (error.code !== "23505") throw error;
+    slug = `${taban}-${Math.random().toString(36).slice(2, 6)}`;
+  }
+  throw new Error("Mekan eklenemedi, adı biraz değiştirip tekrar dene.");
+}
+
+/**
+ * Pin atma. Sıra önemli:
+ *   1) medya Storage'a yüklenir  2) pins satırı  3) pin_media satırları
+ *
+ * assert_pin_has_media trigger'ı pin'in en az bir medyası olmasını şart
+ * koşuyor. Trigger pin_media INSERT'inde kontrol ettiği için pins satırı
+ * önce açılıyor; medya yazılamazsa pin siliniyor (aşağıdaki catch).
+ */
+export async function pinAt(y: YeniPin): Promise<string> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  if (!y.medyalar.length) throw new Error("En az bir fotoğraf ya da video gerekiyor.");
+
+  /* Yol düzeni <kimlik>/<...> — Storage policy'si ilk klasörün kullanıcının
+     kimliği olmasını istiyor, başkasının medyası ezilemesin diye. */
+  const yuklenen: { yol: string; tur: "photo" | "video"; not: string; sure: number }[] = [];
+  for (let i = 0; i < y.medyalar.length; i++) {
+    const m = y.medyalar[i];
+    const uzanti = (m.dosya.name.split(".").pop() ?? "jpg").toLowerCase().slice(0, 5);
+    const yol = `${id}/${Date.now()}-${i}.${uzanti}`;
+    const { error } = await db.storage.from("pin-media")
+      .upload(yol, m.dosya, { contentType: m.dosya.type, upsert: false });
+    if (error) throw new Error(`Dosya yüklenemedi: ${error.message}`);
+    yuklenen.push({
+      yol, tur: m.dosya.type.startsWith("video") ? "video" : "photo",
+      not: m.not, sure: 0,
+    });
+  }
+
+  const { data: pin, error: pinHata } = await db.from("pins").insert({
+    author_id: id,
+    place_id: y.yerId,
+    body: y.metin.trim(),
+    words: y.kelimeler.map((k) => k.trim()),
+    scenario: y.senaryo,
+    rating: y.puan,
+    improve: y.degisse?.trim() || null,
+    frequency: y.siklik || null,
+    would_return: y.tekrar || null,
+    price_paid: y.fiyat ?? null,
+    visit_date: new Date().toISOString().slice(0, 10),
+  }).select("id").single();
+
+  if (pinHata) {
+    /* Yüklenen dosyaları geride bırakma */
+    await db.storage.from("pin-media").remove(yuklenen.map((u) => u.yol));
+    /* 23505 = (author_id, place_id, visit_date) benzersizlik kuralı */
+    if (pinHata.code === "23505") {
+      throw new Error("Bugün bu mekana zaten pin atmışsın. Var olanı düzenleyebilirsin.");
+    }
+    throw pinHata;
+  }
+
+  const { error: medyaHata } = await db.from("pin_media").insert(
+    yuklenen.map((u, i) => ({
+      pin_id: pin.id, kind: u.tur, storage_path: u.yol,
+      caption: u.not.trim() || null, ordering: i,
+    })),
+  );
+  if (medyaHata) {
+    /* Medyasız pin şemaya göre geçersiz — pin'i de geri al */
+    await db.from("pins").delete().eq("id", pin.id);
+    await db.storage.from("pin-media").remove(yuklenen.map((u) => u.yol));
+    throw medyaHata;
+  }
+  return pin.id;
+}
+
+/** Storage yolundan görüntülenebilir URL. Kova public, imzalamaya gerek yok. */
+export function medyaUrl(yol: string): string | null {
+  /* Tohum verisi demo:// ile işaretli — gerçek dosya yok, arayüz degrade çiziyor */
+  if (!yol || yol.startsWith("demo://")) return null;
+  return db.storage.from("pin-media").getPublicUrl(yol).data.publicUrl;
+}

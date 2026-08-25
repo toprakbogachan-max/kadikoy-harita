@@ -194,9 +194,10 @@ export default function Harita({
     }
 
     gorunenler.forEach((y) => {
-      /* "açık mı" artık veritabanında hesaplanıyor (is_open_now, Europe/Istanbul).
-         null = saat bilgisi yok — kapalı değil, bilinmiyor. */
-      const acik = y.acik === true;
+      /* "açık mı" veritabanında hesaplanıyor (is_open_now, Europe/Istanbul).
+         Üç durum olduğu gibi jetona geçiyor: null'u "kapalı"ya indirgemek
+         bilmediğimiz şeyi biliyormuş gibi göstermek olurdu. */
+      const acik = y.acik ?? null;
       const populer = (y.pinSayisi ?? 0) >= POPULER_ESIK;
       const seciliMi = secili === y.id;
 

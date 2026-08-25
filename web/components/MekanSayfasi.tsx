@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useVeri } from "@/lib/kanca";
-import { yerGetir, yerinPinleri, mekanOzeti, kayitDegistir, kayitliMi, type YerDetay } from "@/lib/veri";
+import { yerGetir, yerinPinleri, mekanOzeti, kayitDegistir, kayitliMi, medyaUrl, type YerDetay } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import { useKisiler } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
@@ -18,6 +18,7 @@ interface Props {
   onKapat: () => void;
   onGonderiAc: (pinId: string, liste: string[]) => void;
   onGirisIste: () => void;
+  onPinAt: (yer: YerDetay) => void;
 }
 
 const GUN_AD = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
@@ -31,7 +32,7 @@ const GUN_AD = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
  * Bölüm sırası BRIEF kararı: uyarı → hızlı bakış → buraya bırakılanlar →
  * künye → özetler. Önce "buraya gitmeli miyim", sonra ayrıntı.
  */
-export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste }: Props) {
+export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste, onPinAt }: Props) {
   const { ben } = useOturum();
   const [kademe, setKademe] = useState<Kademe>("yarim");
   const [pinIndex, setPinIndex] = useState(0);
@@ -79,6 +80,8 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste 
   const acik = acikMi(yer.saatler, t);
   const bugun = yer.saatler?.find((s) => s[0] === t.getDay());
   const pin = pinler[Math.min(pinIndex, Math.max(0, pinler.length - 1))];
+  const ilkFoto = pin?.medyalar.find((m) => m.tur === "foto");
+  const pinKapak = ilkFoto ? medyaUrl(ilkFoto.yol) : null;
 
   return (
     <div
@@ -204,8 +207,14 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste 
               <div
                 className="relative grid h-[132px] place-items-center overflow-hidden rounded-sm"
                 style={{ background: fotoZemin(yer.tur) }}
-                dangerouslySetInnerHTML={{ __html: simgeSvg(yer.tur, 40) }}
-              />
+              >
+                {pinKapak ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={pinKapak} alt="" className="size-full object-cover" />
+                ) : (
+                  <span dangerouslySetInnerHTML={{ __html: simgeSvg(yer.tur, 40) }} />
+                )}
+              </div>
               <div className="px-2 pb-2.5 pt-2">
                 <div className="mb-1.5 flex items-center gap-2">
                   <Avatar kisi={pin.kisi} boyut={22} />
@@ -339,7 +348,7 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste 
 
       <div className="flex shrink-0 gap-2 border-t border-[var(--cizgi)] bg-yuzey p-3">
         <button
-          onClick={() => (ben ? alert("Pin formu henüz taşınmadı.") : onGirisIste())}
+          onClick={() => (ben ? onPinAt(yer) : onGirisIste())}
           className="flex-1 rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white"
         >
           Buraya pin at

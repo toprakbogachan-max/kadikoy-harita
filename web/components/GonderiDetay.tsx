@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fotoZemin, simgeSvg, zaman } from "@/lib/gorsel";
 import { useVeri } from "@/lib/kanca";
-import { pinGetir, begeniDegistir, begendimMi, kayitDegistir, kayitliMi } from "@/lib/veri";
+import { pinGetir, begeniDegistir, begendimMi, kayitDegistir, kayitliMi, medyaUrl } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import { useKisi } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
@@ -163,11 +163,26 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
       <div ref={govde} className="relative min-h-0 flex-1 overflow-hidden">
         {/* medya tam ekranı kaplar */}
         <div
-          className="absolute inset-0 grid place-items-center"
+          className="absolute inset-0 grid place-items-center overflow-hidden"
           style={{ background: fotoZemin(p.yerTuru) }}
         >
-          <div className="opacity-[0.22]" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 120) }} />
-          {m.tur === "video" && (
+          {/* Gerçek dosya varsa o gösterilir; tohum verisinde (demo://) yok,
+              degrade + kategori simgesi yer tutucu olarak kalıyor. */}
+          {(() => {
+            const url = medyaUrl(m.yol);
+            if (!url) {
+              return (
+                <div className="opacity-[0.22]" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 120) }} />
+              );
+            }
+            return m.tur === "video" ? (
+              <video src={url} controls playsInline className="size-full object-contain" />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={url} alt={m.not ?? p.yerAdi} className="size-full object-contain" />
+            );
+          })()}
+          {m.tur === "video" && !medyaUrl(m.yol) && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <span className="grid size-[52px] place-items-center rounded-full bg-[rgba(20,15,8,.5)] text-[22px] text-white">▶</span>
             </div>

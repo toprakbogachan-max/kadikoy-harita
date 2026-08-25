@@ -13,6 +13,7 @@ import AraEkrani from "@/components/AraEkrani";
 import { KisilerSaglayici } from "@/lib/kisiler-baglam";
 import { OturumSaglayici, useOturum } from "@/lib/oturum";
 import Giris from "@/components/Giris";
+import PinFormu from "@/components/PinFormu";
 import { useVeri } from "@/lib/kanca";
 import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
@@ -59,6 +60,9 @@ function Uygulama() {
      undefined = oturumdaki kişi. */
   const [profilKisi, setProfilKisi] = useState<string | undefined>(undefined);
   const [girisAcik, setGirisAcik] = useState(false);
+  const [pinFormu, setPinFormu] = useState<{ acik: boolean; yer: Yer | null }>({ acik: false, yer: null });
+  /* pin atıldıktan sonra listeleri tazelemek için */
+  const [tazele, setTazele] = useState(0);
   const { ben } = useOturum();
 
   /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
@@ -85,7 +89,7 @@ function Uygulama() {
       }
       return yerleriGetir(sorgu);
     },
-    [sorgu, kisiFiltre, filtre, ben?.id],
+    [sorgu, kisiFiltre, filtre, ben?.id, tazele],
     [],
   );
 
@@ -228,10 +232,25 @@ function Uygulama() {
             onKapat={() => setSecili(null)}
             onGonderiAc={(id, liste) => setGonderi({ id, liste })}
             onGirisIste={() => setGirisAcik(true)}
+            onPinAt={(y) => setPinFormu({ acik: true, yer: y })}
           />
         )}
 
         {girisAcik && <Giris onKapat={() => setGirisAcik(false)} />}
+
+        {pinFormu.acik && (
+          <PinFormu
+            hazirYer={pinFormu.yer}
+            onKapat={() => setPinFormu({ acik: false, yer: null })}
+            onAtildi={(_pinId, yerId) => {
+              setPinFormu({ acik: false, yer: null });
+              setTazele((n) => n + 1);
+              setEkran("harita");
+              setFiltre("hepsi");
+              setSecili(yerId);
+            }}
+          />
+        )}
 
         {gonderi && (
           <GonderiDetay
@@ -243,7 +262,7 @@ function Uygulama() {
           />
         )}
 
-        <AltMenu ekran={ekran} onGec={setEkran} onPinAt={() => (ben ? alert("Pin formu henüz taşınmadı.") : setGirisAcik(true))} />
+        <AltMenu ekran={ekran} onGec={setEkran} onPinAt={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))} />
       </div>
     </main>
   );
