@@ -36,9 +36,13 @@ interface Props {
   secili: string | null;
   onYerSec: (id: string) => void;
   onBolgeDegisti: (ad: string) => void;
+  /** Harita durunca yeni merkez + görünür yarıçap — sorgu buna göre tazelenir */
+  onAlanDegisti: (a: { lat: number; lng: number; yaricapM: number }) => void;
 }
 
-export default function Harita({ gorunenler, secili, onYerSec, onBolgeDegisti }: Props) {
+export default function Harita({
+  gorunenler, secili, onYerSec, onBolgeDegisti, onAlanDegisti,
+}: Props) {
   const kapsayici = useRef<HTMLDivElement>(null);
   const harita = useRef<maplibregl.Map | null>(null);
   const markerlar = useRef<Record<string, maplibregl.Marker>>({});
@@ -49,9 +53,11 @@ export default function Harita({ gorunenler, secili, onYerSec, onBolgeDegisti }:
      tutarsız kalabiliyor. */
   const onSecRef = useRef(onYerSec);
   const onBolgeRef = useRef(onBolgeDegisti);
+  const onAlanRef = useRef(onAlanDegisti);
   useEffect(() => {
     onSecRef.current = onYerSec;
     onBolgeRef.current = onBolgeDegisti;
+    onAlanRef.current = onAlanDegisti;
   });
 
   /* ---- haritayı bir kez kur ---- */
@@ -134,7 +140,23 @@ export default function Harita({ gorunenler, secili, onYerSec, onBolgeDegisti }:
         .map((l) => l.id);
       basligiGuncelle();
     });
+    /* Görünen alanı bildir: mekanlar sabit merkez yerine haritanın baktığı
+       yerden geliyor. Yarıçap köşegenin yarısı — ekranın dışında kalan
+       marker'lar için boşuna satır çekmemek adına biraz cömert tutuluyor. */
+    const alaniBildir = () => {
+      const s = m.getBounds();
+      const merkez = m.getCenter();
+      const kose = new maplibregl.LngLat(s.getEast(), s.getNorth());
+      onAlanRef.current({
+        lat: merkez.lat,
+        lng: merkez.lng,
+        yaricapM: Math.round(merkez.distanceTo(kose)),
+      });
+    };
+
     m.on("moveend", basligiGuncelle);
+    m.on("moveend", alaniBildir);
+    m.on("load", alaniBildir);
     /* moveend anında etiket karoları henüz gelmemiş olabiliyor */
     m.on("idle", basligiGuncelle);
 

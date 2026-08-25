@@ -24,8 +24,17 @@ export const fotoZemin = (tur: string) => {
   return `linear-gradient(135deg, ${r.ana} 0%, ${r.golge} 100%)`;
 };
 
+/**
+ * "3 sa", "2 gün" — geçen süre.
+ *
+ * Girdi ondalık saat: veritabanındaki created_at'ten hesaplanıyor, tam sayı
+ * değil. Yuvarlanmazsa "20.77557472222222 sa" yazıyor. (Demo verisinde saatler
+ * elle tam sayı yazıldığı için bu ortaya çıkmamıştı.)
+ */
 export const zaman = (s: number) =>
-  s < 1 ? "az önce" : s < 24 ? `${s} sa` : `${Math.floor(s / 24)} gün`;
+  s < 1 ? "az önce"
+    : s < 24 ? `${Math.round(s)} sa`
+    : `${Math.floor(s / 24)} gün`;
 
 /**
  * "Şu an açık mı" — true / false / null (bilgi yok).

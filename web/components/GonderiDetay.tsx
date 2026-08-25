@@ -7,6 +7,7 @@ import { pinGetir } from "@/lib/veri";
 import { useKisi } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
+import Yorumlar from "./Yorumlar";
 
 interface Props {
   pinId: string;
@@ -23,6 +24,7 @@ interface Props {
  */
 export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Props) {
   const [medyaIndex, setMedyaIndex] = useState(0);
+  const [yorumlarAcik, setYorumlarAcik] = useState(false);
   const govde = useRef<HTMLDivElement>(null);
 
   const pinIndex = Math.max(0, liste.indexOf(pinId));
@@ -47,6 +49,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
   if (oncekiPin !== pinId) {
     setOncekiPin(pinId);
     setMedyaIndex(0);
+    setYorumlarAcik(false);
   }
 
   const pinGec = (yon: number) => {
@@ -235,8 +238,50 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti }: Pr
             {p.fiyat && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">kişi başı {p.fiyat}₺</span>}
             {p.siklik && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">{p.siklik}</span>}
           </div>
+
+          {/* eylem çubuğu — beğeni ve kaydetme yazma işlemi, kimlik bekliyor */}
+          <div className="mt-3 flex items-center gap-4 border-t border-white/15 pt-2.5">
+            <Eylem
+              etiket={`${p.begeni}`}
+              aria="Beğen"
+              onTikla={() => alert("Beğenmek için giriş gerekiyor — auth henüz eklenmedi.")}
+              ikon={<path d="M12 20.4 4.2 12.9a4.9 4.9 0 0 1 7-6.9l.8.8.8-.8a4.9 4.9 0 0 1 7 6.9z" />}
+            />
+            <Eylem
+              etiket={`${p.yorumSayisi}`}
+              aria="Yorumlar"
+              onTikla={() => setYorumlarAcik(true)}
+              ikon={<path d="M20.5 11.5a7.5 8 0 0 1-10.8 7.2L4.5 20.5l1.9-4.9A8 8 0 1 1 20.5 11.5z" />}
+            />
+            <Eylem
+              etiket="kaydet"
+              aria="Kaydet"
+              onTikla={() => alert("Kaydetmek için giriş gerekiyor — auth henüz eklenmedi.")}
+              ikon={<path d="M6 3.6h12v17l-6-4.2-6 4.2z" />}
+            />
+          </div>
         </div>
       </div>
+
+      {yorumlarAcik && <Yorumlar pinId={p.id} onKapat={() => setYorumlarAcik(false)} />}
     </div>
+  );
+}
+
+/** Reels alt çubuğundaki tek eylem düğmesi. */
+function Eylem({
+  etiket, aria, ikon, onTikla,
+}: { etiket: string; aria: string; ikon: React.ReactNode; onTikla: () => void }) {
+  return (
+    <button
+      onClick={onTikla}
+      aria-label={aria}
+      className="flex items-center gap-1.5 border-none bg-transparent p-0 text-[12.5px] text-white/90"
+    >
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
+        {ikon}
+      </svg>
+      {etiket}
+    </button>
   );
 }

@@ -18,12 +18,16 @@ import type { PlaceCategory } from "@/lib/types";
 import { jetonGradyanlari } from "@/lib/gorsel";
 
 /* Haritanın açılış merkezi — Kadıköy iskelesi civarı */
-const MERKEZ = { lat: 40.9885, lng: 29.0295 };
+const MERKEZ = { lat: 40.9885, lng: 29.0295, yaricapM: 2500 };
 
-/* Yarıçap Kadıköy'ü kapsıyor; sınır ekrandaki marker sayısını makul tutmak için.
-   Harita gezdikçe yeniden sorgulamak sonraki adım. */
-const YARICAP_M = 2500;
+/* Marker sayısı sınırı: 1052 mekanın hepsini DOM'a basmak haritayı ağırlaştırır.
+   places_nearby pin sayısına ve mesafeye göre sıraladığı için sınıra takılınca
+   en alakalılar kalıyor. */
 const MARKER_SINIRI = 160;
+
+/* Haritayı her oynatışta sorgu atmamak için: merkez bu kadar metreden az
+   kaydıysa yeni sorgu yok. Zoom/pan sırasında moveend arka arkaya tetikleniyor. */
+const YENIDEN_SORGU_ESIGI_M = 250;
 
 /** Filtre çipi → places_nearby parametresi. "kaydettiklerim" auth bekliyor. */
 const KATEGORILER: PlaceCategory[] = [
@@ -45,19 +49,20 @@ function Uygulama() {
   const [kisiFiltre, setKisiFiltre] = useState<string | null>(null);
   const [secili, setSecili] = useState<string | null>(null);
   const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
+  const [alan, setAlan] = useState(MERKEZ);
   /* Profil artık başkasının da olabilir — aramadan bir kişiye gidilebiliyor */
   const [profilKisi, setProfilKisi] = useState(BENIM_KULLANICI_ADIM);
 
   /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
      parametre olarak gidiyor, 1052 mekanı tarayıcıya indirip elemekten iyi. */
   const sorgu = useMemo(() => ({
-    lat: MERKEZ.lat,
-    lng: MERKEZ.lng,
-    yaricapM: YARICAP_M,
+    lat: alan.lat,
+    lng: alan.lng,
+    yaricapM: alan.yaricapM,
     limit: MARKER_SINIRI,
     kategori: KATEGORILER.includes(filtre as PlaceCategory) ? (filtre as PlaceCategory) : null,
     sadeceAcik: filtre === "acik",
-  }), [filtre]);
+  }), [filtre, alan]);
 
   const { veri: gorunenler, yukleniyor, hata } = useVeri<Yer[]>(
     () => (kisiFiltre ? kisininYerleri(kisiFiltre, sorgu) : yerleriGetir(sorgu)),
@@ -66,10 +71,22 @@ function Uygulama() {
   );
 
   const { veri: sayilar } = useVeri(
-    () => ozetSayilar(MERKEZ.lat, MERKEZ.lng, YARICAP_M),
-    [],
+    () => ozetSayilar(alan.lat, alan.lng, alan.yaricapM),
+    [alan],
     { acikYer: 0, pinSayisi: 0 },
   );
+
+  /* Küçük oynamalarda sorgu tazelemiyoruz — moveend zoom sırasında arka arkaya
+     tetikleniyor, her biri yeni sorgu olsa harita takılır. */
+  const alaniGuncelle = (a: { lat: number; lng: number; yaricapM: number }) => {
+    setAlan((onceki) => {
+      const dLat = (a.lat - onceki.lat) * 111_320;
+      const dLng = (a.lng - onceki.lng) * 111_320 * Math.cos((a.lat * Math.PI) / 180);
+      const kaydi = Math.hypot(dLat, dLng) > YENIDEN_SORGU_ESIGI_M;
+      const yaricapDegisti = Math.abs(a.yaricapM - onceki.yaricapM) / onceki.yaricapM > 0.25;
+      return kaydi || yaricapDegisti ? a : onceki;
+    });
+  };
 
   /* hikayeye dokununca kategori filtresi "hepsi"ye geçer, yoksa
      o kişinin pinlediği yerlerin hepsi görünmeyebilir */
@@ -115,7 +132,13 @@ function Uygulama() {
             <HikayeSeridi secili={kisiFiltre} onSec={kisiSec} />
 
             <div className="relative min-h-0 flex-1 overflow-hidden bg-su">
-              <Harita gorunenler={gorunenler} secili={secili} onYerSec={setSecili} onBolgeDegisti={setBolge} />
+              <Harita
+                gorunenler={gorunenler}
+                secili={secili}
+                onYerSec={setSecili}
+                onBolgeDegisti={setBolge}
+                onAlanDegisti={alaniGuncelle}
+              />
               <Durum
                 yukleniyor={yukleniyor}
                 hata={hata}
