@@ -818,3 +818,99 @@ export async function avatarYukle(dosya: Blob, uzanti = "jpg"): Promise<string> 
 
   return url;
 }
+
+/* ---------- bildirimler ---------- */
+
+export interface Bildirim {
+  id: string;
+  tur: "like" | "comment" | "follow";
+  kisi: string;              // eylemi yapan profil id
+  pinId: string | null;
+  pinMetni: string | null;
+  yerAdi: string | null;
+  yorum: string | null;
+  saat: number;
+  okundu: boolean;
+}
+
+export async function bildirimler(limit = 40): Promise<Bildirim[]> {
+  const id = await benimKimligim();
+  if (!id) return [];
+  const { data, error } = await db
+    .from("notifications")
+    .select(`id, kind, actor_id, pin_id, read_at, created_at,
+             pins ( body, places ( name ) ),
+             pin_comments ( body )`)
+    .eq("user_id", id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+
+  interface Ham {
+    id: string; kind: "like" | "comment" | "follow"; actor_id: string;
+    pin_id: string | null; read_at: string | null; created_at: string;
+    pins: { body: string; places: { name: string } | null } | null;
+    pin_comments: { body: string } | null;
+  }
+  return (data as unknown as Ham[]).map((b) => ({
+    id: b.id, tur: b.kind, kisi: b.actor_id, pinId: b.pin_id,
+    pinMetni: b.pins?.body ?? null,
+    yerAdi: b.pins?.places?.name ?? null,
+    yorum: b.pin_comments?.body ?? null,
+    saat: saatFarki(b.created_at),
+    okundu: !!b.read_at,
+  }));
+}
+
+export async function okunmamisBildirim(): Promise<number> {
+  const id = await benimKimligim();
+  if (!id) return 0;
+  const { count } = await db.from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", id).is("read_at", null);
+  return count ?? 0;
+}
+
+export async function bildirimleriOkundu() {
+  const id = await benimKimligim();
+  if (!id) return;
+  const { error } = await db.from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", id).is("read_at", null);
+  if (error) throw error;
+}
+
+/* ---------- şikayet ---------- */
+
+export const SIKAYET_SEBEPLERI = [
+  "Yanlış bilgi",
+  "Mekanla ilgisi yok",
+  "Reklam / spam",
+  "Hakaret veya nefret söylemi",
+  "Başkasının fotoğrafı",
+  "Diğer",
+] as const;
+
+export async function sikayetEt(
+  hedef: { pinId?: string; yorumId?: string }, sebep: string,
+) {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  if (!hedef.pinId && !hedef.yorumId) throw new Error("Şikayet edilecek içerik yok.");
+  const { error } = await db.from("reports").insert({
+    reporter_id: id,
+    pin_id: hedef.pinId ?? null,
+    comment_id: hedef.yorumId ?? null,
+    reason: sebep,
+  });
+  if (error) throw error;
+}
+
+/** Bu içeriği daha önce şikayet ettim mi — düğmeyi tekrarlamamak için */
+export async function sikayetEttimMi(pinId: string): Promise<boolean> {
+  const id = await benimKimligim();
+  if (!id) return false;
+  const { data } = await db.from("reports").select("id")
+    .eq("reporter_id", id).eq("pin_id", pinId).maybeSingle();
+  return !!data;
+}

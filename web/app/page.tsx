@@ -17,8 +17,9 @@ import PinFormu from "@/components/PinFormu";
 import Ayarlar from "@/components/Ayarlar";
 import ListeOlustur from "@/components/ListeOlustur";
 import PaylasimKarti from "@/components/PaylasimKarti";
+import Bildirimler from "@/components/Bildirimler";
 import { useVeri } from "@/lib/kanca";
-import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim } from "@/lib/veri";
+import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim, okunmamisBildirim } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { jetonGradyanlari } from "@/lib/gorsel";
@@ -69,6 +70,7 @@ function Uygulama() {
   const [ayarlarAcik, setAyarlarAcik] = useState(false);
   const [paylasAcik, setPaylasAcik] = useState(false);
   const [listeAcik, setListeAcik] = useState(false);
+  const [bildirimAcik, setBildirimAcik] = useState(false);
   const { ben } = useOturum();
 
   /* Süzme artık veritabanında: kategori ve "şu an açık" places_nearby'ye
@@ -98,6 +100,10 @@ function Uygulama() {
     [sorgu, kisiFiltre, filtre, ben?.id, tazele],
     [],
   );
+
+  /* Okunmamış bildirim rozeti — akış başlığındaki zil */
+  const { veri: okunmamis } = useVeri<number>(
+    okunmamisBildirim, [ben?.id, bildirimAcik, tazele], 0);
 
   const { veri: sayilar } = useVeri(
     () => ozetSayilar(alan.lat, alan.lng, alan.yaricapM),
@@ -190,8 +196,26 @@ function Uygulama() {
 
         {ekran === "akis" && (
           <>
-            <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
+            <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
               <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">AKIŞ</h1>
+              {ben && (
+                <button
+                  onClick={() => setBildirimAcik(true)}
+                  aria-label={okunmamis ? `Bildirimler, ${okunmamis} okunmamış` : "Bildirimler"}
+                  className="relative shrink-0 border-none bg-transparent p-1 text-murekkep2"
+                >
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" />
+                    <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+                  </svg>
+                  {okunmamis > 0 && (
+                    <span className="absolute right-0 top-0 grid min-w-[15px] place-items-center rounded-full bg-jeton px-1 font-sayi text-[9.5px] leading-[15px] text-white">
+                      {okunmamis > 9 ? "9+" : okunmamis}
+                    </span>
+                  )}
+                </button>
+              )}
             </header>
             <Akis onGonderiAc={(id, liste) => setGonderi({ id, liste })} />
           </>
@@ -267,6 +291,14 @@ function Uygulama() {
         )}
 
         {paylasAcik && <PaylasimKarti onKapat={() => setPaylasAcik(false)} />}
+
+        {bildirimAcik && (
+          <Bildirimler
+            onKapat={() => setBildirimAcik(false)}
+            onGonderiAc={(id) => { setBildirimAcik(false); setGonderi({ id, liste: [id] }); }}
+            onKisiAc={(k) => { setBildirimAcik(false); setProfilKisi(k); setEkran("profil"); }}
+          />
+        )}
 
         {pinFormu.acik && (
           <PinFormu

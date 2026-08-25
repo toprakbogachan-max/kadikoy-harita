@@ -9,6 +9,7 @@ import { useKisi } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
 import Yorumlar from "./Yorumlar";
+import Sikayet from "./Sikayet";
 
 interface Props {
   pinId: string;
@@ -28,6 +29,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
   const { ben } = useOturum();
   const [medyaIndex, setMedyaIndex] = useState(0);
   const [yorumlarAcik, setYorumlarAcik] = useState(false);
+  const [sikayetAcik, setSikayetAcik] = useState(false);
   /* İyimser durum: sunucu yanıtını beklemeden düğme değişiyor, hata olursa
      geri alınıyor. Sosyal uygulamada beğeni gecikmesi hemen göze batıyor. */
   const [begeniYerel, setBegeniYerel] = useState<boolean | null>(null);
@@ -64,6 +66,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
     setYorumlarAcik(false);
     setBegeniYerel(null);
     setKayitYerel(null);
+    setSikayetAcik(false);
   }
 
   const pinGec = (yon: number) => {
@@ -304,6 +307,15 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
               }}
               ikon={<path d="M6 3.6h12v17l-6-4.2-6 4.2z" />}
             />
+            {/* Kendi pinini şikayet etmek anlamsız */}
+            {ben && ben.id !== p.kisi && (
+              <button
+                onClick={() => setSikayetAcik(true)}
+                className="ml-auto border-none bg-transparent p-0 text-[11.5px] text-white/55 underline"
+              >
+                şikayet et
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -311,6 +323,8 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
       {yorumlarAcik && (
         <Yorumlar pinId={p.id} onKapat={() => setYorumlarAcik(false)} onGirisIste={onGirisIste} />
       )}
+
+      {sikayetAcik && <Sikayet pinId={p.id} onKapat={() => setSikayetAcik(false)} />}
     </div>
   );
 }

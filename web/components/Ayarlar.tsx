@@ -7,6 +7,7 @@ import { begendiklerim, kaydettigimYerler, kisininListeleri, profilGuncelle } fr
 import type { Pin, Yer, Liste } from "@/lib/model";
 import Arsiv from "./Arsiv";
 import ProfilDuzenle from "./ProfilDuzenle";
+import YasalMetin from "./YasalMetin";
 
 type ArsivTuru = "kaydettiklerim" | "begendiklerim" | "listelerim";
 
@@ -29,6 +30,7 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur 
   const { ben, cikisYap, tazele } = useOturum();
   const [arsiv, setArsiv] = useState<ArsivTuru | null>(null);
   const [profilAcik, setProfilAcik] = useState(false);
+  const [yasal, setYasal] = useState<"sartlar" | "gizlilik" | null>(null);
   /* Tembel başlatıcı: efektte setState basamaklı render üretiyordu. window
      kontrolü SSR için — bu bileşen sunucuda çizilmiyor (yalnızca kullanıcı
      ayarları açınca render ediliyor), ama başlatıcı yine de güvenli olmalı. */
@@ -63,6 +65,9 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur 
     catch (e) { setHerkeseAcik(eski); setHata(e instanceof Error ? e.message : String(e)); }
   };
 
+  if (yasal) {
+    return <YasalMetin tur={yasal} onKapat={() => setYasal(null)} />;
+  }
   if (profilAcik) {
     return <ProfilDuzenle onKapat={() => setProfilAcik(false)} />;
   }
@@ -130,18 +135,12 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur 
         )}
 
         <Baslik>Yasal</Baslik>
-        <div className="border-b border-[var(--cizgi)] px-4 py-3">
-          <div className="text-[13.5px]">Kullanım şartları</div>
-          <div className="mt-0.5 text-[11.5px] text-murekkep2">
-            Henüz yazılmadı — canlıya çıkmadan gerekiyor.
-          </div>
-        </div>
-        <div className="border-b border-[var(--cizgi)] px-4 py-3">
-          <div className="text-[13.5px]">Gizlilik politikası</div>
-          <div className="mt-0.5 text-[11.5px] text-murekkep2">
-            Henüz yazılmadı — canlıya çıkmadan gerekiyor.
-          </div>
-        </div>
+        <Satir ad="Kullanım şartları" aciklama="Ne yazılır, ne yazılmaz"
+               onTikla={() => setYasal("sartlar")}
+               ikon={<><path d="M6 3h9l4 4v14H6z" /><path d="M15 3v4h4" /></>} />
+        <Satir ad="Gizlilik politikası" aciklama="Hangi veri nerede, kime görünür"
+               onTikla={() => setYasal("gizlilik")}
+               ikon={<><rect x="5" y="10" width="14" height="10" rx="1.6" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>} />
         <div className="border-b border-[var(--cizgi)] px-4 py-3">
           <div className="text-[13.5px]">Veri kaynakları</div>
           <div className="mt-0.5 text-[11.5px] leading-snug text-murekkep2">
