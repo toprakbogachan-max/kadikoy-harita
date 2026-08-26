@@ -5,13 +5,7 @@ import { useVeri } from "@/lib/kanca";
 import { kisininPinleri, kisininYerleri } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import type { Yer, Pin } from "@/lib/model";
-import { RENK } from "@/lib/paleti";
-
-/* Profil ekranındakiyle aynı soyutlama — gerçek harita değil, elle çizilmiş
-   Kadıköy silueti. Paylaşım kartında karo yüklemeden çalışması gerekiyor. */
-const X0 = 29.01, XS = 0.05, Y0 = 41.005, YS = 0.04;
-const svgX = (lng: number) => ((lng - X0) / XS) * 100;
-const svgY = (lat: number) => ((Y0 - lat) / YS) * 100;
+import MiniHarita from "./MiniHarita";
 
 /**
  * Instagram story önizlemesi — "haritamı paylaş".
@@ -76,20 +70,7 @@ export default function PaylasimKarti({ onKapat }: { onKapat: () => void }) {
         <div className="mx-auto aspect-[9/16] w-full max-w-[248px] rounded-[14px] bg-[#241E14] p-3 shadow-[0_16px_40px_rgba(0,0,0,.35)]">
           <div className="flex size-full flex-col items-center justify-center gap-3 rounded-[10px] bg-kagit p-3.5">
             <div className="w-full overflow-hidden rounded-sm bg-su shadow-kagit">
-              <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"
-                   className="block aspect-[16/11] w-full">
-                <rect width="100" height="100" fill="#D2DFE2" />
-                <path d="M22 0 L26 14 L28 33 L26 46 L28 61 L34 74 L42 70 L46 61 L53 63 L60 79 L68 91 L63 80 L57 67 L66 62 L78 57 L88 41 L84 12 L80 0 Z"
-                      fill="#F4EEE0" />
-                <g stroke="#fff" strokeWidth=".9" fill="none">
-                  <path d="M28 33 L45 30 L62 26 L80 20" />
-                  <path d="M30 40 L44 44 L58 52 L74 58" />
-                </g>
-                {yerler.map((y) => (
-                  <circle key={y.id} cx={svgX(y.lng)} cy={svgY(y.lat)} r="2.8"
-                          fill={RENK[y.tur]?.ana ?? "#B8801A"} stroke="#fff" strokeWidth=".6" />
-                ))}
-              </svg>
+              <MiniHarita yerler={yerler} noktaBoyutu={2.8} />
             </div>
 
             <div className="text-center">

@@ -1,6 +1,5 @@
 "use client";
 
-import { RENK } from "@/lib/paleti";
 import { igneStil, egim, fotoZemin, simgeSvg } from "@/lib/gorsel";
 import { useState } from "react";
 import { useVeri } from "@/lib/kanca";
@@ -8,40 +7,7 @@ import { profilGetir, kisininPinleri, kisininListeleri, kisininYerleri, takipDeg
 import { useOturum } from "@/lib/oturum";
 import type { Yer, Pin, Kisi, Liste } from "@/lib/model";
 import Avatar from "./Avatar";
-
-/* profil mini haritası — elle çizilmiş Kadıköy soyutlaması (gerçek harita değil,
-   paylaşım kartında da bu kullanılıyor) */
-const X0 = 29.01, XS = 0.05, Y0 = 41.005, YS = 0.04;
-const svgX = (lng: number) => ((lng - X0) / XS) * 100;
-const svgY = (lat: number) => ((Y0 - lat) / YS) * 100;
-
-function MiniHarita({ yerler }: { yerler: Yer[] }) {
-  return (
-    <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className="block aspect-[16/10] w-full">
-      <rect width="100" height="100" fill="#D2DFE2" />
-      <path
-        d="M22 0 L26 14 L28 33 L26 46 L28 61 L34 74 L42 70 L46 61 L53 63 L60 79 L68 91 L63 80 L57 67 L66 62 L78 57 L88 41 L84 12 L80 0 Z"
-        fill="#F4EEE0"
-      />
-      <g stroke="#fff" strokeWidth=".9" fill="none">
-        <path d="M28 33 L45 30 L62 26 L80 20" />
-        <path d="M30 40 L44 44 L58 52 L74 58" />
-        <path d="M33 35 L34 55 L36 70" />
-      </g>
-      {yerler.map((y) => (
-        <circle
-          key={y.id}
-          cx={svgX(y.lng)}
-          cy={svgY(y.lat)}
-          r="2.6"
-          fill={RENK[y.tur]?.ana ?? "#B8801A"}
-          stroke="#fff"
-          strokeWidth=".6"
-        />
-      ))}
-    </svg>
-  );
-}
+import MiniHarita from "./MiniHarita";
 
 export default function Profil({
   kullaniciAdi,
