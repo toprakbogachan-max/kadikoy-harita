@@ -198,6 +198,20 @@ function Uygulama() {
                 konum={konum}
                 konumaGit={konumaGit}
               />
+              {/* Sol üstte pin ekleme. Artı, konum iğnesinin İÇİNDE: sağ üstteki
+                  yakınlaştırma +'sıyla karışmasın diye (prototipte de böyleydi). */}
+              <button
+                onClick={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))}
+                aria-label="Pin at"
+                className="absolute left-2.5 top-2.5 z-[3] grid size-[38px] place-items-center rounded-sm border border-[var(--cizgi)] bg-jeton text-white shadow-kagit2"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 21.5s7-6.3 7-11.2a7 7 0 1 0-14 0c0 4.9 7 11.2 7 11.2z" strokeWidth="1.9" />
+                  <path d="M12 7.1v6.2M8.9 10.2h6.2" strokeWidth="2.2" />
+                </svg>
+              </button>
+
               <KonumDugmesi
                 durum={konumDurumu}
                 konum={konum}

@@ -225,6 +225,41 @@ export default function Harita({
     }
   }, [konumaGit, konum]);
 
+  /* ---- seçilen mekana odaklan ----
+     Uzaktan bir jetona dokunulduğunda mekan sayfası açılıyor ama harita
+     olduğu yerde kalıyordu; hangi yere baktığın görünmüyordu. Zaten
+     yakındaysa yakınlaştırmayı bozmuyoruz. */
+  useEffect(() => {
+    const m = harita.current;
+    if (!m || !secili) return;
+    const y = gorunenler.find((g) => g.id === secili);
+    if (!y) return;
+
+    const merkez = m.getCenter();
+    const uzak = merkez.distanceTo(new maplibregl.LngLat(y.lng, y.lat)) > 120;
+    const genis = m.getZoom() < 15.6;
+    if (!uzak && !genis) return;
+
+    try {
+      /* stop(): yarım kalmış animasyon haritayı "hareket ediyor" durumunda
+         bırakıp sonraki çağrıları yutuyor */
+      m.stop();
+      m.flyTo({
+        center: [y.lng, y.lat],
+        zoom: Math.max(m.getZoom(), 16.2),
+        /* Mekan sayfası altta yarım kademede açılıyor; pin onun altında
+           kalmasın diye merkez yukarı kaydırılıyor. */
+        offset: [0, -70],
+        duration: 700,
+      });
+    } catch (e) {
+      console.warn("mekana odaklanılamadı", e);
+    }
+    /* gorunenler kasıtlı olarak listede yok: filtre değişip liste yenilendiğinde
+       aynı seçim için tekrar uçmak istemiyoruz. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secili]);
+
   /* ---- jeton pinleri çiz / güncelle ---- */
   useEffect(() => {
     const m = harita.current;
