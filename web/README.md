@@ -33,21 +33,38 @@ Next.js (App Router) + TypeScript + Tailwind + Supabase + MapLibre.
 - Kök dizindeki `AGENTS.md`: bu Next.js sürümü eğitim verisinden farklı,
   kod yazmadan önce `node_modules/next/dist/docs/` okunmalı.
 
-## Vercel'e yükleme
+## Vercel
 
-Uygulama `web/` alt klasöründe. Vercel CLI o klasörden çalıştırılırsa kök
-dizini kendisi doğru alır — GitHub'a itmeye gerek yok.
+**Yayında:** https://kadikoy-harita.vercel.app
+
+Yeni sürüm çıkmak için `web/` klasöründen:
 
 ```
-cd web
-npx vercel login          # tarayıcı açılır, hesabınla giriş yap
-npx vercel link           # yeni proje oluştur ya da mevcuduna bağla
-./scripts/vercel-degiskenler.sh   # .env.local'daki NEXT_PUBLIC_* değerlerini aktarır
 npx vercel --prod
 ```
 
-`vercel-degiskenler.sh` şart: Vercel `.env.local` dosyasını kendiliğinden
-yüklemez, değişkenler olmadan uygulama açılır ama Supabase'e bağlanamaz.
+### İlk kurulum (bir kez yapıldı)
+
+```
+npx vercel login          # cihaz kodu; TERMİNAL AÇIK KALMALI, kod ancak
+                          # süreç beklerken geçerli
+npx vercel link --yes --project kadikoy-harita
+npx vercel --prod --yes
+```
+
+### Ortam değişkenleri
+
+Vercel `.env.local` dosyasını kendiliğinden yüklemez, elle aktarılıyor.
+`NEXT_PUBLIC_*` değişkenleri **gizli olamaz** — zaten tarayıcı paketine
+giriyorlar, Vercel bunu reddediyor (`invalid_visibility`). Bu yüzden
+`--visibility config --no-sensitive` şart:
+
+```
+printf '%s' "$DEGER" | npx vercel env add NEXT_PUBLIC_X production \
+  --visibility config --no-sensitive
+```
+
+`scripts/vercel-degiskenler.sh` bunu üç ortam için yapıyor.
 
 ### Yükledikten sonra
 
