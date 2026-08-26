@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   title: "Kadıköy Harita",
   description:
     "Gitmeden ne bilmen lazım, sana uygun mu — Kadıköy'ü pinleyenlerin haritası.",
+  /* Demo: arama motorlarına kapalı. robots.txt tek başına yetmiyor —
+     bağlantı başka yerden bulunursa sayfa yine indekslenebiliyor, meta
+     etiketi onu da engelliyor. Yayına çıkarken ikisi de kaldırılmalı. */
+  robots: { index: false, follow: false },
   /* iOS manifest'teki simgeyi kullanmıyor, apple-touch-icon'a bakıyor */
   icons: { apple: "/apple-touch-icon.png", icon: "/simge-192.png" },
   appleWebApp: {
