@@ -672,3 +672,37 @@ create policy p_reports_insert on reports for insert with check (auth.uid() is n
 -- values ('poyraz-kahve','Poyraz Kahve','kahve','Moda',
 --         st_point(29.0246, 40.9788)::geography,   -- DİKKAT: önce boylam!
 --         '[{"d":1,"open":"08:00","close":"22:00"}]'::jsonb);
+
+-- ============================================================
+--  10. PostGIS TABLOSUNU YAZMAYA KAPAT
+-- ============================================================
+-- Supabase, public şemasındaki TÜM tablolara anon ve authenticated için
+-- GRANT ALL veriyor. PostGIS public'e kurulunca spatial_ref_sys de bu
+-- yetkiyi alıyor: anon anahtarla INSERT/UPDATE/DELETE yapılabiliyordu.
+-- Ölçüldü — srid 4326 (WGS 84) silindiğinde places_nearby "Cannot find
+-- SRID" ile çöküyor, harita tamamen kararıyor.
+--
+-- REVOKE ve RLS burada işe yaramıyor: tablonun sahibi supabase_admin,
+-- biz postgres'iz ve üyesi değiliz. Yetkiyi ancak VEREN rol geri alabilir;
+-- REVOKE hata vermeden hiçbir şey yapmıyor. RLS de sahiplik istiyor.
+-- PostGIS SET SCHEMA'yı desteklemediği için eklentiyi taşımak da yok.
+--
+-- Yetki listesinde TRIGGER var ve trigger oluşturmak sahiplik değil
+-- TRIGGER yetkisi istiyor — koruma oradan geliyor.
+--
+-- DİKKAT: PostGIS sürüm yükseltmesi bu tabloya yazar. Yükseltmeden önce
+--   drop trigger spatial_ref_sys_koruma on public.spatial_ref_sys;
+-- çalıştırılmalı, sonra buradaki blok tekrar uygulanmalı.
+
+create or replace function public.spatial_ref_sys_yazma_engeli()
+returns trigger language plpgsql as $$
+begin
+  raise exception
+    'spatial_ref_sys salt okunur (sema bolum 10). PostGIS yukseltmesi icin trigger gecici olarak dusurulmeli.'
+    using errcode = 'insufficient_privilege';
+end $$;
+
+drop trigger if exists spatial_ref_sys_koruma on public.spatial_ref_sys;
+create trigger spatial_ref_sys_koruma
+  before insert or update or delete on public.spatial_ref_sys
+  for each statement execute function public.spatial_ref_sys_yazma_engeli();
