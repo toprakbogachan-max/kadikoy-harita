@@ -616,9 +616,19 @@ drop policy if exists p_profiles_insert on profiles;
 create policy p_profiles_insert on profiles for insert with check (id = auth.uid());
 drop policy if exists p_places_insert on places;
 create policy p_places_insert  on places for insert with check (auth.uid() is not null);
+-- place_facts wiki tarzı ama İMZALI: yazan kişi kayda geçiyor.
+-- "for all using (auth.uid() is not null)" idi — giriş yapan herkes her
+-- mekanın künyesini silebiliyordu. warning alanı mekan sayfasının en üstünde
+-- kırmızı kutuda çıktığı için biri gerçek bir işletmeye asılsız uyarı
+-- yazabilirdi. Silme kaldırıldı, yazan kişi zorunlu.
 drop policy if exists p_facts_write on place_facts;
-create policy p_facts_write    on place_facts for all
-  using (auth.uid() is not null) with check (auth.uid() is not null);
+drop policy if exists p_facts_ekle on place_facts;
+create policy p_facts_ekle on place_facts for insert
+  with check (auth.uid() is not null and updated_by = auth.uid());
+drop policy if exists p_facts_guncelle on place_facts;
+create policy p_facts_guncelle on place_facts for update
+  using (auth.uid() is not null) with check (updated_by = auth.uid());
+-- DELETE policy'si bilerek yok.
 
 drop policy if exists p_pins_insert on pins;
 create policy p_pins_insert on pins for insert with check (author_id = auth.uid());
