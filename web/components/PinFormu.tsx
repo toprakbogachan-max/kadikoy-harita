@@ -6,7 +6,7 @@ import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { TUR_AD } from "@/lib/paleti";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
-import YerSecici from "./YerSecici";
+import YerSecici, { type YeniNokta } from "./YerSecici";
 
 /* Prototipten gelen seçenekler — şemada serbest metin, arayüzde sabit liste
    olması sonradan gruplamayı mümkün kılıyor ("çoğunlukla X için geliniyor"). */
@@ -31,6 +31,9 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
   const [yeniYer, setYeniYer] = useState<{ lat: number; lng: number } | null>(null);
   const [yeniAd, setYeniAd] = useState("");
   const [yeniTur, setYeniTur] = useState<PlaceCategory>("kahve");
+  /* Coğrafi aramadan gelen semt — elle işaretlemede boş kalıyor ve
+     yerOlustur "Kadıköy" varsayıyor. */
+  const [yeniSemt, setYeniSemt] = useState<string | null>(null);
 
   const [medyalar, setMedyalar] = useState<YeniMedya[]>([]);
   const [kelimeler, setKelimeler] = useState<[string, string, string]>(["", "", ""]);
@@ -71,7 +74,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
     try {
       let yerId = yer?.id;
       if (!yerId && yeniYer) {
-        yerId = await yerOlustur(yeniAd, yeniTur, yeniYer.lat, yeniYer.lng);
+        yerId = await yerOlustur(yeniAd, yeniTur, yeniYer.lat, yeniYer.lng, yeniSemt ?? undefined);
       }
       if (!yerId) throw new Error("Mekan seçilmedi.");
 
@@ -134,13 +137,28 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                 Çalışma saatini bilmiyoruz — uygulamada “saat bilgisi yok” diye görünecek,
                 “kapalı” demeyeceğiz.
               </p>
-              <button onClick={() => { setYeniYer(null); setYeniAd(""); }}
+              {yeniSemt && (
+                <p className="mt-2 font-sayi text-[11.5px] text-murekkep2">
+                  Haritadan: {yeniSemt}
+                </p>
+              )}
+              <button onClick={() => { setYeniYer(null); setYeniAd(""); setYeniSemt(null); }}
                 className="mt-2 border-none bg-transparent p-0 text-[12.5px] text-murekkep2 underline">
                 Vazgeç
               </button>
             </div>
           ) : (
-            <YerSecici onYerSec={setYer} onYeniNokta={(k) => setYeniYer(k)} />
+            <YerSecici
+              onYerSec={setYer}
+              /* Ad/tür/semt aramadan geliyorsa hazır dolduruluyor; haritaya
+                 elle dokunulduysa yalnızca arama metni gelir. */
+              onYeniNokta={(n: YeniNokta) => {
+                setYeniYer({ lat: n.lat, lng: n.lng });
+                if (n.ad) setYeniAd(n.ad);
+                if (n.tur) setYeniTur(n.tur);
+                setYeniSemt(n.semt ?? null);
+              }}
+            />
           )}
         </div>
 

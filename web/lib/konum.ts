@@ -20,10 +20,10 @@ export interface Konum {
 
 /* Kadıköy'ün kabaca sınırları. Kullanıcı İzmir'deyse haritayı oraya
    uçurmak anlamsız — uygulama Kadıköy'ü gösteriyor. */
-const KADIKOY = { guney: 40.955, kuzey: 41.02, bati: 28.99, dogu: 29.09 };
+export const KADIKOY_SINIR = { guney: 40.955, kuzey: 41.02, bati: 28.99, dogu: 29.09 };
 export const kadikoydeMi = (k: Konum) =>
-  k.lat > KADIKOY.guney && k.lat < KADIKOY.kuzey &&
-  k.lng > KADIKOY.bati && k.lng < KADIKOY.dogu;
+  k.lat > KADIKOY_SINIR.guney && k.lat < KADIKOY_SINIR.kuzey &&
+  k.lng > KADIKOY_SINIR.bati && k.lng < KADIKOY_SINIR.dogu;
 
 /**
  * Kullanıcının kendi konumu.

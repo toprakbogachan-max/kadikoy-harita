@@ -156,6 +156,12 @@ function Gizlilik() {
         Commons’tan gelir. Harita karoları OpenFreeMap üzerinden yüklenir —
         bu istekler onların sunucusuna gider.
       </p>
+      <p>
+        Pin atarken mekan aradığında, yazdığın metin bizim kayıtlarımızın yanı sıra
+        Photon’a (komoot) da sorulur — böylece bizde henüz kayıtlı olmayan yerleri de
+        bulabiliyorsun. Yalnızca arama kutusuna yazdığın metin gider; kim olduğun,
+        nerede olduğun ya da hesabın gitmez.
+      </p>
     </>
   );
 }
