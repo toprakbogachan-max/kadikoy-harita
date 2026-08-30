@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as DokunusOlayi } from "react";
 import { useVeri } from "@/lib/kanca";
 import { yerGetir, yerinPinleri, mekanOzeti, kayitDegistir, kayitliMi, medyaUrl, type YerDetay } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
@@ -23,11 +23,23 @@ interface Props {
 
 const GUN_AD = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
+/* Yarım kademenin üst kenarı — kapsayıcı yüksekliğinin oranı. Tek yerde
+   duruyor: sürükleme sınırı da, dinlenme konumu da bunu okuyor. */
+const YARIM_ORAN = 0.56;
+/* Bu kadar piksel altındaki hareket sürükleme değil, dokunuş sayılır. */
+const CEKME_ESIGI = 4;
+/* px/ms — bunun üstündeki fırlatma, yolun yarısı geçilmese de kademeyi
+   değiştirir. Telefonda kısa ve sert kaydırmalar böyle yapılıyor. */
+const FIRLATMA_HIZI = 0.5;
+/* Kapanış animasyonu; aşağıdaki duration-300 ile aynı olmak zorunda. */
+const GECIS_MS = 300;
+
 /**
  * Mekan sayfası — Google Maps tarzı iki kademeli çekmece.
  *
  * Yarım kademede harita üstte görünür kalır (nerede olduğunu görmeden karar
  * veremiyorsun); tutamağa dokunup ya da yukarı sürükleyip tam ekrana çıkar.
+ * Yarımdan aşağı sürüklemek kapatır.
  *
  * Bölüm sırası BRIEF kararı: uyarı → hızlı bakış → buraya bırakılanlar →
  * künye → özetler. Önce "buraya gitmeli miyim", sonra ayrıntı.
@@ -37,6 +49,113 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
   const [kademe, setKademe] = useState<Kademe>("yarim");
   const [pinIndex, setPinIndex] = useState(0);
   const kapatDugmesi = useRef<HTMLButtonElement>(null);
+
+  /* ---- sürükleme ----
+     cek: parmak ekrandayken çekmecenin canlı konumu; null olması
+     "sürükleme yok, kademenin dinlenme yerindeyiz" demek.
+       ust   — üst kenar (px), 0 ile yarım arası
+       asagi — yarımın ALTINA inen kısım. Burada top'u değil transform'u
+               kullanıyoruz: top'u indirmek çekmeceyi kısaltıp içindeki
+               yerleşimi eziyordu, translateY ise onu olduğu gibi
+               ekranın dışına kaydırıyor. */
+  const govde = useRef<HTMLDivElement>(null);
+  const [cek, setCek] = useState<{ ust: number; asagi: number } | null>(null);
+  /* Kapanırken cek dolu ama geçiş AÇIK kalmalı — o yüzden ayrı bayrak. */
+  const [kapaniyor, setKapaniyor] = useState(false);
+  const kapatZamani = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (kapatZamani.current) clearTimeout(kapatZamani.current); }, []);
+  /* Oturum verisi state DEĞİL ref: her parmak hareketinde yeniden render
+     etmemesi gerekiyor, tek okuyucusu da bu üç işleyici. */
+  const cekme = useRef<{
+    id: number; basY: number; basUst: number; kapYuk: number;
+    sonY: number; sonT: number; hiz: number; tasindi: boolean;
+  } | null>(null);
+  const cevir = () => setKademe((k) => (k === "yarim" ? "tam" : "yarim"));
+
+  function cekmeBasla(e: DokunusOlayi<HTMLDivElement>) {
+    if (kapaniyor) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    /* kapat düğmesinden başlayan basış çekmeceyi sürüklemez */
+    if ((e.target as HTMLElement).closest("[data-cekme-disi]")) return;
+    const el = govde.current;
+    if (!el) return;
+    /* Yakalama BASIŞTA alınıyor. İlk harekete ertelemek çalışmıyor: parmak
+       tutamaktan çıkar çıkmaz pointermove artık haritaya gidiyor, çekmece
+       yerinde kalıp harita kayıyordu. */
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* imleç çoktan bırakılmış */ }
+    cekme.current = {
+      id: e.pointerId,
+      basY: e.clientY,
+      basUst: el.offsetTop,
+      kapYuk: (el.offsetParent as HTMLElement | null)?.clientHeight ?? window.innerHeight,
+      sonY: e.clientY, sonT: e.timeStamp, hiz: 0, tasindi: false,
+    };
+  }
+
+  function cekmeSurdur(e: DokunusOlayi<HTMLDivElement>) {
+    const c = cekme.current;
+    if (!c || c.id !== e.pointerId) return;
+    const dy = e.clientY - c.basY;
+    if (!c.tasindi) {
+      if (Math.abs(dy) < CEKME_ESIGI) return;
+      c.tasindi = true;
+    }
+    const dt = e.timeStamp - c.sonT;
+    if (dt > 0) c.hiz = (e.clientY - c.sonY) / dt;
+    c.sonY = e.clientY;
+    c.sonT = e.timeStamp;
+    const yarim = c.kapYuk * YARIM_ORAN;
+    const ham = c.basUst + dy;
+    setCek({
+      ust: Math.max(0, Math.min(yarim, ham)),
+      asagi: Math.max(0, Math.min(c.kapYuk - yarim, ham - yarim)),
+    });
+  }
+
+  function cekmeBitir(e: DokunusOlayi<HTMLDivElement>) {
+    const c = cekme.current;
+    if (!c || c.id !== e.pointerId) return;
+    cekme.current = null;
+    /* İptal (sistem jesti, çağrı, ekran kilidi) karar vermez, geri oturur. */
+    if (e.type === "pointercancel") { setCek(null); return; }
+    if (!c.tasindi) {
+      /* Kımıldamadıysa bu bir dokunuş. Düğmenin click'ine bırakamıyoruz:
+         imleç yakalandığı için tıklama tutamağa değil sarmalayıcıya gidiyor. */
+      if (e.type === "pointerup") cevir();
+      setCek(null);
+      return;
+    }
+
+    const yarim = c.kapYuk * YARIM_ORAN;
+    const son = Math.max(0, Math.min(c.kapYuk, c.basUst + (e.clientY - c.basY)));
+    /* Üç durak var: tam (0), yarım, kapalı (kapsayıcının altı). */
+    let hedef: "tam" | "yarim" | "kapali";
+    if (c.hiz < -FIRLATMA_HIZI) {
+      /* Yukarı fırlatma her zaman tam ekran. */
+      hedef = "tam";
+    } else if (c.hiz > FIRLATMA_HIZI) {
+      /* Aşağı fırlatma BİR durak iner. Nerede bittiğine değil nereden
+         başladığına bakıyoruz: sert bir savuruş uzağa gidebilir, ama
+         kullanıcının beklediği tek kademe inmek. */
+      hedef = c.basUst > CEKME_ESIGI ? "kapali" : "yarim";
+    } else {
+      /* Yavaş bırakma: en yakın durak. */
+      hedef = son < yarim / 2 ? "tam"
+        : son < (yarim + c.kapYuk) / 2 ? "yarim"
+        : "kapali";
+    }
+
+    if (hedef === "kapali") {
+      /* Anında sökmek çekmeceyi parmağın bıraktığı yerde yok ediyor.
+         Önce aşağı kaydırıp sonra haber veriyoruz. */
+      setKapaniyor(true);
+      setCek({ ust: yarim, asagi: c.kapYuk - yarim });
+      kapatZamani.current = setTimeout(onKapat, GECIS_MS);
+      return;
+    }
+    setKademe(hedef);
+    setCek(null);
+  }
 
   const { veri: yer } = useVeri<YerDetay | null>(() => yerGetir(yerId), [yerId], null);
   const { veri: pinler } = useVeri<Pin[]>(() => yerinPinleri(yerId), [yerId], []);
@@ -83,21 +202,46 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
   const ilkFoto = pin?.medyalar.find((m) => m.tur === "foto");
   const pinKapak = ilkFoto ? medyaUrl(ilkFoto.yol) : null;
 
+  /* Yuvarlak köşe + gölge "çekmece havada duruyor" demek; tam ekranda
+     yanlış olur. Sürüklerken kademeye değil ANLIK konuma bakıyoruz:
+     tam ekrandan aşağı çekerken köşeler daha parmak yoldayken dönüyor. */
+  const kenarli = cek ? cek.ust > CEKME_ESIGI : kademe === "yarim";
+
   return (
     <div
+      ref={govde}
       role="dialog"
       aria-modal="true"
       aria-label={yer.ad}
-      className={`absolute inset-x-0 bottom-0 z-20 flex flex-col bg-kagit transition-[top] duration-300 ${
-        kademe === "yarim"
-          ? "top-[56%] rounded-t-[14px] shadow-[0_-8px_24px_rgba(74,58,30,.18)]"
-          : "top-0"
-      }`}
+      style={{
+        top: cek ? cek.ust : kademe === "tam" ? 0 : `${YARIM_ORAN * 100}%`,
+        transform: cek?.asagi ? `translateY(${cek.asagi}px)` : undefined,
+      }}
+      className={`absolute inset-x-0 bottom-0 z-20 flex flex-col bg-kagit ${
+        cek == null || kapaniyor ? "transition-[top,transform] duration-300" : ""
+      } ${kenarli ? "rounded-t-[14px] shadow-[0_-8px_24px_rgba(74,58,30,.18)]" : ""}`}
     >
-      {/* tutamak: dokunuş kademeyi değiştirir */}
+      {/* Sürükleme alanı tutamak + başlık: 4 mm'lik çubuğu parmakla tam
+          tutturmak zor, başlığı da çekilebilir yapınca hedef büyüyor.
+          touch-action none olmasa tarayıcı bunu sayfa kaydırması sanardı. */}
+      <div
+        onPointerDown={cekmeBasla}
+        onPointerMove={cekmeSurdur}
+        onPointerUp={cekmeBitir}
+        onPointerCancel={cekmeBitir}
+        style={{ touchAction: "none" }}
+        className="shrink-0"
+      >
+      {/* tutamak: dokunuş da kademeyi değiştirir (sürüklemek zorunda değilsin) */}
       <button
-        onClick={() => setKademe((k) => (k === "yarim" ? "tam" : "yarim"))}
+        /* Dokunuş/fare pointerup'ta ele alınıyor; burada yalnızca klavye var.
+           preventDefault olmasa Enter ayrıca click üretip iki kez çevirirdi. */
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cevir(); }
+        }}
         aria-label={kademe === "yarim" ? "Sayfayı genişlet" : "Sayfayı küçült"}
+        aria-expanded={kademe === "tam"}
+        title="Dokun ya da yukarı sürükle"
         className="w-full shrink-0 border-none bg-transparent px-0 pb-[3px] pt-[9px]"
       >
         <span className="mx-auto block h-1 w-[38px] rounded-sm bg-[rgba(35,52,60,.22)]" />
@@ -116,10 +260,12 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
           ref={kapatDugmesi}
           onClick={onKapat}
           aria-label="Kapat"
+          data-cekme-disi
           className="size-[30px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[15px] leading-none text-murekkep"
         >
           ✕
         </button>
+      </div>
       </div>
 
       <div className={`min-h-0 flex-1 ${kademe === "yarim" ? "overflow-hidden" : "overflow-y-auto"}`}>
