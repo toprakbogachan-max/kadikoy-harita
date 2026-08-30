@@ -39,8 +39,11 @@ const MARKER_SINIRI = 160;
 const YENIDEN_SORGU_ESIGI_M = 250;
 
 /** Filtre çipi → places_nearby parametresi. "kaydettiklerim" auth bekliyor. */
+/* Şemadaki place_category enum'unun TAMAMI. Eksik bırakılan bir kategori
+   çip olarak görünüp filtrelemiyor — burada olmayan id `kategori: null`a
+   düşüyor, yani "Diğer"e basınca her şey geliyordu. */
 const KATEGORILER: PlaceCategory[] = [
-  "kahve", "yemek", "bar", "tatli", "kultur", "park", "otel", "magaza",
+  "kahve", "yemek", "bar", "tatli", "kultur", "park", "otel", "magaza", "diger",
 ];
 
 export default function Sayfa() {
