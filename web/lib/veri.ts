@@ -454,6 +454,23 @@ export async function mekanAra(q: string, limit = 24): Promise<Yer[]> {
   }));
 }
 
+/**
+ * Tek bir mekanın koordinatı.
+ *
+ * Neden ayrı sorgu: lat/lng şemadaki hesaplanan alanlar (göç 10). Bunları
+ * mekanAra'nın select'ine ekleseydim ve göç uygulanmamış olsaydı PostgREST
+ * BÜTÜN sorguyu 400'lerdi — arama tamamen çalışmaz olurdu. Burada hata
+ * yutuluyor: göç yoksa harita uçmuyor, geri kalan her şey çalışıyor.
+ */
+export async function yerKoordinati(id: string): Promise<{ lat: number; lng: number } | null> {
+  const { data, error } = await db
+    .from("places").select("lat, lng").eq("id", id).maybeSingle();
+  if (error || !data) return null;
+  const { lat, lng } = data as { lat: number | null; lng: number | null };
+  if (typeof lat !== "number" || typeof lng !== "number") return null;
+  return { lat, lng };
+}
+
 export async function kisiAra(q: string, limit = 12): Promise<Kisi[]> {
   const n = aramaMetni(q.trim());
   if (n.length < 2) return [];

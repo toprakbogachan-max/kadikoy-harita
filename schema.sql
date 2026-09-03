@@ -457,6 +457,18 @@ language sql stable as $$
   select place_cover_path($1.id);
 $$;
 
+-- Aynı desen koordinat için: geo sütunu geography tipinde ve PostgREST onu
+-- sayı olarak vermiyor. Bu ikisi olmadan liste sorguları lat/lng okuyamıyor.
+create or replace function lat(places) returns double precision
+language sql stable as $$
+  select st_y($1.geo::geometry);
+$$;
+
+create or replace function lng(places) returns double precision
+language sql stable as $$
+  select st_x($1.geo::geometry);
+$$;
+
 create index if not exists pins_place_begeni_idx
   on pins (place_id, like_count desc) where status = 'published';
 
