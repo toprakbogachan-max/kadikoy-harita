@@ -14,6 +14,9 @@ import { igneStil, simgeSvg } from "@/lib/gorsel";
 const HARITA_STILI =
   process.env.NEXT_PUBLIC_MAP_STYLE ?? "https://tiles.openfreemap.org/styles/liberty";
 
+/** Seçim yapılınca haritanın uçtuğu yakınlık — sokak seviyesi. */
+const SECIM_ZOOM = 17;
+
 /** Yeni mekan adayı — haritaya dokunarak ya da coğrafi aramadan gelir. */
 export interface YeniNokta {
   lat: number;
@@ -23,10 +26,32 @@ export interface YeniNokta {
   semt?: string;
 }
 
+/** Haritada gösterilecek nokta. sabit = kayıtlı mekan, taşınamaz. */
+export interface Secim {
+  lat: number;
+  lng: number;
+  sabit: boolean;
+}
+
 interface Props {
+  /** iğnenin yeri; koordinat bilinmiyorsa null olabilir */
+  secim: Secim | null;
+  /** bir mekan seçilmiş mi — koordinatı okunamasa bile true */
+  secildi: boolean;
   onYerSec: (y: Yer) => void;
   onYeniNokta: (n: YeniNokta) => void;
+  onNoktaTasi: (k: { lat: number; lng: number }) => void;
 }
+
+/* Sürüklenebilir iğnede artı var (taşınabilir), kayıtlı mekanda yok. */
+const igneSVG = (sabit: boolean) =>
+  `<svg width="30" height="37" viewBox="0 0 28 34" style="display:block">
+     <path d="M14 1C7.4 1 2 6.3 2 12.9 2 21.6 14 33 14 33s12-11.4 12-20.1C26 6.3 20.6 1 14 1z"
+           fill="#B8801A" stroke="#fff" stroke-width="2"/>
+     ${sabit
+       ? '<circle cx="14" cy="13" r="3.6" fill="#fff"/>'
+       : '<path d="M14 8v10M9 13h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'}
+   </svg>`;
 
 /**
  * Pin formunun mekan adımı: arama + harita.
@@ -34,18 +59,27 @@ interface Props {
  * Üç yol var:
  *   1) bizde kayıtlı mekanı seçmek,
  *   2) haritadan (OpenStreetMap) bulup yeni mekan olarak eklemek,
- *   3) haritada boş bir noktaya dokunup adını elle yazmak.
+ *   3) haritada bir noktaya dokunup adını elle yazmak.
  *
- * İkinci yol olmadan şu oluyordu: altlık haritanın etiketleri OpenMapTiles'tan
- * geliyor, bizim 1064 mekanımızdan değil — kullanıcı haritada okuduğu adı
- * aratınca hiçbir şey bulamıyor, "buraya pin atılamıyor" sanıyordu.
+ * Harita HER ZAMAN görünür kalıyor. Önceden seçim yapılınca yerini "Yeni
+ * mekan" formu alıyordu — kullanıcı nereyi işaretlediğini göremiyordu.
+ * Artık seçim haritada iğne olarak duruyor, harita oraya uçuyor, yeni
+ * noktaysa iğne parmakla sürüklenip düzeltilebiliyor.
  */
-export default function YerSecici({ onYerSec, onYeniNokta }: Props) {
+export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNoktaTasi }: Props) {
   const [q, setQ] = useState("");
   const [gecikmeli, setGecikmeli] = useState("");
   const kapsayici = useRef<HTMLDivElement>(null);
   const harita = useRef<maplibregl.Map | null>(null);
-  const isaret = useRef<maplibregl.Marker | null>(null);
+  const igne = useRef<maplibregl.Marker | null>(null);
+
+  /* Seçimden sonra arama kutusu temizleniyor: liste yer kaplamasın, seçilen
+     yerle listedeki adaylar aynı anda durup kafa karıştırmasın.
+     Temizlemeyi seçimin KOORDİNATINA bağlamak yanlıştı — göç 10
+     uygulanmamışsa kayıtlı mekanın koordinatı gelmiyor, kutu da hiç
+     temizlenmiyordu. Burada, seçimin yapıldığı yerde yapmak hem doğru hem
+     türetilmiş state'e gerek bırakmıyor. */
+  const temizle = () => { setQ(""); setGecikmeli(""); };
 
   useEffect(() => {
     const z = setTimeout(() => setGecikmeli(q.trim()), 250);
@@ -71,10 +105,18 @@ export default function YerSecici({ onYerSec, onYeniNokta }: Props) {
   const bekleniyor = yerelYukleniyor || (gecikmeli.length >= 3 && haritaYukleniyor);
   const bosSonuc = arandi && !bekleniyor && yereller.length === 0 && yeniler.length === 0;
 
-  /* Harita tıklama işleyicisi bir kez kuruluyor, o yüzden q'yu doğrudan
-     okuyamaz — kapanışta ilk değeri donardı. Ref güncel kalıyor. */
+  /* Harita bir kez kuruluyor; aşağıdaki iki işleyici o yüzden güncel prop'u
+     ref üzerinden okuyor, yoksa ilk render'ın değerlerinde donarlardı. */
   const sorgu = useRef("");
   useEffect(() => { sorgu.current = q.trim(); }, [q]);
+  const geriCagri = useRef({ onYeniNokta, onNoktaTasi });
+  useEffect(() => { geriCagri.current = { onYeniNokta, onNoktaTasi }; });
+  const temizleRef = useRef(temizle);
+  useEffect(() => { temizleRef.current = temizle; });
+
+  /* Konum haritanın KENDİSİNDEN geldiyse (dokunuş ya da sürükleme) tekrar
+     ortalamıyoruz — parmağın altındaki iğne kayardı. */
+  const haritadanGeldi = useRef(false);
 
   useEffect(() => {
     if (harita.current || !kapsayici.current) return;
@@ -83,32 +125,65 @@ export default function YerSecici({ onYerSec, onYeniNokta }: Props) {
       style: HARITA_STILI,
       center: [29.0295, 40.9885],
       zoom: 14.2,
-      attributionControl: { compact: true, customAttribution: "Mekanlar © OpenStreetMap katkıcıları" },
+      /* Atıf harita ÜSTÜNDE değil altında: 220px'lik karede açık atıf çubuğu
+         geniş bir şeridi kaplıyor ve oraya yapılan dokunuşlar haritaya hiç
+         ulaşmıyordu — kullanıcı "pin atılmıyor" sanırdı. Krediler haritanın
+         hemen altında, görünür şekilde duruyor; lisans bunu karşılıyor. */
+      attributionControl: false,
     });
     harita.current = m;
 
     m.on("click", (e) => {
       const { lat, lng } = e.lngLat;
-      if (!isaret.current) {
-        const el = document.createElement("div");
-        el.className = "yeni-nokta";
-        el.innerHTML =
-          '<svg width="28" height="34" viewBox="0 0 28 34"><path d="M14 1C7.4 1 2 6.3 2 12.9 2 21.6 14 33 14 33s12-11.4 12-20.1C26 6.3 20.6 1 14 1z" fill="#B8801A" stroke="#fff" stroke-width="2"/><path d="M14 8v10M9 13h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>';
-        isaret.current = new maplibregl.Marker({ element: el, anchor: "bottom" });
-      }
-      isaret.current.setLngLat([lng, lat]).addTo(m);
+      haritadanGeldi.current = true;
       /* Aranıp bulunamayan metin yeni mekanın adı olarak gidiyor. */
-      onYeniNokta({ lat, lng, ad: sorgu.current || undefined });
+      const ad = sorgu.current || undefined;
+      temizleRef.current();
+      geriCagri.current.onYeniNokta({ lat, lng, ad });
     });
 
     /* Kapsayıcı boyutu form açılırken oturuyor; MapLibre kendiliğinden görmüyor */
     const gozlemci = new ResizeObserver(() => m.resize());
     gozlemci.observe(kapsayici.current);
-    return () => { gozlemci.disconnect(); m.remove(); harita.current = null; };
-    /* onYeniNokta her render'da değişebilir ama haritayı yeniden kurmak
-       istemiyoruz; ilk değeri kapanışta yakalanıyor ve kimliği sabit. */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { gozlemci.disconnect(); m.remove(); harita.current = null; igne.current = null; };
   }, []);
+
+  /* İğneyi seçimle eşitle. Sabitlik değişince iğne yeniden kuruluyor
+     (görünümü ve sürüklenebilirliği farklı), yalnızca konum değiştiyse
+     mevcut iğne taşınıyor. */
+  const sonSabit = useRef<boolean | null>(null);
+  useEffect(() => {
+    const m = harita.current;
+    if (!m) return;
+
+    if (!secim) {
+      igne.current?.remove();
+      igne.current = null;
+      sonSabit.current = null;
+      return;
+    }
+
+    if (!igne.current || sonSabit.current !== secim.sabit) {
+      igne.current?.remove();
+      const el = document.createElement("div");
+      el.innerHTML = igneSVG(secim.sabit);
+      const mk = new maplibregl.Marker({
+        element: el, anchor: "bottom", draggable: !secim.sabit,
+      });
+      mk.on("dragend", () => {
+        const { lat, lng } = mk.getLngLat();
+        haritadanGeldi.current = true;
+        geriCagri.current.onNoktaTasi({ lat, lng });
+      });
+      igne.current = mk.setLngLat([secim.lng, secim.lat]).addTo(m);
+      sonSabit.current = secim.sabit;
+    } else {
+      igne.current.setLngLat([secim.lng, secim.lat]);
+    }
+
+    if (haritadanGeldi.current) { haritadanGeldi.current = false; return; }
+    m.easeTo({ center: [secim.lng, secim.lat], zoom: SECIM_ZOOM, duration: 550 });
+  }, [secim]);
 
   const satir =
     "flex w-full items-center gap-2.5 border-none border-b border-[var(--cizgi)] bg-transparent px-2.5 py-2 text-left last:border-0";
@@ -131,7 +206,7 @@ export default function YerSecici({ onYerSec, onYeniNokta }: Props) {
             <ul className="list-none p-0">
               {yereller.map((y) => (
                 <li key={y.id}>
-                  <button onClick={() => onYerSec(y)} className={satir}>
+                  <button onClick={() => { temizle(); onYerSec(y); }} className={satir}>
                     <span style={igneStil(y.tur)} className="shrink-0"
                       dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 17, "var(--pin)") }} />
                     <span className="min-w-0 flex-1">
@@ -157,7 +232,7 @@ export default function YerSecici({ onYerSec, onYeniNokta }: Props) {
                 {yeniler.map((h) => (
                   <li key={h.anahtar}>
                     <button
-                      onClick={() => onYeniNokta({ lat: h.lat, lng: h.lng, ad: h.ad, tur: h.tur, semt: h.semt ?? undefined })}
+                      onClick={() => { temizle(); onYeniNokta({ lat: h.lat, lng: h.lng, ad: h.ad, tur: h.tur, semt: h.semt ?? undefined }); }}
                       className={satir}
                     >
                       <span style={igneStil(h.tur)} className="shrink-0 opacity-60"
@@ -195,13 +270,22 @@ export default function YerSecici({ onYerSec, onYeniNokta }: Props) {
         </p>
       )}
 
-      <div ref={kapsayici} className="h-[190px] w-full overflow-hidden rounded-sm bg-su"
+      <div ref={kapsayici} className="h-[220px] w-full overflow-hidden rounded-sm bg-su"
            style={{ position: "relative" }} />
-      {!bosSonuc && (
-        <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
-          Aradığın yer yoksa haritada boş bir noktaya dokun, yeni mekan ekle.
-        </p>
-      )}
+      <p className="mt-1 text-[10px] leading-snug text-murekkep2">
+        Mekanlar © OpenStreetMap katkıcıları · Karolar OpenFreeMap / © OpenMapTiles
+      </p>
+      <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
+        {!secildi
+          ? "Aradığın yer yoksa haritada bir noktaya dokun, yeni mekan ekle."
+          : !secim
+            /* Kayıtlı mekan seçildi ama koordinatı okunamadı — göç 10
+               uygulanmamış demek. Sessiz kalmak yerine söylüyoruz. */
+            ? "Seçilen mekanın konumu okunamadı, haritada işaretlenemiyor."
+            : secim.sabit
+              ? "Seçilen mekan haritada işaretli. Başka bir yere dokunarak yeni mekan ekleyebilirsin."
+              : "İğneyi sürükleyerek yerini düzeltebilirsin."}
+      </p>
     </div>
   );
 }

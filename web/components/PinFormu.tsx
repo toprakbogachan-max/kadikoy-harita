@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { pinAt, yerOlustur, type YeniMedya } from "@/lib/veri";
+import { pinAt, yerOlustur, yerKoordinati, type YeniMedya } from "@/lib/veri";
+import { useVeri } from "@/lib/kanca";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { TUR_AD } from "@/lib/paleti";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
-import YerSecici, { type YeniNokta } from "./YerSecici";
+import YerSecici, { type YeniNokta, type Secim } from "./YerSecici";
 
 /* Prototipten gelen seçenekler — şemada serbest metin, arayüzde sabit liste
    olması sonradan gruplamayı mümkün kılıyor ("çoğunlukla X için geliniyor"). */
@@ -34,6 +35,30 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
   /* Coğrafi aramadan gelen semt — elle işaretlemede boş kalıyor ve
      yerOlustur "Kadıköy" varsayıyor. */
   const [yeniSemt, setYeniSemt] = useState<string | null>(null);
+
+  /* Kayıtlı mekanın koordinatı ayrı çekiliyor: mekanAra ve yerGetir lat/lng
+     yerine 0 döndürüyor (geo sütunu geography, PostgREST sayı vermiyor).
+     Göç 10 uygulanmamışsa null geliyor ve harita uçmuyor — form çalışmaya
+     devam ediyor. */
+  const { veri: yerKoord } = useVeri<{ lat: number; lng: number } | null>(
+    () =>
+      !yer ? Promise.resolve(null)
+      : yer.lat !== 0 || yer.lng !== 0 ? Promise.resolve({ lat: yer.lat, lng: yer.lng })
+      : yerKoordinati(yer.id),
+    [yer?.id, yer?.lat, yer?.lng],
+    null,
+  );
+
+  /* useMemo şart: satır içi kursaydım her render'da YENİ nesne olurdu,
+     YerSecici'deki eşitleme efekti de her render'da çalışıp haritayı
+     yeniden ortalardı — mekanın adını yazarken her harfte zıplardı. */
+  const secim = useMemo<Secim | null>(
+    () =>
+      yer ? (yerKoord ? { ...yerKoord, sabit: true } : null)
+      : yeniYer ? { ...yeniYer, sabit: false }
+      : null,
+    [yer, yerKoord, yeniYer],
+  );
 
   const [medyalar, setMedyalar] = useState<YeniMedya[]>([]);
   const [kelimeler, setKelimeler] = useState<[string, string, string]>(["", "", ""]);
@@ -117,10 +142,31 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
         {/* ---- mekan ---- */}
         <div className={alan}>
           <label className={etiket}>Mekan <Zorunlu /></label>
-          {yer ? (
-            <SeciliYer yer={yer} onKaldir={() => setYer(null)} />
-          ) : yeniYer ? (
-            <div className="rounded-sm border border-[var(--cizgi)] bg-yuzey p-3">
+          <YerSecici
+            secim={secim}
+            secildi={!!yer || !!yeniYer}
+            onYerSec={(y) => { setYer(y); setYeniYer(null); setYeniAd(""); setYeniSemt(null); }}
+            /* Ad/tür/semt aramadan geliyorsa hazır dolduruluyor; haritaya
+               elle dokunulduysa yalnızca arama metni gelir. */
+            onYeniNokta={(n: YeniNokta) => {
+              setYer(null);
+              setYeniYer({ lat: n.lat, lng: n.lng });
+              if (n.ad) setYeniAd(n.ad);
+              if (n.tur) setYeniTur(n.tur);
+              setYeniSemt(n.semt ?? null);
+            }}
+            /* İğne sürüklendi: yalnızca koordinat değişiyor, ad ve tür durur. */
+            onNoktaTasi={(k) => setYeniYer(k)}
+          />
+
+          {yer && (
+            <div className="mt-2">
+              <SeciliYer yer={yer} onKaldir={() => setYer(null)} />
+            </div>
+          )}
+
+          {yeniYer && (
+            <div className="mt-2 rounded-sm border border-[var(--cizgi)] bg-yuzey p-3">
               <div className="mb-2 font-tabela text-[11px] uppercase tracking-[0.11em] text-jeton">
                 Yeni mekan
               </div>
@@ -147,18 +193,6 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                 Vazgeç
               </button>
             </div>
-          ) : (
-            <YerSecici
-              onYerSec={setYer}
-              /* Ad/tür/semt aramadan geliyorsa hazır dolduruluyor; haritaya
-                 elle dokunulduysa yalnızca arama metni gelir. */
-              onYeniNokta={(n: YeniNokta) => {
-                setYeniYer({ lat: n.lat, lng: n.lng });
-                if (n.ad) setYeniAd(n.ad);
-                if (n.tur) setYeniTur(n.tur);
-                setYeniSemt(n.semt ?? null);
-              }}
-            />
           )}
         </div>
 
