@@ -84,6 +84,18 @@ export default function BuyukGorsel({
           className="w-full resize-none rounded-sm border border-white/20 bg-white/10 px-3 py-2.5 text-[14px] leading-snug text-white outline-none placeholder:text-white/40 focus:border-[#F2C879]"
         />
         <div className="mt-1 text-right font-sayi text-[10.5px] text-white/45">{not.length}/120</div>
+
+        {/* "Tamam", "Kaydet" DEĞİL: bu ekran sunucuya hiçbir şey yazmıyor,
+            yalnızca formdaki state'i düzenliyor. Asıl kayıt formun altındaki
+            Paylaş/Kaydet ile oluyor — burada "Kaydet" yazsaydı kullanıcı pini
+            kaydettiğini sanırdı. Sağ üstteki çarpı da aynı işi yapıyor ama
+            "vazgeç" gibi okunuyordu; bitirdiğini söyleyen bir düğme gerekti. */}
+        <button
+          onClick={onKapat}
+          className="mt-3 w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white"
+        >
+          Tamam
+        </button>
       </div>
     </div>
   );
