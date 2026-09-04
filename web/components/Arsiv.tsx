@@ -13,7 +13,7 @@ interface Props {
   yerler: Yer[];
   listeler: Liste[];
   onKapat: () => void;
-  onYerAc: (yerId: string) => void;
+  onYerAc: (yerId: string, oncelikliKisi?: string) => void;
   onGonderiAc: (pinId: string, liste: string[]) => void;
   onListeOlustur: () => void;
 }

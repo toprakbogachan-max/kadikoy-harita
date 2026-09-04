@@ -154,8 +154,12 @@ function Uygulama() {
     });
   };
 
-  const haritadaAc = (yerId: string) => {
+  /* Bir KİŞİ üzerinden mekana gidiliyorsa (listesinden ya da pininden),
+     mekan sayfası onun pinini önce göstersin. */
+  const [oncelikliKisi, setOncelikliKisi] = useState<string | undefined>(undefined);
+  const haritadaAc = (yerId: string, kisi?: string) => {
     setSecili(yerId);
+    setOncelikliKisi(kisi);
     setFiltre("hepsi");
     setEkran("harita");
   };
@@ -339,7 +343,8 @@ function Uygulama() {
         {secili && ekran === "harita" && !gonderi && (
           <MekanSayfasi
             yerId={secili}
-            onKapat={() => setSecili(null)}
+            oncelikliKisi={oncelikliKisi}
+            onKapat={() => { setSecili(null); setOncelikliKisi(undefined); }}
             onGonderiAc={(id, liste) => setGonderi({ id, liste })}
             onGirisIste={() => setGirisAcik(true)}
             onPinAt={(y) => setPinFormu({ acik: true, yer: y })}

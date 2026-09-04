@@ -20,7 +20,7 @@ export default function Profil({
 }: {
   /** boşsa oturumdaki kişi gösterilir */
   kullaniciAdi?: string;
-  onYerAc: (id: string) => void;
+  onYerAc: (id: string, oncelikliKisi?: string) => void;
   onGirisIste: () => void;
   onPaylas: () => void;
   onAyarlar: () => void;
@@ -217,7 +217,9 @@ export default function Profil({
             return (
               <button
                 key={p.id}
-                onClick={() => onYerAc(p.yer)}
+                /* Profilden bir pine dokunuyorsan o kişinin yazdığını
+                   görmek istiyorsun, en çok beğenilen yabancı pini değil. */
+                onClick={() => onYerAc(p.yer, kisi.id)}
                 style={{ ...igneStil(p.yerTuru), transform: `rotate(${egim(i)}deg)` }}
                 className="relative aspect-[0.86] rounded-sm border-none bg-[var(--kag)] p-[3px] shadow-kagit"
               >

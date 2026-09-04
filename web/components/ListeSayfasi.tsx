@@ -23,7 +23,8 @@ export default function ListeSayfasi({
   /** başkasının listesine bakarken sahibinin adı */
   sahibi?: string;
   onKapat: () => void;
-  onYerAc: (yerId: string) => void;
+  /** oncelikliKisi: mekan sayfası bu kişinin pinini önce göstersin */
+  onYerAc: (yerId: string, oncelikliKisi?: string) => void;
 }) {
   useEffect(() => {
     const el = (e: KeyboardEvent) => { if (e.key === "Escape") onKapat(); };
@@ -61,7 +62,10 @@ export default function ListeSayfasi({
                 {/* Mekana dokununca liste kapanıyor ve harita oraya odaklanıyor —
                     açık kalsa kullanıcı haritayı listenin altında göremezdi. */}
                 <button
-                  onClick={() => { onKapat(); onYerAc(y.id); }}
+                  /* Liste sahibinin pini önce gösterilsin: birinin listesinden
+                     bir mekana giriyorsan, merak ettiğin şey ONUN oraya ne
+                     yazdığı. Sahip zaten listenin üstünde duruyor. */
+                  onClick={() => { onKapat(); onYerAc(y.id, liste.sahip); }}
                   className="flex w-full items-center gap-3 border-none border-b border-[var(--cizgi)] bg-transparent px-4 py-3 text-left last:border-0"
                 >
                   <span className="grid size-[38px] shrink-0 place-items-center rounded-sm"

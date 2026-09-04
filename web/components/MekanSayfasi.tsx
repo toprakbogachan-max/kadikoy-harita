@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as DokunusOlayi } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as DokunusOlayi } from "react";
 import { useVeri } from "@/lib/kanca";
 import { yerGetir, yerinPinleri, mekanOzeti, kayitDegistir, kayitliMi, medyaUrl, type YerDetay } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
@@ -15,6 +15,8 @@ type Kademe = "yarim" | "tam";
 
 interface Props {
   yerId: string;
+  /** bu kişinin pinleri karuselde önce gösterilsin */
+  oncelikliKisi?: string;
   onKapat: () => void;
   onGonderiAc: (pinId: string, liste: string[]) => void;
   onGirisIste: () => void;
@@ -44,7 +46,7 @@ const GECIS_MS = 300;
  * Bölüm sırası BRIEF kararı: uyarı → hızlı bakış → buraya bırakılanlar →
  * künye → özetler. Önce "buraya gitmeli miyim", sonra ayrıntı.
  */
-export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste, onPinAt }: Props) {
+export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiAc, onGirisIste, onPinAt }: Props) {
   const { ben } = useOturum();
   const [kademe, setKademe] = useState<Kademe>("yarim");
   const [pinIndex, setPinIndex] = useState(0);
@@ -159,6 +161,18 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
 
   const { veri: yer } = useVeri<YerDetay | null>(() => yerGetir(yerId), [yerId], null);
   const { veri: pinler } = useVeri<Pin[]>(() => yerinPinleri(yerId), [yerId], []);
+  /* Bir kişi üzerinden gelindiyse onun pinleri başa alınıyor. sort kararlı,
+     yani grup içindeki sıra (beğeni/tarih) bozulmuyor — yalnızca o kişinin
+     pinleri öne çekiliyor. */
+  const siraliPinler = useMemo(
+    () =>
+      oncelikliKisi
+        ? [...pinler].sort(
+            (a, b) => (b.kisi === oncelikliKisi ? 1 : 0) - (a.kisi === oncelikliKisi ? 1 : 0),
+          )
+        : pinler,
+    [pinler, oncelikliKisi],
+  );
   const { veri: ozet } = useVeri<PlaceSummary | null>(
     () => mekanOzeti(yerId), [yerId], null);
   const kisiler = useKisiler();
@@ -168,9 +182,12 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
   const kayitli = kayitYerel ?? kayitSunucu;
 
   /* mekan değişince karusel ve kademe başa döner */
-  const [oncekiYer, setOncekiYer] = useState(yerId);
-  if (oncekiYer !== yerId) {
-    setOncekiYer(yerId);
+  /* Öncelikli kişi değişince de başa dönüyor: aynı mekana bu kez başkasının
+     listesinden girildiyse karusel onun pininde başlamalı. */
+  const anahtar = `${yerId}|${oncelikliKisi ?? ""}`;
+  const [oncekiYer, setOncekiYer] = useState(anahtar);
+  if (oncekiYer !== anahtar) {
+    setOncekiYer(anahtar);
     setPinIndex(0);
     setKademe("yarim");
     setKayitYerel(null);
@@ -198,7 +215,7 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
   const t = new Date();
   const acik = acikMi(yer.saatler, t);
   const bugun = yer.saatler?.find((s) => s[0] === t.getDay());
-  const pin = pinler[Math.min(pinIndex, Math.max(0, pinler.length - 1))];
+  const pin = siraliPinler[Math.min(pinIndex, Math.max(0, siraliPinler.length - 1))];
   const ilkFoto = pin?.medyalar.find((m) => m.tur === "foto");
   const pinKapak = ilkFoto ? medyaUrl(ilkFoto.yol) : null;
 
@@ -342,9 +359,9 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
           <div className="font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
             Buraya bırakılanlar
           </div>
-          {pinler.length > 1 && (
+          {siraliPinler.length > 1 && (
             <span className="font-sayi text-[11.5px] text-murekkep2">
-              {pinIndex + 1}/{pinler.length}
+              {pinIndex + 1}/{siraliPinler.length}
             </span>
           )}
         </div>
@@ -352,7 +369,7 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
         {pin ? (
           <div className="relative mx-4 mb-4">
             <button
-              onClick={() => onGonderiAc(pin.id, pinler.map((p) => p.id))}
+              onClick={() => onGonderiAc(pin.id, siraliPinler.map((p) => p.id))}
               style={{ ...igneStil(yer.tur), transform: `rotate(${egim(pinIndex)}deg)` }}
               className="block w-full rounded-sm border-none bg-[var(--kag)] p-[3px] text-left shadow-kagit"
             >
@@ -379,7 +396,7 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
               </div>
             </button>
 
-            {pinler.length > 1 && (
+            {siraliPinler.length > 1 && (
               <>
                 <button
                   onClick={() => setPinIndex((i) => Math.max(0, i - 1))}
@@ -390,8 +407,8 @@ export default function MekanSayfasi({ yerId, onKapat, onGonderiAc, onGirisIste,
                   ‹
                 </button>
                 <button
-                  onClick={() => setPinIndex((i) => Math.min(pinler.length - 1, i + 1))}
-                  disabled={pinIndex === pinler.length - 1}
+                  onClick={() => setPinIndex((i) => Math.min(siraliPinler.length - 1, i + 1))}
+                  disabled={pinIndex === siraliPinler.length - 1}
                   aria-label="Sonraki pin"
                   className="absolute -right-1.5 top-1/2 z-[3] grid size-7 -translate-y-1/2 place-items-center rounded-full border border-[var(--cizgi)] bg-yuzey text-murekkep shadow-kagit disabled:opacity-30"
                 >
