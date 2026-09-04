@@ -108,13 +108,6 @@ function Uygulama() {
       /* Takip filtresi yarıçapa bakmıyor: takip ettiklerinin pinlediği her
          yeri görmek istersin, ekranın neresine düştüğünü değil. */
       if (filtre === "takip") return takiptekilerinYerleri();
-      /* "Pinli": uygulamanın asıl içeriği. places_nearby zaten pin_count'a
-         göre sıralıyor, yani pinliler ilk satırlar — geniş çekip süzmek
-         ayrı bir sorgudan ucuz ve is_open bilgisini de koruyor. */
-      if (filtre === "pinli") {
-        const hepsi = await yerleriGetir({ ...sorgu, yaricapM: 4000, limit: 120, kategori: null, sadeceAcik: false });
-        return hepsi.filter((y) => (y.pinSayisi ?? 0) > 0);
-      }
       if (filtre === "kaydettiklerim") {
         const idler = new Set(await kaydettiklerim());
         if (!idler.size) return [];
@@ -253,8 +246,6 @@ function Uygulama() {
                 mesaj={
                   kisiFiltre
                     ? "Bu kişinin şu filtrede pinlediği yer yok."
-                    : filtre === "pinli"
-                      ? "Bu çevrede henüz kimsenin pin attığı yer yok."
                       : filtre === "takip"
                       ? ben ? "Takip ettiklerin henüz hiçbir yere pin atmamış." : "Takip ettiklerini görmek için giriş yap."
                       : filtre === "kaydettiklerim"

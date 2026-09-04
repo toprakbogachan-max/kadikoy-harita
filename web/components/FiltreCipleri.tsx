@@ -10,7 +10,6 @@ import { egim } from "@/lib/gorsel";
 const CIP_TEMA: Record<string, { kag: string; pin: string; isik: string; koyu: string }> = {
   acik: { kag: "#FBF3D9", pin: "#DE9B2E", isik: "#F5C87C", koyu: "#8E5C11" },
   hepsi: { kag: "#EAE3CE", pin: "#8B7A55", isik: "#C9B98E", koyu: "#5C4E30" },
-  pinli: { kag: "#FCE8B4", pin: "#E0A33E", isik: "#FFE9A8", koyu: "#C07A16" },
   takip: { kag: "#DCE9F3", pin: "#2A6F97", isik: "#86C0DE", koyu: "#123F58" },
   kaydettiklerim: { kag: "#EFE2C2", pin: "#8A5E0E", isik: "#C9A25E", koyu: "#4A3106" },
   tur: { kag: "#E7E0D0", pin: "#7E6C55", isik: "#C6B7A2", koyu: "#453A2C" },
@@ -21,7 +20,6 @@ const CIP_TEMA: Record<string, { kag: string; pin: string; isik: string; koyu: s
    süzmek rehber davranışı; bu uygulamanın ekseni ise insanlar. */
 const ANA = [
   { id: "hepsi", ad: "Hepsi" },
-  { id: "pinli", ad: "Pinli" },
   { id: "takip", ad: "Takip ettiklerim" },
   { id: "kaydettiklerim", ad: "Kaydettiklerim" },
   { id: "acik", ad: "Şu an açık" },
