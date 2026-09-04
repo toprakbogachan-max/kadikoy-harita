@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useVeri } from "@/lib/kanca";
-import { mekanAra, listeOlustur, kaydettigimYerler } from "@/lib/veri";
+import { mekanAra, listeOlustur, kaydettigimYerler, pinlediklerim } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
 
 /**
  * Liste oluşturma — "kendi küratörlüğün".
  *
- * Mekanlar aramadan ya da kaydettiklerinden seçiliyor. Kaydettiklerini
- * başlangıçta göstermek işi kolaylaştırıyor: liste yapan biri zaten
- * kaydettiği yerlerden seçiyor genelde.
+ * Mekanlar üç kaynaktan seçiliyor: kaydettiklerin, PİNLEDİKLERİN, ya da
+ * arama. İlk ikisi liste yapmanın doğal kaynağı — küratörlük yaparken zaten
+ * gittiğin ya da not aldığın yerlerden seçiyorsun; her birini adıyla
+ * aramak zorunda kalmak gereksiz sürtünmeydi.
  */
 export default function ListeOlustur({
   onKapat, onOlusturuldu,
@@ -29,7 +30,10 @@ export default function ListeOlustur({
     return () => clearTimeout(z);
   }, [q]);
 
+  /* Hangi kaynağa bakılıyor — arama yapılırken ikisi de devre dışı. */
+  const [kaynak, setKaynak] = useState<"kayit" | "pin">("kayit");
   const { veri: kayitlar } = useVeri<Yer[]>(kaydettigimYerler, [], []);
+  const { veri: pinlerim } = useVeri<Yer[]>(pinlediklerim, [], []);
   const { veri: bulunanlar } = useVeri<Yer[]>(
     () => (gecikmeli.length >= 2 ? mekanAra(gecikmeli, 12) : Promise.resolve([])),
     [gecikmeli], []);
@@ -44,7 +48,7 @@ export default function ListeOlustur({
   const degistir = (y: Yer) =>
     setSecilenler((s) => (s.some((x) => x.id === y.id) ? s.filter((x) => x.id !== y.id) : [...s, y]));
 
-  const aday = gecikmeli.length >= 2 ? bulunanlar : kayitlar;
+  const aday = gecikmeli.length >= 2 ? bulunanlar : kaynak === "kayit" ? kayitlar : pinlerim;
   const gecerli = baslik.trim().length >= 2 && secilenler.length > 0;
 
   const gonder = async () => {
@@ -110,9 +114,28 @@ export default function ListeOlustur({
         <input value={q} onChange={(e) => setQ(e.target.value)}
           placeholder="Mekan ara" aria-label="Mekan ara" className={girdi + " mb-2"} />
 
-        <div className="mb-1.5 text-[11.5px] text-murekkep2">
-          {gecikmeli.length >= 2 ? "Arama sonuçları" : "Kaydettiklerin"}
-        </div>
+        {gecikmeli.length >= 2 ? (
+          <div className="mb-1.5 text-[11.5px] text-murekkep2">Arama sonuçları</div>
+        ) : (
+          <div className="mb-1.5 flex gap-1.5">
+            {([["kayit", "Kaydettiklerin", kayitlar.length], ["pin", "Pinlediklerin", pinlerim.length]] as const).map(
+              ([id, ad, sayi]) => (
+                <button
+                  key={id}
+                  onClick={() => setKaynak(id)}
+                  aria-pressed={kaynak === id}
+                  className={`rounded-sm px-2.5 py-1 font-tabela text-[11px] uppercase tracking-[0.1em] ${
+                    kaynak === id
+                      ? "border-none bg-jeton text-white"
+                      : "border border-[var(--cizgi)] bg-yuzey text-murekkep2"
+                  }`}
+                >
+                  {ad}{sayi > 0 && <span className="ml-1 font-sayi normal-case tracking-normal">{sayi}</span>}
+                </button>
+              ),
+            )}
+          </div>
+        )}
 
         {aday.length ? (
           <ul className="m-0 list-none rounded-sm border border-[var(--cizgi)] bg-yuzey p-0">
@@ -139,7 +162,9 @@ export default function ListeOlustur({
           <p className="py-4 text-[13px] leading-relaxed text-murekkep2">
             {gecikmeli.length >= 2
               ? "Eşleşen mekan yok."
-              : "Henüz bir yer kaydetmedin — yukarıdan arayarak ekleyebilirsin."}
+              : kaynak === "kayit"
+                ? "Henüz bir yer kaydetmedin — yukarıdan arayarak ekleyebilirsin."
+                : "Henüz pin atmadın — yukarıdan arayarak da mekan ekleyebilirsin."}
           </p>
         )}
 

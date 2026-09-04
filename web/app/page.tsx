@@ -405,6 +405,7 @@ function Uygulama() {
              sekmeye basmak o kişinin profilini açmaya devam ediyordu. */
           onGec={(e) => { if (e === "profil") setProfilKisi(undefined); setEkran(e); }}
           onPinAt={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))}
+          onListeOlustur={() => (ben ? setListeAcik(true) : setGirisAcik(true))}
         />
       </div>
     </main>

@@ -526,6 +526,46 @@ export async function takiptekilerinYerleri(): Promise<Yer[]> {
   }));
 }
 
+/**
+ * Kendi pin attığım mekanlar — liste oluştururken kaynak.
+ *
+ * kisininYerleri'nden farkı: yarıçap sorgusu istemiyor. Koordinat doğrudan
+ * geliyor (göç 10), o yüzden 1500 satır çekip kesişim almaya gerek yok.
+ */
+export async function pinlediklerim(): Promise<Yer[]> {
+  const id = await benimKimligim();
+  if (!id) return [];
+
+  const { data, error } = await db
+    .from("pins")
+    .select("created_at, places!inner(id, slug, name, category, neighborhood, pin_count, cover_url, cover_path, lat, lng)")
+    .eq("author_id", id)
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  interface HamYer {
+    id: string; slug: string; name: string; category: PlaceCategory;
+    neighborhood: string | null; pin_count: number;
+    cover_url: string | null; cover_path: string | null;
+    lat: number | null; lng: number | null;
+  }
+  /* Aynı mekana birden fazla pin atmış olabilirim; liste tek satır ister. */
+  const tekil = new Map<string, HamYer>();
+  for (const satir of (data ?? []) as unknown as { places: HamYer }[]) {
+    if (satir.places && !tekil.has(satir.places.id)) tekil.set(satir.places.id, satir.places);
+  }
+
+  return [...tekil.values()].map((p): Yer => ({
+    id: p.id, slug: p.slug, ad: p.name, tur: p.category,
+    semt: p.neighborhood ?? "Kadıköy",
+    lat: p.lat ?? 0, lng: p.lng ?? 0,
+    saatler: null,
+    pinSayisi: p.pin_count,
+    kapak: kapakSec(p.cover_path, p.cover_url).url,
+  }));
+}
+
 export async function kisiAra(q: string, limit = 12): Promise<Kisi[]> {
   const n = aramaMetni(q.trim());
   if (n.length < 2) return [];

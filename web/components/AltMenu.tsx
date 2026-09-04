@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 export type Ekran = "harita" | "akis" | "ara" | "profil";
 
 const IKON: Record<Ekran, React.ReactNode> = {
@@ -30,11 +32,17 @@ export default function AltMenu({
   ekran,
   onGec,
   onPinAt,
+  onListeOlustur,
 }: {
   ekran: Ekran;
   onGec: (e: Ekran) => void;
   onPinAt: () => void;
+  onListeOlustur: () => void;
 }) {
+  /* Artı düğmesi tek işe bağlıydı (pin at). Liste oluşturma ise Ayarlar'ın
+     ya da profilin içinde kalıyordu; "bir şey ekle" niyetiyle artıya basan
+     kullanıcı listeye ulaşamıyordu. Artık iki seçenek sunuyor. */
+  const [acik, setAcik] = useState(false);
   const dugme = (e: Ekran) => (
     <button
       key={e}
@@ -55,15 +63,46 @@ export default function AltMenu({
     <nav className="flex shrink-0 items-center border-t border-[var(--cizgi)] bg-yuzey px-1.5 py-1.5">
       {dugme("harita")}
       {dugme("akis")}
-      <button
-        onClick={onPinAt}
-        aria-label="Pin at"
-        className="mx-1.5 grid size-11 shrink-0 place-items-center rounded-full border-none bg-jeton shadow-[0_4px_14px_rgba(184,128,26,.35)]"
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </button>
+      <div className="relative mx-1.5 shrink-0">
+        {acik && (
+          <>
+            {/* Perde: dışarı dokununca kapansın. Menünün altında ama sayfanın
+                üstünde durması gerekiyor, o yüzden sabit konumlu. */}
+            <button
+              onClick={() => setAcik(false)}
+              aria-label="Kapat"
+              className="fixed inset-0 z-[45] border-none bg-transparent"
+            />
+            <div
+              role="menu"
+              className="absolute bottom-[54px] left-1/2 z-[46] w-[168px] -translate-x-1/2 overflow-hidden rounded-sm border border-[var(--cizgi)] bg-yuzey shadow-kagit2"
+            >
+              {([["Pin at", onPinAt], ["Liste oluştur", onListeOlustur]] as const).map(([ad, islem]) => (
+                <button
+                  key={ad}
+                  role="menuitem"
+                  onClick={() => { setAcik(false); islem(); }}
+                  className="block w-full border-none border-b border-[var(--cizgi)] bg-transparent px-3 py-2.5 text-left text-[13.5px] text-murekkep last:border-0"
+                >
+                  {ad}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        <button
+          onClick={() => setAcik((a) => !a)}
+          aria-label="Ekle"
+          aria-expanded={acik}
+          aria-haspopup="menu"
+          className="grid size-11 place-items-center rounded-full border-none bg-jeton shadow-[0_4px_14px_rgba(184,128,26,.35)] transition-transform"
+          style={{ transform: acik ? "rotate(45deg)" : undefined }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      </div>
       {dugme("ara")}
       {dugme("profil")}
     </nav>
