@@ -82,8 +82,15 @@ export function OturumSaglayici({ children }: { children: React.ReactNode }) {
       const { data, error } = await db.auth.signUp({
         email: eposta,
         password: sifre,
-        /* Trigger bu iki alanı okuyup profiles satırını dolduruyor */
-        options: { data: { username: kullaniciAdi, display_name: ad } },
+        options: {
+          /* Trigger bu iki alanı okuyup profiles satırını dolduruyor */
+          data: { username: kullaniciAdi, display_name: ad },
+          /* Bu verilmezse Supabase projenin "Site URL" ayarına düşüyor —
+             oradaki localhost yüzünden onay bağlantısı hata veriyordu.
+             origin'i çalışma anında okuyoruz: geliştirmede localhost,
+             canlıda vercel adresi, ikisi de kendiliğinden doğru. */
+          emailRedirectTo: `${window.location.origin}/auth/onay`,
+        },
       });
       if (error) throw new Error(cevirHata(error.message));
       /* Oturum yoksa Supabase e-posta doğrulaması bekliyor demektir */
