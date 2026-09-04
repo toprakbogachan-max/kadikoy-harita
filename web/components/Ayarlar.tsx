@@ -150,7 +150,10 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur 
         </div>
 
         <div className="p-4">
-          <button onClick={cikisYap}
+          {/* Çıkıştan sonra paneli KAPATMAK şart: oturum kapanıyordu ama ayarlar
+              ekranda kalıyordu, arşiv sayıları 0'a düşüp çıkış düğmesi
+              kayboluyordu — kullanıcıya "düğme çalışmadı" gibi görünüyordu. */}
+          <button onClick={async () => { await cikisYap(); onKapat(); }}
             className="w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-murekkep">
             Çıkış yap
           </button>
