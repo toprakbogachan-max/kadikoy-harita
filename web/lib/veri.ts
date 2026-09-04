@@ -416,9 +416,16 @@ export async function hikayeSeridi(): Promise<HikayeKisi[]> {
     if (!enSon.has(p.author_id)) enSon.set(p.author_id, saatFarki(p.created_at));
   }
 
+  /* `ben` bayrağı burada kuruluyor. Önceden kurulmuyordu: profilCevir onu
+     yazmıyor, yalnızca profilimiGetir ekliyordu. Sonuç olarak şeritte giriş
+     yapmış kullanıcı "Sen" yerine kendi adıyla görünüyordu ve aşağıdaki
+     sıralamanın "kendim başta" anahtarı sessizce hiçbir şey yapmıyordu. */
   return ((profiller ?? []) as HamProfil[])
-    .map((p) => ({ ...profilCevir(p), sonPinSaat: enSon.get(p.id) ?? Infinity }))
-    .sort((a, b) => (b.ben ? 1 : 0) - (a.ben ? 1 : 0) || a.sonPinSaat - b.sonPinSaat);
+    .map((p) => ({ ...profilCevir(p), ben: p.id === ben.id, sonPinSaat: enSon.get(p.id) ?? Infinity }))
+    /* Sıralama SAF tazelik: en son pin atan başta. "Kendim başta" kuralı
+       kaldırıldı — şerit "kim ne zaman pin attı" sorusunu yanıtlıyor,
+       kendi sıranı öne almak o soruyu bozuyordu. */
+    .sort((a, b) => a.sonPinSaat - b.sonPinSaat);
 }
 
 /** Tek pin — Reels ekranı ve ileride /pin/[id] rotası için. */

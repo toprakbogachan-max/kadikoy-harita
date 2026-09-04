@@ -32,6 +32,12 @@ export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props
     return <div className={`pano-doku shrink-0 border-b border-[var(--cizgi)] ${acik ? "h-[92px]" : "h-[26px]"}`} />;
   }
 
+  /* Şerit kapalıyken de haber vermesi gerekiyor: kullanıcı haritaya dokunup
+     şeridi kapattıktan sonra takip ettiği biri pin atmışsa bunu göremezdi.
+     Ölçüt açık haldeki halkayla AYNI: son 24 saat. Kendi pinin "yeni" saymaz —
+     kendi attığını zaten biliyorsun. */
+  const yeniPinliler = kisiler.filter((p) => !p.ben && p.sonPinSaat < 24);
+
   /* Kapalı hal: 92px yerine 26px. Harita ekranın %54'ünden ~%70'ine çıkıyor —
      "kompakt" isteğinin en doğrudan karşılığı bu. Avatarlar küçük halkalar
      olarak kalıyor ki şeridin var olduğu unutulmasın. */
@@ -39,16 +45,29 @@ export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props
     return (
       <button
         onClick={onAc}
-        aria-label="Takip ettiklerini göster"
+        aria-label={yeniPinliler.length ? `${yeniPinliler.length} kişi yeni pin attı, göster` : "Takip ettiklerini göster"}
         aria-expanded={false}
         className="pano-doku flex h-[26px] w-full shrink-0 items-center justify-center gap-1.5 border-none border-b border-[var(--cizgi)] px-4"
       >
-        {kisiler.slice(0, 6).map((p) => (
-          <span key={p.id} className="size-2.5 rounded-full border border-[rgba(74,58,30,.35)]"
-                style={{ background: kisiRengi(p.id) }} />
-        ))}
-        <span className="ml-1 font-tabela text-[9.5px] uppercase tracking-[0.12em] text-murekkep2">
-          takip ettiklerin
+        {kisiler.slice(0, 6).map((p) => {
+          const yeni = !p.ben && p.sonPinSaat < 24;
+          return (
+            <span
+              key={p.id}
+              className="size-2.5 rounded-full border border-[rgba(74,58,30,.35)]"
+              style={{
+                background: kisiRengi(p.id),
+                /* Yeni pin atanın noktası altın halkayla işaretleniyor —
+                   açık haldeki halkanın küçültülmüş hâli. */
+                boxShadow: yeni ? "0 0 0 2px var(--color-jeton)" : undefined,
+              }}
+            />
+          );
+        })}
+        <span className={`ml-1 font-tabela text-[9.5px] uppercase tracking-[0.12em] ${
+          yeniPinliler.length ? "text-jeton" : "text-murekkep2"
+        }`}>
+          {yeniPinliler.length ? `${yeniPinliler.length} yeni pin` : "takip ettiklerin"}
         </span>
       </button>
     );
