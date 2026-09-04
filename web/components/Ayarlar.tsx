@@ -31,12 +31,6 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur 
   const [arsiv, setArsiv] = useState<ArsivTuru | null>(null);
   const [profilAcik, setProfilAcik] = useState(false);
   const [yasal, setYasal] = useState<"sartlar" | "gizlilik" | null>(null);
-  /* Tembel başlatıcı: efektte setState basamaklı render üretiyordu. window
-     kontrolü SSR için — bu bileşen sunucuda çizilmiyor (yalnızca kullanıcı
-     ayarları açınca render ediliyor), ama başlatıcı yine de güvenli olmalı. */
-  const [acilistaAcik, setAcilistaAcik] = useState(
-    () => (typeof window === "undefined" ? true : localStorage.getItem("acilistaAcik") !== "0"),
-  );
   const [herkeseAcik, setHerkeseAcik] = useState(true);
   const [hata, setHata] = useState<string | null>(null);
 
@@ -123,10 +117,6 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur 
         <Anahtar ad="Profilim herkese açık"
                  aciklama="Kapalıyken paylaştığın link kimsede açılmaz."
                  acik={herkeseAcik} onDegis={gizlilikDegistir} />
-        <Anahtar ad="Açılışta “Şu an açık” filtresi"
-                 aciklama="Kapalıyken harita tüm mekanlarla açılır."
-                 acik={acilistaAcik}
-                 onDegis={(v) => { setAcilistaAcik(v); localStorage.setItem("acilistaAcik", v ? "1" : "0"); }} />
 
         {hata && (
           <p className="mx-4 mt-3 rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px]">
