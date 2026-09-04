@@ -184,7 +184,12 @@ export default function PinDuzenle({
           </label>
 
           {kalan.map((m, i) => (
-            <div key={m.yol} className="mb-2 flex gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
+            /* Satırın BOŞ alanına dokunmak da görseli büyütüyor: 52px'lik
+               kutuyu parmakla tutturmak zor, kartın tamamı hedef olmalı.
+               Not alanı ve kaldırma düğmesi kendi tıklamalarını durduruyor,
+               yoksa nota yazmaya çalışırken katman açılırdı. */
+            <div key={m.yol} onClick={() => setBuyuk({ tur: "kalan", i })}
+                 className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
               {/* Küçük kutuya dokununca büyüyor: 52px'de ne fotoğraf seçilebiliyor
                   ne de not rahat yazılabiliyordu. Demo tohumunun medyası demo://
                   yolunda ve medyaUrl null dönüyor — boş <img> yerine yer tutucu. */}
@@ -204,13 +209,14 @@ export default function PinDuzenle({
                 <input
                   value={m.not}
                   onChange={(e) => setKalan((l) => l.map((x, j) => (j === i ? { ...x, not: e.target.value } : x)))}
+                  onClick={(e) => e.stopPropagation()}
                   maxLength={120}
                   placeholder="Bu görselin notu (isteğe bağlı)"
                   className="w-full rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] outline-none focus:border-jeton"
                 />
               </div>
               <button
-                onClick={() => setKalan((l) => l.filter((_, j) => j !== i))}
+                onClick={(e) => { e.stopPropagation(); setKalan((l) => l.filter((_, j) => j !== i)); }}
                 disabled={medyaSayisi <= 1}
                 aria-label="Kaldır"
                 title={medyaSayisi <= 1 ? "En az bir görsel kalmalı" : "Kaldır"}
@@ -222,7 +228,8 @@ export default function PinDuzenle({
           ))}
 
           {yeniler.map((m, i) => (
-            <div key={i} className="mb-2 flex gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
+            <div key={i} onClick={() => setBuyuk({ tur: "yeni", i })}
+                 className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
               <button onClick={() => setBuyuk({ tur: "yeni", i })} aria-label="Görseli büyüt"
                       className="shrink-0 border-none bg-transparent p-0">
                 <Onizleme dosya={m.dosya} />
@@ -232,12 +239,13 @@ export default function PinDuzenle({
                 <input
                   value={m.not}
                   onChange={(e) => setYeniler((l) => l.map((x, j) => (j === i ? { ...x, not: e.target.value } : x)))}
+                  onClick={(e) => e.stopPropagation()}
                   maxLength={120}
                   placeholder="Bu görselin notu (isteğe bağlı)"
                   className="w-full rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] outline-none focus:border-jeton"
                 />
               </div>
-              <button onClick={() => setYeniler((l) => l.filter((_, j) => j !== i))}
+              <button onClick={(e) => { e.stopPropagation(); setYeniler((l) => l.filter((_, j) => j !== i)); }}
                 aria-label="Kaldır"
                 className="shrink-0 self-start border-none bg-transparent p-0 text-[14px] text-murekkep2">
                 ✕
