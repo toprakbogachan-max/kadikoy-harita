@@ -318,6 +318,7 @@ function Uygulama() {
               onGirisIste={() => setGirisAcik(true)}
               onPaylas={() => setPaylasAcik(true)}
               onAyarlar={() => setAyarlarAcik(true)}
+              onListeOlustur={() => setListeAcik(true)}
             />
           </>
         )}

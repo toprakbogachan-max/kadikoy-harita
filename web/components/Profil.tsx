@@ -15,6 +15,7 @@ export default function Profil({
   onGirisIste,
   onPaylas,
   onAyarlar,
+  onListeOlustur,
 }: {
   /** boşsa oturumdaki kişi gösterilir */
   kullaniciAdi?: string;
@@ -22,6 +23,7 @@ export default function Profil({
   onGirisIste: () => void;
   onPaylas: () => void;
   onAyarlar: () => void;
+  onListeOlustur: () => void;
 }) {
   const { ben: oturumKisi } = useOturum();
   const hedef = kullaniciAdi ?? oturumKisi?.k ?? "";
@@ -142,7 +144,19 @@ export default function Profil({
         <MiniHarita yerler={yerleri} />
       </div>
 
-      <div className={baslik}>{benim ? "Listelerin" : kisi.ad + "’in listeleri"}</div>
+      {/* Liste oluşturma yalnızca Ayarlar → Arşiv → Listelerim'in içinde
+          duruyordu. Profilde "Listelerin" bölümü ve "Henüz listen yok." boş
+          durumu vardı ama oradan liste açmanın yolu yoktu — özelliği görüp
+          nasıl kullanacağını bulamıyordun. */}
+      <div className={`${baslik} flex items-center justify-between`}>
+        <span>{benim ? "Listelerin" : kisi.ad + "’in listeleri"}</span>
+        {benim && (
+          <button onClick={onListeOlustur}
+            className="border-none bg-transparent p-0 font-tabela text-[11px] uppercase tracking-[0.11em] text-jeton">
+            + Yeni liste
+          </button>
+        )}
+      </div>
       {listeleri.length ? (
         <div className="flex gap-3 overflow-x-auto px-4 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {listeleri.map((l, i) => {
@@ -174,7 +188,9 @@ export default function Profil({
         </div>
       ) : (
         <p className="px-4 pb-5 text-[13px] text-murekkep2">
-          {benim ? "Henüz listen yok." : `${kisi.ad} henüz liste oluşturmamış.`}
+          {benim
+            ? "Henüz listen yok. Kaydettiğin mekanlardan bir liste yapabilirsin."
+            : `${kisi.ad} henüz liste oluşturmamış.`}
         </p>
       )}
 
