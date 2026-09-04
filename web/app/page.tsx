@@ -397,7 +397,14 @@ function Uygulama() {
           />
         )}
 
-        <AltMenu ekran={ekran} onGec={setEkran} onPinAt={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))} />
+        <AltMenu
+          ekran={ekran}
+          /* Alt menüdeki PROFİL "benim profilim" demek. Akıştan ya da aramadan
+             başkasının profiline gidildiyse profilKisi ayarlı kalıyordu ve
+             sekmeye basmak o kişinin profilini açmaya devam ediyordu. */
+          onGec={(e) => { if (e === "profil") setProfilKisi(undefined); setEkran(e); }}
+          onPinAt={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))}
+        />
       </div>
     </main>
   );
