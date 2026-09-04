@@ -11,14 +11,14 @@ import YerSecici, { type YeniNokta, type Secim } from "./YerSecici";
 
 /* Prototipten gelen seçenekler — şemada serbest metin, arayüzde sabit liste
    olması sonradan gruplamayı mümkün kılıyor ("çoğunlukla X için geliniyor"). */
-const SENARYOLAR = ["tek başına", "çalışmak için", "ilk buluşma", "kalabalık grup", "hızlı uğrak", "uzun oturma"];
-const SIKLIKLAR = ["haftalık uğrak", "ayda bir", "yılda birkaç", "bir kez görülür"];
-const TEKRARLAR = ["evet", "belki", "hayır"];
+export const SENARYOLAR = ["tek başına", "çalışmak için", "ilk buluşma", "kalabalık grup", "hızlı uğrak", "uzun oturma"];
+export const SIKLIKLAR = ["haftalık uğrak", "ayda bir", "yılda birkaç", "bir kez görülür"];
+export const TEKRARLAR = ["evet", "belki", "hayır"];
 const TURLER: PlaceCategory[] = ["kahve", "yemek", "bar", "tatli", "kultur", "park", "otel", "magaza", "diger"];
 
 /* Şemadaki check ile aynı sınırlar — sunucuya boşuna gidip hata almayalım */
-const METIN_MIN = 15;
-const METIN_MAX = 1000;
+export const METIN_MIN = 15;
+export const METIN_MAX = 1000;
 
 interface Props {
   onKapat: () => void;
@@ -348,7 +348,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
 const Zorunlu = () => <span className="text-[#E0271C]">*</span>;
 
-function Cip({ secili, onTikla, children }: { secili: boolean; onTikla: () => void; children: React.ReactNode }) {
+export function Cip({ secili, onTikla, children }: { secili: boolean; onTikla: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onTikla} aria-pressed={secili}
       className={`rounded-sm px-2.5 py-1.5 text-[12.5px] ${
@@ -384,7 +384,7 @@ function SeciliYer({ yer, onKaldir }: { yer: Yer; onKaldir: () => void }) {
  * revokeObjectURL şart — yoksa seçilen her dosya sekme kapanana kadar
  * bellekte kalır.
  */
-function Onizleme({ dosya }: { dosya: File }) {
+export function Onizleme({ dosya }: { dosya: File }) {
   const video = dosya.type.startsWith("video");
   const url = useMemo(() => (video ? null : URL.createObjectURL(dosya)), [dosya, video]);
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);

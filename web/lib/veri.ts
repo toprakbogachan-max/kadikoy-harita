@@ -776,6 +776,109 @@ export async function yerOlustur(
   return data as string;
 }
 
+/** Düzenlemede kalan mevcut medya — yol değişmez, yalnızca notu değişebilir. */
+export interface KalanMedya {
+  yol: string;
+  not: string;
+}
+
+export interface PinGuncelleme {
+  metin: string;
+  kelimeler: [string, string, string];
+  senaryo: string;
+  puan: number;
+  degisse?: string;
+  siklik?: string;
+  tekrar?: string;
+  fiyat?: number;
+  /** silinmeyenler; sıralama bu dizinin sırası */
+  kalanMedyalar: KalanMedya[];
+  yeniMedyalar: YeniMedya[];
+}
+
+/**
+ * Pin düzenleme.
+ *
+ * Mekan DEĞİŞTİRİLEMİYOR: pin bir mekana bırakılmış not, başka mekana
+ * taşımak onu başka bir şey yapardı — ve (author_id, place_id, visit_date)
+ * benzersizlik kuralıyla çakışırdı.
+ *
+ * Sıra pinAt'takinin tersi: önce YENİ medya yükleniyor, sonra satırlar
+ * yazılıyor. assert_pin_has_media trigger'ı yayınlanmış pinin en az bir
+ * medyası olmasını şart koşuyor, o yüzden silme işlemi ekleme bittikten
+ * sonra yapılıyor — arada pin bir an medyasız kalmasın.
+ */
+export async function pinGuncelle(pinId: string, g: PinGuncelleme): Promise<void> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  if (!g.kalanMedyalar.length && !g.yeniMedyalar.length) {
+    throw new Error("En az bir fotoğraf ya da video kalmalı.");
+  }
+
+  /* 1) Yeni dosyalar yükleniyor. Yol düzeni pinAt ile aynı: <kimlik>/<...> */
+  const yuklenen: { yol: string; tur: "photo" | "video"; not: string }[] = [];
+  for (let i = 0; i < g.yeniMedyalar.length; i++) {
+    const m = g.yeniMedyalar[i];
+    const uzanti = (m.dosya.name.split(".").pop() ?? "jpg").toLowerCase().slice(0, 5);
+    const yol = `${id}/${Date.now()}-${i}.${uzanti}`;
+    const { error } = await db.storage.from("pin-media")
+      .upload(yol, m.dosya, { contentType: m.dosya.type, upsert: false });
+    if (error) throw new Error(`Dosya yüklenemedi: ${error.message}`);
+    yuklenen.push({ yol, tur: m.dosya.type.startsWith("video") ? "video" : "photo", not: m.not });
+  }
+
+  /* 2) Yeni satırlar. Sıralama kalanların ardından devam ediyor. */
+  if (yuklenen.length) {
+    const { error } = await db.from("pin_media").insert(
+      yuklenen.map((u, i) => ({
+        pin_id: pinId, kind: u.tur, storage_path: u.yol,
+        caption: u.not.trim() || null, ordering: g.kalanMedyalar.length + i,
+      })),
+    );
+    if (error) {
+      await db.storage.from("pin-media").remove(yuklenen.map((u) => u.yol));
+      throw error;
+    }
+  }
+
+  /* 3) Kalanların notu ve sırası güncelleniyor. */
+  for (let i = 0; i < g.kalanMedyalar.length; i++) {
+    const k = g.kalanMedyalar[i];
+    const { error } = await db.from("pin_media")
+      .update({ caption: k.not.trim() || null, ordering: i })
+      .eq("pin_id", pinId).eq("storage_path", k.yol);
+    if (error) throw error;
+  }
+
+  /* 4) Silinenler: önce satır, sonra dosya. Ters sırada yapılsaydı satır
+        kalıp dosyası olmayan medya olurdu. */
+  const kalanYollar = g.kalanMedyalar.map((k) => k.yol);
+  const { data: hepsi } = await db.from("pin_media")
+    .select("storage_path").eq("pin_id", pinId);
+  const silinecek = (hepsi ?? [])
+    .map((m) => m.storage_path as string)
+    .filter((y) => !kalanYollar.includes(y) && !yuklenen.some((u) => u.yol === y));
+  if (silinecek.length) {
+    const { error } = await db.from("pin_media")
+      .delete().eq("pin_id", pinId).in("storage_path", silinecek);
+    if (error) throw error;
+    await db.storage.from("pin-media").remove(silinecek);
+  }
+
+  /* 5) Pinin kendisi. */
+  const { error } = await db.from("pins").update({
+    body: g.metin.trim(),
+    words: g.kelimeler.map((k) => k.trim()),
+    scenario: g.senaryo,
+    rating: g.puan,
+    improve: g.degisse?.trim() || null,
+    frequency: g.siklik || null,
+    would_return: g.tekrar || null,
+    price_paid: g.fiyat ?? null,
+  }).eq("id", pinId);
+  if (error) throw error;
+}
+
 /**
  * Pin atma. Sıra önemli:
  *   1) medya Storage'a yüklenir  2) pins satırı  3) pin_media satırları

@@ -10,6 +10,7 @@ import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
 import Yorumlar from "./Yorumlar";
 import Sikayet from "./Sikayet";
+import PinDuzenle from "./PinDuzenle";
 
 interface Props {
   pinId: string;
@@ -32,6 +33,9 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
   const [medyaIndex, setMedyaIndex] = useState(0);
   const [yorumlarAcik, setYorumlarAcik] = useState(false);
   const [sikayetAcik, setSikayetAcik] = useState(false);
+  const [duzenleAcik, setDuzenleAcik] = useState(false);
+  /* Kaydedince pinGetir tekrar koşsun diye. */
+  const [duzenSayac, setDuzenSayac] = useState(0);
   /* İyimser durum: sunucu yanıtını beklemeden düğme değişiyor, hata olursa
      geri alınıyor. Sosyal uygulamada beğeni gecikmesi hemen göze batıyor. */
   const [begeniYerel, setBegeniYerel] = useState<boolean | null>(null);
@@ -41,7 +45,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
   const pinIndex = Math.max(0, liste.indexOf(pinId));
   /* Tek pin ayrı çekiliyor: akış listesi bellekte olsa da Reels'e doğrudan
      bağlantıyla da girilebilmeli (ileride /pin/[id] rotası). */
-  const { veri: gelen } = useVeri<Pin | null>(() => pinGetir(pinId), [pinId], null);
+  const { veri: gelen } = useVeri<Pin | null>(() => pinGetir(pinId), [pinId, duzenSayac], null);
 
   /* Yeni pin yüklenirken `gelen` null oluyor ve bileşen tamamen kapanıyordu —
      hızlı bağlantıda göze çarpmıyor ama yavaş ağda dikey kaydırmanın her
@@ -74,6 +78,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
     setBegeniYerel(null);
     setKayitYerel(null);
     setSikayetAcik(false);
+    setDuzenleAcik(false);
   }
 
   /* Medya gezinmesi tek yerden: oklar, klavye ve YATAY kaydırma aynı işlevi
@@ -368,6 +373,17 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
               ikon={<path d="M6 3.6h12v17l-6-4.2-6 4.2z" />}
             />
             {/* Kendi pinini şikayet etmek anlamsız */}
+            {/* Kendi pininde düzenle, başkasınınkinde şikayet. pinAt hata
+                verirken "Var olanı düzenleyebilirsin" diyordu ama düzenleme
+                diye bir ekran hiç yoktu. */}
+            {ben && ben.id === p.kisi && (
+              <button
+                onClick={() => setDuzenleAcik(true)}
+                className="ml-auto border-none bg-transparent p-0 text-[11.5px] text-white/70 underline"
+              >
+                düzenle
+              </button>
+            )}
             {ben && ben.id !== p.kisi && (
               sikayetEttim ? (
                 <span className="ml-auto text-[11.5px] text-white/40">şikayet ettin</span>
@@ -389,6 +405,13 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
       )}
 
       {sikayetAcik && <Sikayet pinId={p.id} onKapat={() => setSikayetAcik(false)} />}
+      {duzenleAcik && (
+        <PinDuzenle
+          pin={p}
+          onKapat={() => setDuzenleAcik(false)}
+          onKaydedildi={() => { setDuzenleAcik(false); setDuzenSayac((n) => n + 1); }}
+        />
+      )}
     </div>
   );
 }
