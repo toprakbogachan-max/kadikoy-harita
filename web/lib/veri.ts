@@ -852,7 +852,13 @@ export async function pinGuncelle(pinId: string, g: PinGuncelleme): Promise<void
     const uzanti = (m.dosya.name.split(".").pop() ?? "jpg").toLowerCase().slice(0, 5);
     const yol = `${id}/${Date.now()}-${i}.${uzanti}`;
     const { error } = await db.storage.from("pin-media")
-      .upload(yol, m.dosya, { contentType: m.dosya.type, upsert: false });
+      .upload(yol, m.dosya, {
+        contentType: m.dosya.type, upsert: false,
+        /* Bir yıl: yollar benzersiz (kimlik/zaman damgası), aynı yola başka
+           dosya yazılmıyor. Varsayılan bir saatti, aynı fotoğraf her gün
+           yeniden iniyordu. */
+        cacheControl: "31536000",
+      });
     if (error) throw new Error(`Dosya yüklenemedi: ${error.message}`);
     yuklenen.push({ yol, tur: m.dosya.type.startsWith("video") ? "video" : "photo", not: m.not });
   }
@@ -930,7 +936,13 @@ export async function pinAt(y: YeniPin): Promise<string> {
     const uzanti = (m.dosya.name.split(".").pop() ?? "jpg").toLowerCase().slice(0, 5);
     const yol = `${id}/${Date.now()}-${i}.${uzanti}`;
     const { error } = await db.storage.from("pin-media")
-      .upload(yol, m.dosya, { contentType: m.dosya.type, upsert: false });
+      .upload(yol, m.dosya, {
+        contentType: m.dosya.type, upsert: false,
+        /* Bir yıl: yollar benzersiz (kimlik/zaman damgası), aynı yola başka
+           dosya yazılmıyor. Varsayılan bir saatti, aynı fotoğraf her gün
+           yeniden iniyordu. */
+        cacheControl: "31536000",
+      });
     if (error) throw new Error(`Dosya yüklenemedi: ${error.message}`);
     yuklenen.push({
       yol, tur: m.dosya.type.startsWith("video") ? "video" : "photo",

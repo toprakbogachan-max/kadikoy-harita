@@ -4,6 +4,7 @@ import { useState } from "react";
 import { igneStil, egim, fotoZemin, simgeSvg } from "@/lib/gorsel";
 import { useVeri } from "@/lib/kanca";
 import { akisGetir, medyaUrl, type AkisSekmesi } from "@/lib/veri";
+import KartGorsel from "./KartGorsel";
 import { useKisiler } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
@@ -83,8 +84,7 @@ export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste:
                     style={{ background: fotoZemin(p.yerTuru) }}
                   >
                     {kapak ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={kapak} alt="" className="size-full object-cover" />
+                      <KartGorsel url={kapak} />
                     ) : (
                       <span dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 32) }} />
                     )}

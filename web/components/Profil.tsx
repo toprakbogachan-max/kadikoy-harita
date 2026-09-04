@@ -9,6 +9,7 @@ import type { Yer, Pin, Kisi, Liste } from "@/lib/model";
 import Avatar from "./Avatar";
 import MiniHarita from "./MiniHarita";
 import ListeSayfasi from "./ListeSayfasi";
+import KartGorsel from "./KartGorsel";
 
 export default function Profil({
   kullaniciAdi,
@@ -237,8 +238,7 @@ export default function Profil({
                   style={{ background: fotoZemin(p.yerTuru) }}
                 >
                   {kapak ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={kapak} alt="" className="size-full object-cover" />
+                    <KartGorsel url={kapak} />
                   ) : (
                     <div className="opacity-30" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 26) }} />
                   )}
