@@ -10,6 +10,7 @@ import type { PlaceSummary } from "@/lib/types";
 import { TUR_AD } from "@/lib/paleti";
 import { igneStil, egim, fotoZemin, simgeSvg, acikMi, zaman } from "@/lib/gorsel";
 import Avatar from "./Avatar";
+import KunyeDuzenle from "./KunyeDuzenle";
 
 type Kademe = "yarim" | "tam";
 
@@ -50,6 +51,9 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   const { ben } = useOturum();
   const [kademe, setKademe] = useState<Kademe>("yarim");
   const [pinIndex, setPinIndex] = useState(0);
+  const [kunyeAcik, setKunyeAcik] = useState(false);
+  /* Künye kaydedilince yerGetir tekrar çalışsın diye sayaç. */
+  const [kunyeSayac, setKunyeSayac] = useState(0);
   const kapatDugmesi = useRef<HTMLButtonElement>(null);
 
   /* ---- sürükleme ----
@@ -159,7 +163,7 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
     setCek(null);
   }
 
-  const { veri: yer } = useVeri<YerDetay | null>(() => yerGetir(yerId), [yerId], null);
+  const { veri: yer } = useVeri<YerDetay | null>(() => yerGetir(yerId), [yerId, kunyeSayac], null);
   const { veri: pinler } = useVeri<Pin[]>(() => yerinPinleri(yerId), [yerId], []);
   /* Bir kişi üzerinden gelindiyse onun pinleri başa alınıyor. sort kararlı,
      yani grup içindeki sıra (beğeni/tarih) bozulmuyor — yalnızca o kişinin
@@ -216,6 +220,15 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   const acik = acikMi(yer.saatler, t);
   const bugun = yer.saatler?.find((s) => s[0] === t.getDay());
   const pin = siraliPinler[Math.min(pinIndex, Math.max(0, siraliPinler.length - 1))];
+
+  /* Künye imzası: "@kim · N gün önce". Kişi adı kisiler bağlamından geliyor;
+     henüz yüklenmediyse imza hiç gösterilmiyor (yanlış isim göstermektense
+     hiç göstermemek). */
+  const imzaKisi = yer.kunye?.guncelleyen ? kisiler[yer.kunye.guncelleyen] : null;
+  const imza =
+    imzaKisi && yer.kunye?.guncellenme != null
+      ? `@${imzaKisi.k} · ${zaman(yer.kunye.guncellenme)}`
+      : null;
   const ilkFoto = pin?.medyalar.find((m) => m.tur === "foto");
   const pinKapak = ilkFoto ? medyaUrl(ilkFoto.yol) : null;
 
@@ -318,6 +331,10 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
               Gitmeden önce
             </strong>
             {yer.kunye.uyari}
+            {/* İmza şart: bu alanı giriş yapan herkes değiştirebiliyor.
+                İmzasız olsa okuyan bir iddiaya kimin arkasında durduğunu
+                bilemezdi. */}
+            {imza && <span className="mt-1.5 block font-sayi text-[10.5px] text-murekkep2">{imza}</span>}
           </div>
         )}
 
@@ -424,8 +441,19 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
         )}
 
         {/* ---- künye ---- */}
-        <div className="px-4 pb-2.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+        <div className="flex items-center justify-between px-4 pb-2.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
           Künye
+          {ben ? (
+            <button
+              /* Çekmece de tam ekrana çıkıyor: form `absolute inset-0` ile
+                 çekmecenin İÇİNDE duruyor, yarım kademede alanların yarısı
+                 görünmüyordu. */
+              onClick={() => { setKademe("tam"); setKunyeAcik(true); }}
+              className="border-none bg-transparent p-0 font-tabela text-[11px] uppercase tracking-[0.11em] text-jeton"
+            >
+              {yer.kunye ? "Düzenle" : "+ Künye ekle"}
+            </button>
+          ) : null}
         </div>
         <dl className="mx-4 mb-4 rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-1">
           <Satir e="Pin" d={`${yer.pinSayisi ?? 0} kişi pinledi`} sayi />
@@ -440,6 +468,9 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
           {yer.kunye?.enIyiSaat && <Satir e="En iyi saat" d={yer.kunye.enIyiSaat} />}
           {yer.kunye?.sadeceNakit && <Satir e="Ödeme" d="sadece nakit" />}
         </dl>
+        {imza && (
+          <p className="mx-4 -mt-2 mb-4 font-sayi text-[10.5px] text-murekkep2">{imza}</p>
+        )}
 
         {/* ---- kelimeler ve puan dağılımı ---- */}
         {ozet && ozet.pin_count > 0 && (
@@ -515,6 +546,16 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
           </>
         )}
       </div>
+
+      {kunyeAcik && (
+        <KunyeDuzenle
+          yerId={yerId}
+          yerAdi={yer.ad}
+          mevcut={yer.kunye}
+          onKapat={() => setKunyeAcik(false)}
+          onKaydedildi={() => { setKunyeAcik(false); setKunyeSayac((n) => n + 1); }}
+        />
+      )}
 
       <div className="flex shrink-0 gap-2 border-t border-[var(--cizgi)] bg-yuzey p-3">
         <button

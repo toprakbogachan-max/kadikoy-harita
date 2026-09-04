@@ -100,6 +100,12 @@ export interface Kunye {
   sadeceNakit: boolean | null;
   iyiGelir: string[] | null;
   uyari: string | null;
+  /* İmza. place_facts wiki tarzı: giriş yapan herkes başkasının yazdığının
+     üzerine yazabiliyor. Kim yazdığı görünmezse kırmızı uyarı kutusu imzasız
+     bir iddia olurdu; okuyanın kime baktığını bilmesi gerekiyor. */
+  guncelleyen: string | null;
+  /** kaç saat önce güncellendi — Pin.saat ile aynı biçim, zaman() ile yazılıyor */
+  guncellenme: number | null;
 }
 
 export interface YerDetay extends Yer {
@@ -124,7 +130,7 @@ export async function yerGetir(id: string): Promise<YerDetay | null> {
     .select(`id, slug, name, category, neighborhood, address, phone, website,
              opening_hours, pin_count, save_count, cover_url, cover_credit, cover_path,
              place_facts ( needs_booking, booking_note, best_time, price_per_person,
-                           cash_only, good_for, warning )`)
+                           cash_only, good_for, warning, updated_by, updated_at )`)
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
@@ -134,6 +140,7 @@ export async function yerGetir(id: string): Promise<YerDetay | null> {
     needs_booking: boolean | null; booking_note: string | null; best_time: string | null;
     price_per_person: number | null; cash_only: boolean | null;
     good_for: string[] | null; warning: string | null;
+    updated_by: string | null; updated_at: string | null;
   }
   const ham = data.place_facts as HamKunye | HamKunye[] | null;
   const f = (Array.isArray(ham) ? ham[0] : ham) ?? null;
@@ -157,9 +164,45 @@ export async function yerGetir(id: string): Promise<YerDetay | null> {
           sadeceNakit: f.cash_only,
           iyiGelir: f.good_for,
           uyari: f.warning,
+          guncelleyen: f.updated_by,
+          guncellenme: f.updated_at ? saatFarki(f.updated_at) : null,
         }
       : null,
   };
+}
+
+/** Künye formundan gelen alanlar. Hepsi isteğe bağlı, boş bırakılan silinir. */
+export interface YeniKunye {
+  uyari: string | null;
+  rezervasyon: boolean | null;
+  rezervasyonNotu: string | null;
+  enIyiSaat: string | null;
+  kisiBasi: number | null;
+  sadeceNakit: boolean | null;
+}
+
+/**
+ * Künye yazma — place_facts.
+ *
+ * upsert: her mekanın tek satırı var (place_id birincil anahtar). Politika
+ * updated_by = auth.uid() şart koşuyor, yani başkasının satırını üzerine
+ * yazabilirsin ama imza sende kalıyor. Silme politikası bilerek yok.
+ */
+export async function kunyeYaz(yerId: string, k: YeniKunye): Promise<void> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  const { error } = await db.from("place_facts").upsert({
+    place_id: yerId,
+    warning: k.uyari,
+    needs_booking: k.rezervasyon,
+    booking_note: k.rezervasyonNotu,
+    best_time: k.enIyiSaat,
+    price_per_person: k.kisiBasi,
+    cash_only: k.sadeceNakit,
+    updated_by: id,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
 }
 
 export async function mekanOzeti(yerId: string, bakanId?: string): Promise<PlaceSummary> {
