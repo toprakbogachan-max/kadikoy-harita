@@ -400,6 +400,7 @@ function Uygulama() {
             onKapat={() => setGonderi(null)}
             onPinDegisti={(id) => setGonderi((g) => (g ? { ...g, id } : g))}
             onGirisIste={() => setGirisAcik(true)}
+            onKisiAc={(k) => { setGonderi(null); setProfilKisi(k); setEkran("profil"); }}
           />
         )}
 

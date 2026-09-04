@@ -17,6 +17,8 @@ interface Props {
   onKapat: () => void;
   onPinDegisti: (id: string) => void;
   onGirisIste: () => void;
+  /** yazarın profilini aç — kullanıcı adı ile */
+  onKisiAc: (kullaniciAdi: string) => void;
 }
 
 /**
@@ -25,7 +27,7 @@ interface Props {
  *  - yatay (oklar / ←→)               → aynı pinin medyaları arası
  * Her medyanın kendi notu görselin altında görünür.
  */
-export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGirisIste }: Props) {
+export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGirisIste, onKisiAc }: Props) {
   const { ben } = useOturum();
   const [medyaIndex, setMedyaIndex] = useState(0);
   const [yorumlarAcik, setYorumlarAcik] = useState(false);
@@ -74,6 +76,14 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
     setSikayetAcik(false);
   }
 
+  /* Medya gezinmesi tek yerden: oklar, klavye ve YATAY kaydırma aynı işlevi
+     çağırsın. Önce yalnızca oklarda vardı, telefonda fotoğraflar arasında
+     kaydırmak çalışmıyordu. */
+  const medyaGec = (yon: number) => {
+    const son = (p?.medyalar.length ?? 1) - 1;
+    setMedyaIndex((i) => Math.min(son, Math.max(0, i + yon)));
+  };
+
   const pinGec = (yon: number) => {
     const yeni = pinIndex + yon;
     if (yeni < 0 || yeni >= liste.length) return;
@@ -85,11 +95,10 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
     const el = (e: KeyboardEvent) => {
       if (e.key === "Escape") return onKapat();
       if (!p) return;
-      const son = p.medyalar.length - 1;
       if (e.key === "ArrowUp") pinGec(-1);
       else if (e.key === "ArrowDown") pinGec(1);
-      else if (e.key === "ArrowLeft") setMedyaIndex((i) => Math.max(0, i - 1));
-      else if (e.key === "ArrowRight") setMedyaIndex((i) => Math.min(son, i + 1));
+      else if (e.key === "ArrowLeft") medyaGec(-1);
+      else if (e.key === "ArrowRight") medyaGec(1);
     };
     window.addEventListener("keydown", el);
     return () => window.removeEventListener("keydown", el);
@@ -99,17 +108,30 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
   useEffect(() => {
     const g = govde.current;
     if (!g) return;
+    let basX: number | null = null;
     let basY: number | null = null;
     const ESIK = 70;
-    const bitir = (y: number) => {
-      if (basY === null) return;
-      const d = y - basY;
-      basY = null;
-      if (d < -ESIK) pinGec(1);
-      else if (d > ESIK) pinGec(-1);
+    /* Hangi eksende kaydırıldığına BÜYÜK olan farka bakarak karar veriyoruz:
+       yatay → fotoğraflar, dikey → pinler. İki jesti aynı eksene koymak
+       mümkün değil, o yüzden fotoğraf yatayda, pin dikeyde kaldı. */
+    const bitir = (x: number, y: number) => {
+      if (basX === null || basY === null) return;
+      const dx = x - basX;
+      const dy = y - basY;
+      basX = null; basY = null;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) < ESIK) return;
+        medyaGec(dx < 0 ? 1 : -1);
+      } else {
+        if (Math.abs(dy) < ESIK) return;
+        pinGec(dy < 0 ? 1 : -1);
+      }
     };
-    const basla = (e: TouchEvent) => (basY = e.touches[0].clientY);
-    const bit = (e: TouchEvent) => bitir(e.changedTouches[0].clientY);
+    const basla = (e: TouchEvent) => {
+      basX = e.touches[0].clientX;
+      basY = e.touches[0].clientY;
+    };
+    const bit = (e: TouchEvent) => bitir(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
 
     /* tek jest birden çok wheel olayı üretiyor — zaman kilidi */
     let sonTeker = 0;
@@ -153,10 +175,33 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {/* Pinler arasi gezinme yalnizca jestle yapiliyordu (dikey kaydirma,
+              tekerlek, ok tuslari) — ekranda hicbir isaret yoktu, kullanici
+              birden fazla pin oldugunu ancak sayaci fark edince anliyordu.
+              Oklar YUKARI/ASAGI: jestin ekseniyle ayni olsun, yandaki ‹ ›
+              medya oklariyla karismasin. */}
           {liste.length > 1 && (
-            <span className="font-sayi text-[11.5px] text-white/80">
-              {pinIndex + 1}/{liste.length}
-            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => pinGec(-1)}
+                disabled={pinIndex === 0}
+                aria-label="Önceki pin"
+                className="grid size-[26px] place-items-center rounded-sm border-none bg-white/15 text-[13px] leading-none text-white disabled:opacity-30"
+              >
+                ∧
+              </button>
+              <span className="font-sayi text-[11.5px] text-white/80">
+                {pinIndex + 1}/{liste.length}
+              </span>
+              <button
+                onClick={() => pinGec(1)}
+                disabled={pinIndex === liste.length - 1}
+                aria-label="Sonraki pin"
+                className="grid size-[26px] place-items-center rounded-sm border-none bg-white/15 text-[13px] leading-none text-white disabled:opacity-30"
+              >
+                ∨
+              </button>
+            </div>
           )}
           <button
             onClick={onKapat}
@@ -214,7 +259,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
             </div>
             {/* oklar alt panelin ÜSTÜNDE olmalı, yoksa panelin şeffaf kısmı tıklamayı yutuyor */}
             <button
-              onClick={() => setMedyaIndex((i) => Math.max(0, i - 1))}
+              onClick={() => medyaGec(-1)}
               disabled={medyaIndex === 0}
               aria-label="Önceki medya"
               className="absolute left-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(20,15,8,.5)] text-white disabled:opacity-30"
@@ -222,7 +267,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
               ‹
             </button>
             <button
-              onClick={() => setMedyaIndex((i) => Math.min(medya.length - 1, i + 1))}
+              onClick={() => medyaGec(1)}
               disabled={medyaIndex === medya.length - 1}
               aria-label="Sonraki medya"
               className="absolute right-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(20,15,8,.5)] text-white disabled:opacity-30"
@@ -235,16 +280,26 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
         {/* alt bilgi perdesi */}
         <div className="absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgba(12,9,5,.92)] via-[rgba(12,9,5,.72)] to-transparent px-4 pb-4 pt-[70px] text-white">
           <div className="mb-2.5 flex items-center gap-2.5">
-            <Avatar kisi={p.kisi} boyut={34} />
-            <div className="flex-1">
-              <div className="text-[13.5px] font-semibold leading-tight">
-                {kisi.ad}
-                {kisi.ben ? " · sen" : ""}
-              </div>
-              <div className="mt-0.5 font-sayi text-[10.5px] text-white/65">
-                @{kisi.k} · {zaman(p.saat)}
-              </div>
-            </div>
+            {/* Fotoğrafa ve ada dokununca yazarın profili açılıyor. Önceden
+                gönderi detayından kişiye geçmenin hiçbir yolu yoktu: pini
+                beğendiğin birine bakmak için aramadan adını bulman
+                gerekiyordu. */}
+            <button
+              onClick={() => { onKapat(); onKisiAc(kisi.k); }}
+              aria-label={`${kisi.ad} profilini aç`}
+              className="flex flex-1 items-center gap-2.5 border-none bg-transparent p-0 text-left"
+            >
+              <Avatar kisi={p.kisi} boyut={34} />
+              <span className="flex-1">
+                <span className="block text-[13.5px] font-semibold leading-tight text-white">
+                  {kisi.ad}
+                  {kisi.ben ? " · sen" : ""}
+                </span>
+                <span className="mt-0.5 block font-sayi text-[10.5px] text-white/65">
+                  @{kisi.k} · {zaman(p.saat)}
+                </span>
+              </span>
+            </button>
             {p.puan != null && (
               <span className="font-sayi text-[14px] font-bold text-[#F2C879]">
                 {p.puan}
