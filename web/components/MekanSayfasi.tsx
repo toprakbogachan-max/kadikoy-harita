@@ -34,6 +34,9 @@ const CEKME_ESIGI = 4;
 /* px/ms — bunun üstündeki fırlatma, yolun yarısı geçilmese de kademeyi
    değiştirir. Telefonda kısa ve sert kaydırmalar böyle yapılıyor. */
 const FIRLATMA_HIZI = 0.5;
+/* Bir kişi üzerinden gelindiğinde "Buraya bırakılanlar" başlığının üstünde
+   bırakılan boşluk. Sıfır olsa bölüm kabın tam kenarına yapışıyor. */
+const BOLUM_BOSLUGU = 12;
 /* Kapanış animasyonu; aşağıdaki duration-300 ile aynı olmak zorunda. */
 const GECIS_MS = 300;
 
@@ -49,7 +52,10 @@ const GECIS_MS = 300;
  */
 export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiAc, onGirisIste, onPinAt }: Props) {
   const { ben } = useOturum();
-  const [kademe, setKademe] = useState<Kademe>("yarim");
+  /* Bir kişi üzerinden gelindiyse çekmece tam ekran AÇILIYOR — kademeyi
+     efekte bırakmak yarış yaratıyordu: aşağıdaki render-içi sıfırlama
+     "yarim"a geri alıyor, efekt de bir kez çalıştığı için düzeltmiyordu. */
+  const [kademe, setKademe] = useState<Kademe>(oncelikliKisi ? "tam" : "yarim");
   const [pinIndex, setPinIndex] = useState(0);
   const [kunyeAcik, setKunyeAcik] = useState(false);
   /* Künye kaydedilince yerGetir tekrar çalışsın diye sayaç. */
@@ -60,7 +66,9 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
      görmek istiyorsun. */
   const icerik = useRef<HTMLDivElement>(null);
   const pinlerBasligi = useRef<HTMLDivElement>(null);
-  const kaydirildi = useRef(false);
+  /* Kaydırmanın yapıldığı anahtar. Boolean olsa aynı çekmecede ikinci bir
+     mekana geçildiğinde bir daha kaydırmıyordu. */
+  const kaydirilan = useRef<string | null>(null);
 
   /* ---- sürükleme ----
      cek: parmak ekrandayken çekmecenin canlı konumu; null olması
@@ -199,7 +207,7 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   if (oncekiYer !== anahtar) {
     setOncekiYer(anahtar);
     setPinIndex(0);
-    setKademe("yarim");
+    setKademe(oncelikliKisi ? "tam" : "yarim");
     setKayitYerel(null);
   }
 
@@ -209,24 +217,27 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   }, []);
 
   /* Kaydırma pinler YÜKLENDİKTEN sonra, çünkü öncesinde bölüm yerinde
-     değil ve hedefin konumu yanlış çıkıyor. Bir kez: kullanıcı sonra
-     yukarı kaydırırsa geri zıplamasın. */
+     değil ve hedefin konumu yanlış çıkıyor. Mekan başına bir kez:
+     kullanıcı sonra yukarı kaydırırsa geri zıplamasın. */
   useEffect(() => {
-    if (!oncelikliKisi || kaydirildi.current) return;
+    if (!oncelikliKisi || kaydirilan.current === anahtar) return;
     if (!siraliPinler.length) return;
     const k = icerik.current;
     const h = pinlerBasligi.current;
     /* yer'den ÖNCE gelen pinler için: bu noktada gövde henüz iskelet,
        ref'ler boş. yer bağımlılıkta olmasa efekt bir daha çalışmazdı. */
     if (!k || !h) return;
-    kaydirildi.current = true;
-    setKademe("tam");
+    kaydirilan.current = anahtar;
     /* Bir kare bekleniyor: kademe "tam"a geçince kapsayıcı büyüyor,
-       offsetTop ondan önce okunursa yanlış yere kaydırıyor. */
+       konum ondan önce okunursa yanlış yere kaydırıyor. */
     requestAnimationFrame(() => {
-      k.scrollTo({ top: Math.max(0, h.offsetTop - 12), behavior: "smooth" });
+      /* offsetTop DEĞİL: başlığın konumlandırılmış üst öğesi kaydırma kabı
+         değil, çekmecenin kendisi. offsetTop üstteki sabit başlığı da
+         sayıyordu, bölüm o kadar yukarı kaçıyordu. Rect farkı kaba göreli. */
+      const fark = h.getBoundingClientRect().top - k.getBoundingClientRect().top;
+      k.scrollTo({ top: Math.max(0, k.scrollTop + fark - BOLUM_BOSLUGU), behavior: "smooth" });
     });
-  }, [oncelikliKisi, siraliPinler.length, yer]);
+  }, [oncelikliKisi, anahtar, siraliPinler.length, yer]);
 
   useEffect(() => {
     const el = (e: KeyboardEvent) => { if (e.key === "Escape") onKapat(); };
