@@ -8,6 +8,11 @@ import {
 } from "./PinFormu";
 import BuyukGorsel from "./BuyukGorsel";
 
+/** Yüklenmiş medya video mu — kırpma yalnızca fotoğraf için. */
+function kalanVideo(yol: string, pin: Pin): boolean {
+  return pin.medyalar.find((m) => m.yol === yol)?.tur === "video";
+}
+
 /**
  * Pin düzenleme.
  *
@@ -307,11 +312,20 @@ export default function PinDuzenle({
           }
           onKapat={() => setBuyuk(null)}
           notaOdaklan={buyuk.nota}
-          /* Yalnızca yeni eklenen dosyalar kırpılabiliyor; yüklenmiş medyayı
-             kırpmak yeniden yükleme demek, o ayrı bir iş. */
+          /* Yüklenmiş bir görseli kırpmak onu YENİ dosya yapıyor: kırpılmış
+             hâli yüklenip eskisi düşüyor (pinGuncelle zaten listede olmayan
+             medyayı siliyor). Notu taşınıyor. Birden çok görsel varsa kırpılan
+             sona geçiyor — sıra kalanlardan sonra veriliyor.
+             Video kırpılamaz: karesi yok, çerçeveleyecek bir şey yok. */
           onKirp={
             buyuk.tur === "kalan"
-              ? undefined
+              ? kalanVideo(kalan[buyuk.i].yol, pin)
+                ? undefined
+                : (d) => {
+                    const eski = kalan[buyuk.i];
+                    setKalan((l) => l.filter((_, j) => j !== buyuk.i));
+                    setYeniler((l) => [...l, { dosya: d, not: eski.not }]);
+                  }
               : (d) => setYeniler((l) => l.map((x, j) => (j === buyuk.i ? { ...x, dosya: d } : x)))
           }
         />

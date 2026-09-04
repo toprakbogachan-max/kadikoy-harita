@@ -36,9 +36,9 @@ export default function BuyukGorsel({
      dokunularak açıldığında ODAKLANMIYOR: telefonda klavye açılıp görseli
      örterdi, oysa oraya bakmak için açtın. */
   notaOdaklan?: boolean;
-  /* Kadraj onaylandığında kırpılmış dosyayı geri veriyor. Yalnızca HENÜZ
-     yüklenmemiş fotoğraflar için: yüklenmiş medyayı kırpmak yeniden yükleme
-     demek, o ayrı bir iş. */
+  /* Kadraj onaylandığında kırpılmış dosyayı geri veriyor. Yüklenmiş bir
+     medya için de çalışıyor — çağıran onu yeni dosya olarak koyup eskisini
+     düşürüyor, yani kırpma yeniden yükleme demek. Video için verilmemeli. */
   onKirp?: (dosya: File) => void;
 }) {
   const notAlani = useRef<HTMLTextAreaElement>(null);
@@ -63,7 +63,7 @@ export default function BuyukGorsel({
     return () => window.removeEventListener("keydown", el);
   }, [onKapat]);
 
-  const kirpilabilir = !!onKirp && !!foto;
+  const kirpilabilir = !!onKirp && (!!foto || !!yolUrl);
 
   return (
     <div role="dialog" aria-modal="true" aria-label={kirpilabilir ? "Görseli kırp" : "Görseli büyüt"}
@@ -81,7 +81,8 @@ export default function BuyukGorsel({
       </div>
 
       {kirpilabilir ? (
-        <Kirpici dosya={foto!} onKirp={onKirp!} onBitti={onKapat}
+        <Kirpici dosya={foto} url={yolUrl} ad={foto ? foto.name : (yol ?? "foto")}
+                 onKirp={onKirp!} onBitti={onKapat}
                  not={not} onNot={onNot} notAlani={notAlani} />
       ) : (
         <>
@@ -166,14 +167,17 @@ function NotAlani({
 }
 
 /**
- * Kadraj seçici. Görsel çerçeveyi DAİMA dolduruyor: taban ölçek "kapla"
+ * Kadraj seçici — kaynağı ister seçilmiş dosya, ister yüklenmiş bir görsel.
+ * Görsel çerçeveyi DAİMA dolduruyor: taban ölçek "kapla"
  * hesabı, kaydırma da çerçevenin dışına taşmayacak şekilde sınırlanıyor.
  * Böylece kırpılmış dosyada boş kenar çıkmıyor.
  */
 function Kirpici({
-  dosya, onKirp, onBitti, not, onNot, notAlani,
+  dosya, url, ad, onKirp, onBitti, not, onNot, notAlani,
 }: {
-  dosya: File;
+  dosya: File | null;
+  url: string | null;
+  ad: string;
   onKirp: (d: File) => void;
   onBitti: () => void;
   not: string;
@@ -268,8 +272,8 @@ function Kirpici({
         tuval.toBlob((b) => ver(b), "image/jpeg", 0.86),
       );
       if (!parca) return;
-      const ad = dosya.name.replace(/\.[^.]+$/, "") + ".jpg";
-      onKirp(new File([parca], ad, { type: "image/jpeg" }));
+      const cikisAdi = (ad.split("/").pop() ?? "foto").replace(/\.[^.]+$/, "") + ".jpg";
+      onKirp(new File([parca], cikisAdi, { type: "image/jpeg" }));
       onBitti();
     } finally {
       setCalisiyor(false);
@@ -293,6 +297,12 @@ function Kirpici({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={gorsel}
+            /* src'den ÖNCE: yüklenmiş bir görseli tuvale çizmek CORS izni
+               istiyor, izinsiz yüklenen görsel tuvali kirletiyor ve toBlob
+               SecurityError veriyor. Nitelik src'den sonra atanırsa istek
+               çoktan izinsiz gitmiş oluyor. */
+            crossOrigin={url ? "anonymous" : undefined}
+            src={url ?? undefined}
             alt=""
             draggable={false}
             onLoad={(e) => {
