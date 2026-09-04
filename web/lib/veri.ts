@@ -177,7 +177,6 @@ export interface YeniKunye {
   rezervasyon: boolean | null;
   rezervasyonNotu: string | null;
   enIyiSaat: string | null;
-  kisiBasi: number | null;
   sadeceNakit: boolean | null;
 }
 
@@ -197,7 +196,6 @@ export async function kunyeYaz(yerId: string, k: YeniKunye): Promise<void> {
     needs_booking: k.rezervasyon,
     booking_note: k.rezervasyonNotu,
     best_time: k.enIyiSaat,
-    price_per_person: k.kisiBasi,
     cash_only: k.sadeceNakit,
     updated_by: id,
     updated_at: new Date().toISOString(),

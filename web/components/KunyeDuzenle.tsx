@@ -13,6 +13,12 @@ import { kunyeYaz, type Kunye } from "@/lib/veri";
  * place_facts wiki tarzı: giriş yapan herkes yazabiliyor ve satırın üstüne
  * yazabiliyor, ama imza (updated_by) yazana geçiyor ve mekan sayfasında
  * görünüyor. Silme politikası yok — yanlış bilgi düzeltilir, yok edilmez.
+ *
+ * KİŞİ BAŞI FİYAT BURADA YOK, bilerek. Pin formu zaten "ne ödedin" diye
+ * soruyor (pins.price_paid); aynı olguyu ikinci kez sormak hem gereksiz
+ * sürtünme hem de çelişki üretiyordu — Poyraz Kahve'de pin 210 TL derken
+ * künye 180 TL diyordu. Fiyat artık pinlerin medyanından hesaplanıyor:
+ * daha doğru, ve pinler biriktikçe kendini güncelliyor.
  */
 export default function KunyeDuzenle({
   yerId, yerAdi, mevcut, onKapat, onKaydedildi,
@@ -31,7 +37,6 @@ export default function KunyeDuzenle({
   );
   const [rezervasyonNotu, setRezervasyonNotu] = useState(mevcut?.rezervasyonNotu ?? "");
   const [enIyiSaat, setEnIyiSaat] = useState(mevcut?.enIyiSaat ?? "");
-  const [kisiBasi, setKisiBasi] = useState(mevcut?.kisiBasi != null ? String(mevcut.kisiBasi) : "");
   const [sadeceNakit, setSadeceNakit] = useState(mevcut?.sadeceNakit === true);
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
@@ -50,7 +55,6 @@ export default function KunyeDuzenle({
         rezervasyon: rezervasyon === "" ? null : rezervasyon === "evet",
         rezervasyonNotu: rezervasyonNotu.trim() || null,
         enIyiSaat: enIyiSaat.trim() || null,
-        kisiBasi: kisiBasi.trim() ? Number(kisiBasi) : null,
         sadeceNakit: sadeceNakit ? true : null,
       });
       onKaydedildi();
@@ -123,12 +127,6 @@ export default function KunyeDuzenle({
           <span className={etiket}>En iyi saat</span>
           <input value={enIyiSaat} onChange={(e) => setEnIyiSaat(e.target.value)}
             maxLength={60} placeholder="örn. hafta içi 15:00–17:00" className={girdi} />
-        </label>
-
-        <label className="mb-4 block">
-          <span className={etiket}>Kişi başı (₺)</span>
-          <input value={kisiBasi} onChange={(e) => setKisiBasi(e.target.value.replace(/[^0-9]/g, ""))}
-            inputMode="numeric" maxLength={5} placeholder="örn. 350" className={girdi} />
         </label>
 
         <button onClick={() => setSadeceNakit((v) => !v)} aria-pressed={sadeceNakit}

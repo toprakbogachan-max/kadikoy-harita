@@ -221,6 +221,20 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   const bugun = yer.saatler?.find((s) => s[0] === t.getDay());
   const pin = siraliPinler[Math.min(pinIndex, Math.max(0, siraliPinler.length - 1))];
 
+  /* Kişi başı fiyat KÜNYEDEN değil pinlerden geliyor: pin formu zaten "ne
+     ödedin" diye soruyor, aynı şeyi künyede ikinci kez sormak çelişki
+     üretiyordu (Poyraz Kahve'de pin 210 TL, künye 180 TL). Medyan seçildi:
+     tek bir pahalı akşam ortalamayı bozuyor, medyan bozmuyor. */
+  const fiyatlar = siraliPinler
+    .map((p) => p.fiyat)
+    .filter((f): f is number => typeof f === "number" && f > 0)
+    .sort((a, b) => a - b);
+  const ortancaFiyat = fiyatlar.length
+    ? fiyatlar.length % 2
+      ? fiyatlar[(fiyatlar.length - 1) / 2]
+      : Math.round((fiyatlar[fiyatlar.length / 2 - 1] + fiyatlar[fiyatlar.length / 2]) / 2)
+    : null;
+
   /* Künye imzası: "@kim · N gün önce". Kişi adı kisiler bağlamından geliyor;
      henüz yüklenmediyse imza hiç gösterilmiyor (yanlış isim göstermektense
      hiç göstermemek). */
@@ -464,7 +478,13 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
           />
           {yer.adres && <Satir e="Adres" d={yer.adres} />}
           {yer.kunye?.rezervasyon && <Satir e="Rezervasyon" d={yer.kunye.rezervasyon} />}
-          {yer.kunye?.kisiBasi != null && <Satir e="Kişi başı" d={`≈ ${yer.kunye.kisiBasi} ₺`} sayi />}
+          {ortancaFiyat != null && (
+            <Satir
+              e="Kişi başı"
+              sayi
+              d={`≈ ${ortancaFiyat} ₺ · ${fiyatlar.length} pinden`}
+            />
+          )}
           {yer.kunye?.enIyiSaat && <Satir e="En iyi saat" d={yer.kunye.enIyiSaat} />}
           {yer.kunye?.sadeceNakit && <Satir e="Ödeme" d="sadece nakit" />}
         </dl>
