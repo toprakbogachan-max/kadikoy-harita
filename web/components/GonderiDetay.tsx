@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fotoZemin, simgeSvg, zaman } from "@/lib/gorsel";
 import { useVeri } from "@/lib/kanca";
-import { pinGetir, begeniDegistir, begendimMi, kayitDegistir, kayitliMi, medyaUrl } from "@/lib/veri";
+import { pinGetir, begeniDegistir, begendimMi, kayitDegistir, kayitliMi, medyaUrl, sikayetEttimMi } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import { useKisi } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
@@ -55,6 +55,11 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
     () => (ben && p ? begendimMi(p.id) : Promise.resolve(false)), [p?.id, ben?.id], false);
   const { veri: kayitSunucu } = useVeri<boolean>(
     () => (ben && p ? kayitliMi(p.yer) : Promise.resolve(false)), [p?.yer, ben?.id], false);
+  /* sikayetEttimMi yazılmıştı ama hiç çağrılmıyordu: aynı pini defalarca
+     şikayet edebiliyordun ve reports tablosunda benzersizlik kısıtı da yok,
+     yani moderasyon kuyruğuna kopya satırlar düşüyordu. */
+  const { veri: sikayetEttim } = useVeri<boolean>(
+    () => (ben && p ? sikayetEttimMi(p.id) : Promise.resolve(false)), [p?.id, ben?.id, sikayetAcik], false);
 
   /* Pin değişince medya başa döner. Efekt yerine React'in "prop değişince
      state'i ayarla" kalıbı — efektte setState basamaklı render üretiyor ve
@@ -309,12 +314,16 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
             />
             {/* Kendi pinini şikayet etmek anlamsız */}
             {ben && ben.id !== p.kisi && (
-              <button
-                onClick={() => setSikayetAcik(true)}
-                className="ml-auto border-none bg-transparent p-0 text-[11.5px] text-white/55 underline"
-              >
-                şikayet et
-              </button>
+              sikayetEttim ? (
+                <span className="ml-auto text-[11.5px] text-white/40">şikayet ettin</span>
+              ) : (
+                <button
+                  onClick={() => setSikayetAcik(true)}
+                  className="ml-auto border-none bg-transparent p-0 text-[11.5px] text-white/55 underline"
+                >
+                  şikayet et
+                </button>
+              )
             )}
           </div>
         </div>
