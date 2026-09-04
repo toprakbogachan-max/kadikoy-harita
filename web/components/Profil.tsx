@@ -3,7 +3,7 @@
 import { igneStil, egim, fotoZemin, simgeSvg } from "@/lib/gorsel";
 import { useState } from "react";
 import { useVeri } from "@/lib/kanca";
-import { profilGetir, kisininPinleri, kisininListeleri, kisininYerleri, takipDegistir, takiptemiyim } from "@/lib/veri";
+import { profilGetir, kisininPinleri, kisininListeleri, kisininYerleri, takipDegistir, takiptemiyim, medyaUrl } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import type { Yer, Pin, Kisi, Liste } from "@/lib/model";
 import Avatar from "./Avatar";
@@ -217,6 +217,11 @@ export default function Profil({
       {pinleri.length ? (
         <div className="grid grid-cols-3 gap-2.5 px-4 pb-5">
           {pinleri.map((p, i) => {
+            /* Akıştaki kapakla aynı kural: ızgarada video oynatmıyoruz,
+               kapak yalnızca fotoğraftan geliyor. Demo pinlerin demo://
+               yolunda medyaUrl null dönüyor, o zaman simgeye düşüyor. */
+            const ilk = p.medyalar[0];
+            const kapak = ilk && ilk.tur !== "video" ? medyaUrl(ilk.yol) : null;
             return (
               <button
                 key={p.id}
@@ -231,7 +236,12 @@ export default function Profil({
                   className="relative grid size-full place-items-center overflow-hidden rounded-sm"
                   style={{ background: fotoZemin(p.yerTuru) }}
                 >
-                  <div className="opacity-30" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 26) }} />
+                  {kapak ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={kapak} alt="" className="size-full object-cover" />
+                  ) : (
+                    <div className="opacity-30" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 26) }} />
+                  )}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(0,0,0,.6)] to-transparent px-1.5 pb-1.5 pt-3.5 text-left text-[10px] font-semibold leading-tight text-white">
                     {p.yerAdi}
                   </div>
