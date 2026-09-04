@@ -20,6 +20,8 @@ interface Props {
   onGirisIste: () => void;
   /** yazarın profilini aç — kullanıcı adı ile */
   onKisiAc: (kullaniciAdi: string) => void;
+  /** pin silindi: detay kapanmalı ve listeler tazelenmeli */
+  onPinSilindi: () => void;
 }
 
 /**
@@ -28,7 +30,7 @@ interface Props {
  *  - yatay (oklar / ←→)               → aynı pinin medyaları arası
  * Her medyanın kendi notu görselin altında görünür.
  */
-export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGirisIste, onKisiAc }: Props) {
+export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGirisIste, onKisiAc, onPinSilindi }: Props) {
   const { ben } = useOturum();
   const [medyaIndex, setMedyaIndex] = useState(0);
   const [yorumlarAcik, setYorumlarAcik] = useState(false);
@@ -410,6 +412,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           pin={p}
           onKapat={() => setDuzenleAcik(false)}
           onKaydedildi={() => { setDuzenleAcik(false); setDuzenSayac((n) => n + 1); }}
+          onSilindi={() => { setDuzenleAcik(false); onPinSilindi(); }}
         />
       )}
     </div>

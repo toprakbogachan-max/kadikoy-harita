@@ -776,6 +776,36 @@ export async function yerOlustur(
   return data as string;
 }
 
+/**
+ * Pin silme.
+ *
+ * Sıra önemli: medya YOLLARI önce okunuyor, çünkü pin silinince pin_media
+ * satırları art arda (on delete cascade) yok oluyor ve dosyaların nerede
+ * olduğunu bir daha öğrenemiyoruz. Depodaki dosyalar cascade'e dahil DEĞİL —
+ * temizlenmezse kimsenin göremediği ama yer kaplayan dosyalar kalırdı.
+ *
+ * Satır önce, dosya sonra: tersi olsaydı satır silinemediğinde görselleri
+ * olmayan bir pin kalırdı.
+ *
+ * Sayaçlar bump_counter trigger'ında düşüyor (places.pin_count,
+ * profiles.pin_count), burada elle bir şey yapmıyoruz.
+ */
+export async function pinSil(pinId: string): Promise<void> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+
+  const { data: medyalar } = await db.from("pin_media")
+    .select("storage_path").eq("pin_id", pinId);
+  const yollar = (medyalar ?? [])
+    .map((m) => m.storage_path as string)
+    .filter((y) => y && !y.startsWith("demo://"));
+
+  const { error } = await db.from("pins").delete().eq("id", pinId);
+  if (error) throw error;
+
+  if (yollar.length) await db.storage.from("pin-media").remove(yollar);
+}
+
 /** Düzenlemede kalan mevcut medya — yol değişmez, yalnızca notu değişebilir. */
 export interface KalanMedya {
   yol: string;

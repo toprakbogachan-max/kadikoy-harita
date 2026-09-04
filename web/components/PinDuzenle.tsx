@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { pinGuncelle, medyaUrl, type YeniMedya, type KalanMedya } from "@/lib/veri";
+import { pinGuncelle, pinSil, medyaUrl, type YeniMedya, type KalanMedya } from "@/lib/veri";
 import type { Pin } from "@/lib/model";
 import {
   Cip, Onizleme, SENARYOLAR, SIKLIKLAR, TEKRARLAR, METIN_MIN, METIN_MAX,
@@ -23,11 +23,12 @@ import BuyukGorsel from "./BuyukGorsel";
  * kaldırılabiliyor, ama en az biri kalmak zorunda (assert_pin_has_media).
  */
 export default function PinDuzenle({
-  pin, onKapat, onKaydedildi,
+  pin, onKapat, onKaydedildi, onSilindi,
 }: {
   pin: Pin;
   onKapat: () => void;
   onKaydedildi: () => void;
+  onSilindi: () => void;
 }) {
   const [metin, setMetin] = useState(pin.metin);
   const [kelimeler, setKelimeler] = useState<[string, string, string]>([
@@ -50,6 +51,7 @@ export default function PinDuzenle({
   /* Hangi görsel büyütülmüş — kalan/yeni listesindeki konumuyla. */
   const [buyuk, setBuyuk] = useState<{ tur: "kalan" | "yeni"; i: number; nota?: boolean } | null>(null);
   const [gonderiliyor, setGonderiliyor] = useState(false);
+  const [siliniyor, setSiliniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,6 +83,18 @@ export default function PinDuzenle({
     } catch (e) {
       setHata(e instanceof Error ? e.message : String(e));
     } finally { setGonderiliyor(false); }
+  };
+
+  const sil = async () => {
+    /* Geri alınamaz: pin, medyası ve yorumları gidiyor. Onay şart. */
+    if (!confirm(`"${pin.yerAdi}" pinin silinsin mi? Fotoğrafları ve yorumlarıyla birlikte gider, geri alınamaz.`)) return;
+    setSiliniyor(true); setHata(null);
+    try {
+      await pinSil(pin.id);
+      onSilindi();
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : String(e));
+    } finally { setSiliniyor(false); }
   };
 
   const alan = "px-4 py-3.5 border-b border-[var(--cizgi)]";
@@ -267,6 +281,15 @@ export default function PinDuzenle({
             {hata}
           </p>
         )}
+
+        {/* Silme en altta ve sessiz: yıkıcı işlem kaydetmeyle yan yana
+            durmamalı, yanlışlıkla basılır. */}
+        <div className="px-4 py-5">
+          <button onClick={sil} disabled={siliniyor || gonderiliyor}
+            className="w-full border-none bg-transparent p-0 text-[12.5px] text-[#921008] underline disabled:opacity-40">
+            {siliniyor ? "Siliniyor…" : "Bu pini sil"}
+          </button>
+        </div>
       </div>
 
       {buyuk && (buyuk.tur === "kalan" ? kalan[buyuk.i] : yeniler[buyuk.i]) && (

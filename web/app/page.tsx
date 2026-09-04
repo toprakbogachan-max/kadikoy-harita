@@ -401,6 +401,9 @@ function Uygulama() {
             onPinDegisti={(id) => setGonderi((g) => (g ? { ...g, id } : g))}
             onGirisIste={() => setGirisAcik(true)}
             onKisiAc={(k) => { setGonderi(null); setProfilKisi(k); setEkran("profil"); }}
+            /* Silinen pin artık yok: detayı kapat ve listeleri tazele,
+               yoksa harita ve akış silinmiş pini göstermeye devam eder. */
+            onPinSilindi={() => { setGonderi(null); setTazele((n) => n + 1); }}
           />
         )}
 
