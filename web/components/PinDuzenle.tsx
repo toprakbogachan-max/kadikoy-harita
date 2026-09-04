@@ -29,13 +29,25 @@ import {
  * Not aynı state'i düzenliyor — kapatınca listede de güncel.
  */
 function BuyukGorsel({
-  kaynak, not, onNot, onKapat,
+  kaynak, not, onNot, onKapat, notaOdaklan,
 }: {
   kaynak: { tip: "yol"; yol: string } | { tip: "dosya"; dosya: File };
   not: string;
   onNot: (v: string) => void;
   onKapat: () => void;
+  /* Nota dokunularak açıldıysa imleç doğrudan not alanına gitsin. Görsele
+     dokunularak açıldığında ODAKLANMIYOR: telefonda klavye açılıp görseli
+     örterdi, oysa oraya bakmak için açtın. */
+  notaOdaklan?: boolean;
 }) {
+  const notAlani = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!notaOdaklan) return;
+    const el = notAlani.current;
+    if (!el) return;
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
+  }, [notaOdaklan]);
   const video = kaynak.tip === "dosya" && kaynak.dosya.type.startsWith("video");
   /* Dosya için nesne URL'i burada üretiliyor ve sökülürken geri veriliyor —
      yoksa her açılışta bellekte bir blob birikirdi. */
@@ -81,6 +93,7 @@ function BuyukGorsel({
           Bu görselin notu
         </label>
         <textarea
+          ref={notAlani}
           value={not}
           onChange={(e) => onNot(e.target.value)}
           maxLength={120}
@@ -120,7 +133,7 @@ export default function PinDuzenle({
   const dosyaGirdi = useRef<HTMLInputElement>(null);
 
   /* Hangi görsel büyütülmüş — kalan/yeni listesindeki konumuyla. */
-  const [buyuk, setBuyuk] = useState<{ tur: "kalan" | "yeni"; i: number } | null>(null);
+  const [buyuk, setBuyuk] = useState<{ tur: "kalan" | "yeni"; i: number; nota?: boolean } | null>(null);
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
@@ -206,14 +219,17 @@ export default function PinDuzenle({
               </button>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 font-sayi text-[10.5px] text-murekkep2">yüklenmiş</div>
-                <input
-                  value={m.not}
-                  onChange={(e) => setKalan((l) => l.map((x, j) => (j === i ? { ...x, not: e.target.value } : x)))}
-                  onClick={(e) => e.stopPropagation()}
-                  maxLength={120}
-                  placeholder="Bu görselin notu (isteğe bağlı)"
-                  className="w-full rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] outline-none focus:border-jeton"
-                />
+                {/* Artık düzenlenebilir alan DEĞİL, özet. Dokununca büyük ekran
+                    açılıyor ve imleç oradaki not alanına gidiyor — tek satırlık
+                    kutuya 120 karakter sığmıyordu. */}
+                <div
+                  onClick={(e) => { e.stopPropagation(); setBuyuk({ tur: "kalan", i, nota: true }); }}
+                  className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
+                    m.not ? "text-murekkep" : "text-murekkep2"
+                  }`}
+                >
+                  {m.not || "Bu görselin notu (isteğe bağlı)"}
+                </div>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); setKalan((l) => l.filter((_, j) => j !== i)); }}
@@ -236,14 +252,14 @@ export default function PinDuzenle({
               </button>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 truncate text-[12px] text-murekkep2">{m.dosya.name}</div>
-                <input
-                  value={m.not}
-                  onChange={(e) => setYeniler((l) => l.map((x, j) => (j === i ? { ...x, not: e.target.value } : x)))}
-                  onClick={(e) => e.stopPropagation()}
-                  maxLength={120}
-                  placeholder="Bu görselin notu (isteğe bağlı)"
-                  className="w-full rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] outline-none focus:border-jeton"
-                />
+                <div
+                  onClick={(e) => { e.stopPropagation(); setBuyuk({ tur: "yeni", i, nota: true }); }}
+                  className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
+                    m.not ? "text-murekkep" : "text-murekkep2"
+                  }`}
+                >
+                  {m.not || "Bu görselin notu (isteğe bağlı)"}
+                </div>
               </div>
               <button onClick={(e) => { e.stopPropagation(); setYeniler((l) => l.filter((_, j) => j !== i)); }}
                 aria-label="Kaldır"
@@ -352,6 +368,7 @@ export default function PinDuzenle({
               : setYeniler((l) => l.map((x, j) => (j === buyuk.i ? { ...x, not: v } : x)))
           }
           onKapat={() => setBuyuk(null)}
+          notaOdaklan={buyuk.nota}
         />
       )}
 
