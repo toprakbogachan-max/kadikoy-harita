@@ -510,6 +510,78 @@ create or replace function places_nearby(
 $$;
 
 -- ============================================================
+--  7a. MEKAN AÇMA — kopya kayıt üretmeden
+-- ============================================================
+-- Gizli ('hidden') mekan RLS yüzünden istemciye görünmüyor ama coğrafi arama
+-- onu buluyor; istemci tarafında açılan kayıt kopya olurdu. Arama ve geri
+-- açma burada, tek çağrıda ve yarış olmadan yapılıyor.
+--
+-- security definer, dar yetkiyle: giriş şart, yalnızca 'hidden' geri açılıyor
+-- ('removed' asla — o moderasyon kararı), eşleşme için ad aynı ve mesafe
+-- 30 m'den yakın olmak zorunda, search_path sabit.
+
+create or replace function public.yer_bul_ya_da_olustur(
+  in_ad   text,
+  in_tur  place_category,
+  in_lat  double precision,
+  in_lng  double precision,
+  in_semt text default null
+) returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_kisi  uuid := auth.uid();
+  v_nokta geography := st_setsrid(st_point(in_lng, in_lat), 4326)::geography;
+  v_ad    text := lower(translate(btrim(in_ad),
+                        'ÇĞİÖŞÜÂÎÛçğıöşüâîû', 'CGIOSUAIUcgiosuaiu'));
+  v_id    uuid;
+  v_taban text;
+  v_slug  text;
+begin
+  if v_kisi is null then
+    raise exception 'Giriş gerekiyor.' using errcode = '42501';
+  end if;
+  if length(btrim(in_ad)) < 2 then
+    raise exception 'Mekan adı çok kısa.' using errcode = '22023';
+  end if;
+
+  -- Aynı adla, 30 m içinde kayıt var mı? Gizliler dahil.
+  select id into v_id
+    from places
+   where status in ('published', 'hidden')
+     and lower(translate(name, 'ÇĞİÖŞÜÂÎÛçğıöşüâîû', 'CGIOSUAIUcgiosuaiu')) = v_ad
+     and st_dwithin(geo, v_nokta, 30)
+   order by st_distance(geo, v_nokta)
+   limit 1;
+
+  if v_id is not null then
+    update places set status = 'published'
+     where id = v_id and status = 'hidden';
+    return v_id;
+  end if;
+
+  -- Yeni kayıt. Slug çakışırsa sona kısa bir ek.
+  v_taban := left(coalesce(nullif(btrim(regexp_replace(v_ad, '[^a-z0-9]+', '-', 'g'), '-'), ''), 'mekan'), 50);
+  v_slug  := v_taban;
+  for i in 1..5 loop
+    begin
+      insert into places (slug, name, category, neighborhood, geo, opening_hours, created_by)
+      values (v_slug, btrim(in_ad), in_tur,
+              coalesce(nullif(btrim(coalesce(in_semt, '')), ''), 'Kadıköy'),
+              v_nokta, null, v_kisi)
+      returning id into v_id;
+      return v_id;
+    exception when unique_violation then
+      v_slug := v_taban || '-' || substr(md5(random()::text), 1, 4);
+    end;
+  end loop;
+
+  raise exception 'Mekan eklenemedi, adı biraz değiştirip tekrar dene.';
+end $$;
+
+-- ============================================================
 --  7b. MEKAN ÖZETİ
 --  Mekan sayfasindaki "hizli bakis" ve dagilim bloklari.
 --  BRIEF: ortalama tek basina gosterilmiyor; dagilim + takip

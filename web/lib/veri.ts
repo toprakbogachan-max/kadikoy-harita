@@ -671,28 +671,21 @@ export interface YeniPin {
 export async function yerOlustur(
   ad: string, tur: PlaceCategory, lat: number, lng: number, semt?: string,
 ): Promise<string> {
-  const id = await benimKimligim();
-  if (!id) throw new Error("Giriş gerekiyor.");
-
-  /* slug çakışırsa sona kısa bir ek — places.slug unique */
-  const taban = aramaMetni(ad).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50)
-    || "mekan";
-  let slug = taban;
-  for (let deneme = 0; deneme < 5; deneme++) {
-    const { data, error } = await db.from("places").insert({
-      slug, name: ad.trim(), category: tur,
-      neighborhood: semt ?? "Kadıköy",
-      geo: `SRID=4326;POINT(${lng} ${lat})`,
-      opening_hours: null,
-      created_by: id,
-    }).select("id").single();
-
-    if (!error) return data.id;
-    /* 23505 = unique ihlali; slug tutulmuş, yeni ek dene */
-    if (error.code !== "23505") throw error;
-    slug = `${taban}-${Math.random().toString(36).slice(2, 6)}`;
-  }
-  throw new Error("Mekan eklenemedi, adı biraz değiştirip tekrar dene.");
+  /* Slug üretimi ve çakışma döngüsü artık SQL tarafında (göç 12).
+     Sebebi tek başına derli toplu olmak değil: gizli mekanları burada
+     göremiyoruz. Göç 11 sonrası 652 kayıt 'hidden' durumda ve RLS onları
+     istemciye vermiyor; Photon ise buluyor. Aynı yeri ikinci kez yaratmamak
+     için arama ve geri açma sunucuda, tek çağrıda, yarış olmadan yapılıyor. */
+  const { data, error } = await db.rpc("yer_bul_ya_da_olustur", {
+    in_ad: ad.trim(),
+    in_tur: tur,
+    in_lat: lat,
+    in_lng: lng,
+    in_semt: semt ?? null,
+  });
+  if (error) throw error;
+  if (!data) throw new Error("Mekan eklenemedi.");
+  return data as string;
 }
 
 /**
