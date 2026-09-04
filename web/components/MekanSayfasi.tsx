@@ -55,6 +55,12 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   /* Künye kaydedilince yerGetir tekrar çalışsın diye sayaç. */
   const [kunyeSayac, setKunyeSayac] = useState(0);
   const kapatDugmesi = useRef<HTMLButtonElement>(null);
+  /* Bir kişi üzerinden gelindiyse doğrudan "Buraya bırakılanlar"a kaydırılıyor:
+     birinin pinine dokunduysan mekanın kapak fotoğrafını değil ONUN notunu
+     görmek istiyorsun. */
+  const icerik = useRef<HTMLDivElement>(null);
+  const pinlerBasligi = useRef<HTMLDivElement>(null);
+  const kaydirildi = useRef(false);
 
   /* ---- sürükleme ----
      cek: parmak ekrandayken çekmecenin canlı konumu; null olması
@@ -202,6 +208,26 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
     kapatDugmesi.current?.focus({ preventScroll: true });
   }, []);
 
+  /* Kaydırma pinler YÜKLENDİKTEN sonra, çünkü öncesinde bölüm yerinde
+     değil ve hedefin konumu yanlış çıkıyor. Bir kez: kullanıcı sonra
+     yukarı kaydırırsa geri zıplamasın. */
+  useEffect(() => {
+    if (!oncelikliKisi || kaydirildi.current) return;
+    if (!siraliPinler.length) return;
+    const k = icerik.current;
+    const h = pinlerBasligi.current;
+    /* yer'den ÖNCE gelen pinler için: bu noktada gövde henüz iskelet,
+       ref'ler boş. yer bağımlılıkta olmasa efekt bir daha çalışmazdı. */
+    if (!k || !h) return;
+    kaydirildi.current = true;
+    setKademe("tam");
+    /* Bir kare bekleniyor: kademe "tam"a geçince kapsayıcı büyüyor,
+       offsetTop ondan önce okunursa yanlış yere kaydırıyor. */
+    requestAnimationFrame(() => {
+      k.scrollTo({ top: Math.max(0, h.offsetTop - 12), behavior: "smooth" });
+    });
+  }, [oncelikliKisi, siraliPinler.length, yer]);
+
   useEffect(() => {
     const el = (e: KeyboardEvent) => { if (e.key === "Escape") onKapat(); };
     window.addEventListener("keydown", el);
@@ -220,6 +246,11 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   const acik = acikMi(yer.saatler, t);
   const bugun = yer.saatler?.find((s) => s[0] === t.getDay());
   const pin = siraliPinler[Math.min(pinIndex, Math.max(0, siraliPinler.length - 1))];
+
+  /* Bu mekana kendim pin attım mı? Attıysam alt çubuktaki "Buraya pin at"
+     yanlış bilgi veriyordu — attığımı zaten biliyorum, görmek istediğim
+     kendi notum. */
+  const benimPinim = ben ? siraliPinler.find((p) => p.kisi === ben.id) ?? null : null;
 
   /* Kişi başı fiyat KÜNYEDEN değil pinlerden geliyor: pin formu zaten "ne
      ödedin" diye soruyor, aynı şeyi künyede ikinci kez sormak çelişki
@@ -312,7 +343,7 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
       </div>
       </div>
 
-      <div className={`min-h-0 flex-1 ${kademe === "yarim" ? "overflow-hidden" : "overflow-y-auto"}`}>
+      <div ref={icerik} className={`min-h-0 flex-1 ${kademe === "yarim" ? "overflow-hidden" : "overflow-y-auto"}`}>
         {/* ---- kapak: yalnızca serbest lisanslı referans görseli ---- */}
         {/* Kapak: önce en çok beğenilen pinin fotoğrafı, o yoksa Wikimedia
             referans görseli. Atıf yalnızca ikincisinde gösteriliyor —
@@ -386,11 +417,19 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
         )}
 
         {/* ---- buraya bırakılanlar: tek tek, oklar kartın kenarlarında ---- */}
-        <div className="mt-4 flex items-center justify-between px-4 pb-2.5">
+        <div ref={pinlerBasligi} className="mt-4 flex items-center justify-between px-4 pb-2.5">
           <div className="font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
             Buraya bırakılanlar
           </div>
-          {siraliPinler.length > 1 && (
+          {benimPinim && (
+            <button
+              onClick={() => onPinAt(yer)}
+              className="border-none bg-transparent p-0 font-tabela text-[10.5px] uppercase tracking-[0.1em] text-jeton"
+            >
+              + yine pin at
+            </button>
+          )}
+          {!benimPinim && siraliPinler.length > 1 && (
             <span className="font-sayi text-[11.5px] text-murekkep2">
               {pinIndex + 1}/{siraliPinler.length}
             </span>
@@ -578,11 +617,18 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
       )}
 
       <div className="flex shrink-0 gap-2 border-t border-[var(--cizgi)] bg-yuzey p-3">
+        {/* Zaten pin attıysam düğme kendi pinimi açıyor. Yeni bir ziyaret için
+            tekrar pin atmak hâlâ mümkün (şema aynı gün için tek pin diyor),
+            ama o artık ana eylem değil — alttaki "yine pin at" bağlantısında. */}
         <button
-          onClick={() => (ben ? onPinAt(yer) : onGirisIste())}
+          onClick={() =>
+            !ben ? onGirisIste()
+            : benimPinim ? onGonderiAc(benimPinim.id, siraliPinler.map((p) => p.id))
+            : onPinAt(yer)
+          }
           className="flex-1 rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white"
         >
-          Buraya pin at
+          {benimPinim ? "Pinini aç" : "Buraya pin at"}
         </button>
         <button
           onClick={async () => {
