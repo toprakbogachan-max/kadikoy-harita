@@ -20,10 +20,15 @@ interface Props {
  * Takip listesi artık sabit değil — follows tablosundan geliyor.
  */
 export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props) {
-  const { veri: kisiler } = useVeri<HikayeKisi[]>(hikayeSeridi, [], []);
+  const { veri: kisiler, yukleniyor } = useVeri<HikayeKisi[]>(hikayeSeridi, [], []);
 
-  /* Şerit yüklenirken de yer kaplasın, yoksa harita yukarı zıplıyor */
   if (!kisiler.length) {
+    /* Yükleme bittiyse ve kimse yoksa hiç çizmiyoruz. hikayeSeridi giriş
+       yapmamış kullanıcıya [] döndürüyor; eskiden bu durumda da yer tutucu
+       çiziliyordu, yani uygulamayı ilk açan birinin ekranının tepesinde
+       92px'lik boş gri blok duruyordu. */
+    if (!yukleniyor) return null;
+    /* Yüklenirken yer kaplasın, yoksa harita yukarı zıplıyor. */
     return <div className={`pano-doku shrink-0 border-b border-[var(--cizgi)] ${acik ? "h-[92px]" : "h-[26px]"}`} />;
   }
 
