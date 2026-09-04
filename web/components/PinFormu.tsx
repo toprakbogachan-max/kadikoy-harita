@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pinAt, yerOlustur, yerKoordinati, type YeniMedya } from "@/lib/veri";
+import { fotograflariHazirla } from "@/lib/fotograf";
 import { useVeri } from "@/lib/kanca";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
@@ -83,10 +84,21 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
     return () => window.removeEventListener("keydown", el);
   }, [onKapat, gonderiliyor]);
 
-  const dosyaEkle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const yeni = Array.from(e.target.files ?? []).map((d) => ({ dosya: d, not: "" }));
-    setMedyalar((m) => [...m, ...yeni]);
+  /* Fotoğraflar SEÇİLİRKEN küçültülüyor, yüklenirken değil: burada
+     açılamayan bir dosyayı (HEIC) hemen söyleyebiliyoruz, kullanıcı formu
+     doldurup Paylaş'a bastıktan sonra değil. */
+  const [hazirlaniyor, setHazirlaniyor] = useState(false);
+  const dosyaEkle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const secilen = Array.from(e.target.files ?? []);
     e.target.value = "";  /* aynı dosya tekrar seçilebilsin */
+    if (!secilen.length) return;
+    setHazirlaniyor(true); setHata(null);
+    try {
+      const hazir = await fotograflariHazirla(secilen);
+      setMedyalar((m) => [...m, ...hazir.map((d) => ({ dosya: d, not: "" }))]);
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : String(err));
+    } finally { setHazirlaniyor(false); }
   };
 
   const yerHazir = !!yer || (!!yeniYer && yeniAd.trim().length > 1);
@@ -237,9 +249,11 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
           <input ref={dosyaGirdi} type="file" accept="image/*,video/*" multiple
             onChange={dosyaEkle} className="hidden" />
-          <button onClick={() => dosyaGirdi.current?.click()}
-            className="w-full rounded-sm border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-[13px] text-murekkep2">
-            + Fotoğraf / video ekle
+          {/* Küçültme büyük bir fotoğrafta bir saniye sürebiliyor; sessiz
+              kalırsa dokunuş işlememiş gibi duruyor. */}
+          <button onClick={() => dosyaGirdi.current?.click()} disabled={hazirlaniyor}
+            className="w-full rounded-sm border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-[13px] text-murekkep2 disabled:opacity-50">
+            {hazirlaniyor ? "Fotoğraf hazırlanıyor…" : "+ Fotoğraf / video ekle"}
           </button>
           <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
             Birden fazla ekleyebilirsin; her birine ayrı not yazabilirsin.

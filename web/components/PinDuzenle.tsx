@@ -7,6 +7,7 @@ import {
   Cip, Onizleme, SENARYOLAR, SIKLIKLAR, TEKRARLAR, METIN_MIN, METIN_MAX,
 } from "./PinFormu";
 import BuyukGorsel from "./BuyukGorsel";
+import { fotograflariHazirla } from "@/lib/fotograf";
 
 /** Yüklenmiş medya video mu — kırpma yalnızca fotoğraf için. */
 function kalanVideo(yol: string, pin: Pin): boolean {
@@ -64,6 +65,21 @@ export default function PinDuzenle({
     window.addEventListener("keydown", el);
     return () => window.removeEventListener("keydown", el);
   }, [onKapat, gonderiliyor]);
+
+  /* Pin atma formuyla aynı: fotoğraf seçilirken küçültülüyor. */
+  const [hazirlaniyor, setHazirlaniyor] = useState(false);
+  const dosyaEkle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const secilen = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!secilen.length) return;
+    setHazirlaniyor(true); setHata(null);
+    try {
+      const hazir = await fotograflariHazirla(secilen);
+      setYeniler((l) => [...l, ...hazir.map((d) => ({ dosya: d, not: "" }))]);
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : String(err));
+    } finally { setHazirlaniyor(false); }
+  };
 
   const medyaSayisi = kalan.length + yeniler.length;
   const gecerli =
@@ -204,15 +220,13 @@ export default function PinDuzenle({
           ))}
 
           <input ref={dosyaGirdi} type="file" accept="image/*,video/*" multiple
-            onChange={(e) => {
-              const d = Array.from(e.target.files ?? []).map((f) => ({ dosya: f, not: "" }));
-              setYeniler((l) => [...l, ...d]);
-              e.target.value = "";
-            }}
+            onChange={dosyaEkle}
             className="hidden" />
-          <button onClick={() => dosyaGirdi.current?.click()}
-            className="w-full rounded-sm border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-[13px] text-murekkep2">
-            + Fotoğraf / video ekle
+          {/* Küçültme büyük bir fotoğrafta bir saniye sürebiliyor; sessiz
+              kalırsa dokunuş işlememiş gibi duruyor. */}
+          <button onClick={() => dosyaGirdi.current?.click()} disabled={hazirlaniyor}
+            className="w-full rounded-sm border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-[13px] text-murekkep2 disabled:opacity-50">
+            {hazirlaniyor ? "Fotoğraf hazırlanıyor…" : "+ Fotoğraf / video ekle"}
           </button>
         </div>
 
