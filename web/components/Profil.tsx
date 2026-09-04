@@ -8,6 +8,7 @@ import { useOturum } from "@/lib/oturum";
 import type { Yer, Pin, Kisi, Liste } from "@/lib/model";
 import Avatar from "./Avatar";
 import MiniHarita from "./MiniHarita";
+import ListeSayfasi from "./ListeSayfasi";
 
 export default function Profil({
   kullaniciAdi,
@@ -37,6 +38,9 @@ export default function Profil({
   const kimlik = kisi?.id ?? "";
   const { veri: pinleri } = useVeri<Pin[]>(
     () => (kimlik ? kisininPinleri(kimlik) : Promise.resolve([])), [kimlik], []);
+  /* Açık liste id ile değil NESNE ile tutuluyor: Liste.yerler zaten elimizde,
+     tekrar sorgu atmaya gerek yok. */
+  const [acikListe, setAcikListe] = useState<Liste | null>(null);
   const { veri: listeleri } = useVeri<Liste[]>(
     () => (kimlik ? kisininListeleri(kimlik) : Promise.resolve([])), [kimlik], []);
   const { veri: takipte, yukleniyor: takipYukleniyor } = useVeri<boolean>(
@@ -73,6 +77,17 @@ export default function Profil({
   const takipDurumu = takipYerel ?? takipte;
 
   const baslik = "px-4 pb-2.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2";
+
+  if (acikListe) {
+    return (
+      <ListeSayfasi
+        liste={acikListe}
+        sahibi={benim ? undefined : kisi.ad}
+        onKapat={() => setAcikListe(null)}
+        onYerAc={onYerAc}
+      />
+    );
+  }
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto bg-kagit">
@@ -162,15 +177,16 @@ export default function Profil({
           {listeleri.map((l, i) => {
             const ilk = l.yerler.slice(0, 3);
             return (
-              <div
+              <button
                 key={l.id}
+                onClick={() => setAcikListe(l)}
                 style={{
                   ["--pin" as string]: "#B8801A",
                   ["--pin-isik" as string]: "#E0A33E",
                   ["--pin-koyu" as string]: "#8A5E0E",
                   transform: `rotate(${egim(i)}deg)`,
                 }}
-                className="relative w-[158px] shrink-0 rounded-sm bg-[#EFE6CC] px-[3px] pt-[3px] shadow-kagit"
+                className="relative w-[158px] shrink-0 rounded-sm border-none bg-[#EFE6CC] px-[3px] pt-[3px] shadow-kagit"
               >
                 <span className="absolute -top-[5px] left-1/2 size-2.5 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
                 <div className="flex h-[60px] overflow-hidden rounded-sm">
@@ -182,7 +198,7 @@ export default function Profil({
                   <div className="mb-1 text-[13px] font-semibold leading-tight">{l.baslik}</div>
                   <div className="font-sayi text-[10.5px] text-murekkep2">{l.yerler.length} mekan</div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

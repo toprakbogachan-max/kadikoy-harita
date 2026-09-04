@@ -5,6 +5,7 @@ import { listeSil } from "@/lib/veri";
 import type { Pin, Yer, Liste } from "@/lib/model";
 import { igneStil, egim, fotoZemin, simgeSvg, zaman } from "@/lib/gorsel";
 import Avatar from "./Avatar";
+import ListeSayfasi from "./ListeSayfasi";
 
 interface Props {
   tur: "kaydettiklerim" | "begendiklerim" | "listelerim";
@@ -27,6 +28,7 @@ const BASLIK = {
 export default function Arsiv({
   tur, pinler, yerler, listeler, onKapat, onYerAc, onGonderiAc, onListeOlustur,
 }: Props) {
+  const [acikListe, setAcikListe] = useState<Liste | null>(null);
   const [silinen, setSilinen] = useState<Set<string>>(new Set());
   const [hata, setHata] = useState<string | null>(null);
 
@@ -39,6 +41,16 @@ export default function Arsiv({
   const gorunenListeler = listeler.filter((l) => !silinen.has(l.id));
   const adet = tur === "kaydettiklerim" ? yerler.length
     : tur === "begendiklerim" ? pinler.length : gorunenListeler.length;
+
+  if (acikListe) {
+    return (
+      <ListeSayfasi
+        liste={acikListe}
+        onKapat={() => setAcikListe(null)}
+        onYerAc={onYerAc}
+      />
+    );
+  }
 
   return (
     <div role="dialog" aria-modal="true" aria-label={BASLIK[tur]}
@@ -137,17 +149,23 @@ export default function Arsiv({
                                ["--pin-koyu" as string]: "#8A5E0E", transform: `rotate(${egim(i)}deg)` }}
                       className="relative rounded-sm bg-[#EFE6CC] p-[3px] shadow-kagit">
                     <Igne />
-                    <div className="flex h-[54px] overflow-hidden rounded-sm">
-                      {l.yerler.slice(0, 4).map((y) => (
-                        <div key={y.id} className="flex-1" style={{ background: fotoZemin(y.tur) }} />
-                      ))}
-                    </div>
+                    {/* Kart gövdesi listeyi açıyor; silme düğmesi DIŞINDA
+                        kalıyor, yoksa silmeye dokunmak listeyi de açardı. */}
+                    <button onClick={() => setAcikListe(l)}
+                            className="block w-full border-none bg-transparent p-0 text-left">
+                      <div className="flex h-[54px] overflow-hidden rounded-sm">
+                        {l.yerler.slice(0, 4).map((y) => (
+                          <div key={y.id} className="flex-1" style={{ background: fotoZemin(y.tur) }} />
+                        ))}
+                      </div>
+                    </button>
                     <div className="flex items-start gap-2 px-2 pb-2.5 pt-2">
-                      <div className="min-w-0 flex-1">
+                      <button onClick={() => setAcikListe(l)}
+                              className="min-w-0 flex-1 border-none bg-transparent p-0 text-left">
                         <div className="text-[13.5px] font-semibold leading-tight">{l.baslik}</div>
                         {l.not && <div className="mt-0.5 text-[11.5px] text-murekkep2">{l.not}</div>}
                         <div className="mt-1 font-sayi text-[10.5px] text-murekkep2">{l.yerler.length} mekan</div>
-                      </div>
+                      </button>
                       <button
                         onClick={async () => {
                           if (!confirm(`“${l.baslik}” listesi silinsin mi?`)) return;
