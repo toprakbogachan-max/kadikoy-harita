@@ -72,7 +72,7 @@ export default function BuyukGorsel({
          className="absolute inset-0 z-[48] flex flex-col bg-[#0C0905]">
       <div className="flex shrink-0 items-center justify-between p-3">
         <span className="font-tabela text-[10.5px] uppercase tracking-[0.12em] text-white/45">
-          {kirpilabilir ? "sürükle · yakınlaştır" : ""}
+          {kirpilabilir ? "sürükle · büyüt küçült" : ""}
         </span>
         <button onClick={onKapat} aria-label="Kapat"
           className="size-[34px] rounded-sm border-none bg-white/15 text-[17px] leading-none text-white">
@@ -186,10 +186,18 @@ function Kirpici({
 }) {
   const cerceve = useRef<HTMLDivElement>(null);
   const gorsel = useRef<HTMLImageElement>(null);
+  /* Zemin: fotoğraf çerçeveyi doldurmadığında kalan boşluk. Düz renk yerine
+     fotoğrafın bulanık kopyası — kart tam kanamalı duruyor ve boşluk kazara
+     bırakılmış gibi görünmüyor. */
+  const zemin = useRef<HTMLImageElement>(null);
   useDosyaSrc(dosya, gorsel);
+  useDosyaSrc(dosya, zemin);
   const [olcu, setOlcu] = useState<{ en: number; boy: number } | null>(null);
   const [dogal, setDogal] = useState<{ en: number; boy: number } | null>(null);
-  const [yakin, setYakin] = useState(1);
+  /* null = kullanıcı kaydırıcıya dokunmadı; varsayılan aşağıda TÜMÜ SIĞSIN
+     olarak türetiliyor. Taban "çerçeveyi doldur" olduğu için başlangıçta
+     geniş fotoğraflar ortadan dar bir dilim hâlinde görünüyordu. */
+  const [yakinEl, setYakinEl] = useState<number | null>(null);
   /* null = kullanıcı henüz oynatmadı. Başlangıç kadrajı ORTA: sıfırdan
      başlayınca geniş bir fotoğrafın sol kenarı çerçeveleniyordu. Efektte
      ortalamak yerine türetiliyor, yoksa fazladan bir render turu gerekirdi. */
@@ -208,33 +216,36 @@ function Kirpici({
     return () => go.disconnect();
   }, []);
 
+  /* Taban ölçek "çerçeveyi doldur" (kapla). Kaydırıcının 1'i budur; altı
+     fotoğrafı küçültüp tamamını çerçeveye sığdırıyor, üstü yakınlaştırıyor. */
   const taban = olcu && dogal ? Math.max(olcu.en / dogal.en, olcu.boy / dogal.boy) : 1;
+  const sigdir = olcu && dogal ? Math.min(olcu.en / dogal.en, olcu.boy / dogal.boy) : 1;
+  const enAz = sigdir / taban;
+  const yakin = yakinEl ?? enAz;
   const en = dogal ? dogal.en * taban * yakin : 0;
   const boy = dogal ? dogal.boy * taban * yakin : 0;
   const kay = kayEl ?? (olcu ? { x: (olcu.en - en) / 2, y: (olcu.boy - boy) / 2 } : { x: 0, y: 0 });
 
+  /* Görsel bir eksende çerçeveden KÜÇÜKSE o eksende sürüklenmiyor, ortada
+     duruyor: sınır ters dönüp fotoğrafı kenara yapıştırıyordu. */
+  const eksen = (kenar: number, olcu2: number, v: number) =>
+    olcu2 <= kenar ? (kenar - olcu2) / 2 : Math.min(0, Math.max(kenar - olcu2, v));
   const sinirla = (x: number, y: number) => {
     if (!olcu) return { x, y };
-    return {
-      x: Math.min(0, Math.max(olcu.en - en, x)),
-      y: Math.min(0, Math.max(olcu.boy - boy, y)),
-    };
+    return { x: eksen(olcu.en, en, x), y: eksen(olcu.boy, boy, y) };
   };
 
   /* Yakınlaştırma çerçevenin ORTASINI sabit tutuyor; sol üstü sabit tutsaydı
      görsel kaydırıcıyı her oynatışta kayıyormuş gibi duruyordu. */
   const yakinDegis = (yeni: number) => {
-    if (!olcu || !dogal) { setYakin(yeni); return; }
+    if (!olcu || !dogal) { setYakinEl(yeni); return; }
     const k = yeni / yakin;
     const x = olcu.en / 2 - (olcu.en / 2 - kay.x) * k;
     const y = olcu.boy / 2 - (olcu.boy / 2 - kay.y) * k;
     const yeniEn = dogal.en * taban * yeni;
     const yeniBoy = dogal.boy * taban * yeni;
-    setYakin(yeni);
-    setKayEl({
-      x: Math.min(0, Math.max(olcu.en - yeniEn, x)),
-      y: Math.min(0, Math.max(olcu.boy - yeniBoy, y)),
-    });
+    setYakinEl(yeni);
+    setKayEl({ x: eksen(olcu.en, yeniEn, x), y: eksen(olcu.boy, yeniBoy, y) });
   };
 
   const surukle = useRef<{ x: number; y: number; kx: number; ky: number } | null>(null);
@@ -267,6 +278,17 @@ function Kirpici({
       /* JPEG saydamlığı siyaha çeviriyor; PNG'den gelen boşluk için beyaz. */
       c.fillStyle = "#fff";
       c.fillRect(0, 0, tuval.width, tuval.height);
+      /* Önce bulanık zemin — ekrandaki çerçevede ne görüyorsan o. Tuvali
+         kaplayacak ölçek ayrıca hesaplanıyor: kadrajın ölçeğiyle çizilseydi
+         fotoğraf küçükken zemin de boşluk bırakırdı. filter desteklenmezse
+         (eski Safari) bulanıksız kaplama kalıyor, yine de boşluk çıkmıyor. */
+      const zk = Math.max(tuval.width / dogal.en, tuval.height / dogal.boy) * 1.1;
+      const ze = dogal.en * zk;
+      const zb = dogal.boy * zk;
+      c.save();
+      c.filter = `blur(${Math.round(tuval.width / 26)}px)`;
+      c.drawImage(g, (tuval.width - ze) / 2, (tuval.height - zb) / 2, ze, zb);
+      c.restore();
       c.drawImage(g, kay.x * k, kay.y * k, en * k, boy * k);
       const parca: Blob | null = await new Promise((ver) =>
         tuval.toBlob((b) => ver(b), "image/jpeg", 0.86),
@@ -296,6 +318,18 @@ function Kirpici({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            ref={zemin}
+            crossOrigin={url ? "anonymous" : undefined}
+            src={url ?? undefined}
+            alt=""
+            aria-hidden
+            draggable={false}
+            /* scale-110: bulanıklık kenarlarda saydamlaşıyor, biraz taşırınca
+               çerçevenin köşelerinde açık şerit kalmıyor. */
+            className="pointer-events-none absolute inset-0 size-full scale-110 select-none object-cover blur-xl"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             ref={gorsel}
             /* src'den ÖNCE: yüklenmiş bir görseli tuvale çizmek CORS izni
                istiyor, izinsiz yüklenen görsel tuvali kirletiyor ve toBlob
@@ -321,7 +355,7 @@ function Kirpici({
           <input
             type="range"
             aria-label="Yakınlaştır"
-            min={1}
+            min={enAz}
             max={EN_COK_YAKIN}
             step={0.01}
             value={yakin}
