@@ -352,6 +352,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           onNot={(v) => setMedyalar((l) => l.map((x, j) => (j === buyuk.i ? { ...x, not: v } : x)))}
           onKapat={() => setBuyuk(null)}
           notaOdaklan={buyuk.nota}
+          onKirp={(d) => setMedyalar((l) => l.map((x, j) => (j === buyuk.i ? { ...x, dosya: d } : x)))}
         />
       )}
 
@@ -398,15 +399,22 @@ function SeciliYer({ yer, onKaldir }: { yer: Yer; onKaldir: () => void }) {
 /**
  * Seçilen dosyanın küçük önizlemesi — video ise ilk kare yerine ▶ rozeti.
  *
- * URL useMemo ile türetiliyor, efektte setState yok: efektin işi yalnızca
- * temizlik. Aksi halde her önizleme fazladan bir render turu açıyordu.
- * revokeObjectURL şart — yoksa seçilen her dosya sekme kapanana kadar
- * bellekte kalır.
+ * URL useMemo ile türetilmiyor: StrictMode efektleri iki kez çalıştırıyor,
+ * aradaki temizlik URL'i iptal ediyor ve memo yeniden hesaplamadığı için
+ * önizleme ölü bir blob'a bakıp kalıyordu (kutu boş görünüyordu). Efektte
+ * atanınca ikinci tur yenisini kuruyor. revokeObjectURL şart — yoksa seçilen
+ * her dosya sekme kapanana kadar bellekte kalır.
  */
 export function Onizleme({ dosya }: { dosya: File }) {
   const video = dosya.type.startsWith("video");
-  const url = useMemo(() => (video ? null : URL.createObjectURL(dosya)), [dosya, video]);
-  useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
+  const gorsel = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    const el = gorsel.current;
+    if (!el || video) return;
+    const u = URL.createObjectURL(dosya);
+    el.src = u;
+    return () => URL.revokeObjectURL(u);
+  }, [dosya, video]);
 
   if (video) {
     return (
@@ -416,5 +424,5 @@ export function Onizleme({ dosya }: { dosya: File }) {
     );
   }
   /* eslint-disable-next-line @next/next/no-img-element */
-  return <img src={url!} alt="" className="size-[52px] shrink-0 rounded-sm object-cover" />;
+  return <img ref={gorsel} alt="" className="size-[52px] shrink-0 rounded-sm object-cover" />;
 }

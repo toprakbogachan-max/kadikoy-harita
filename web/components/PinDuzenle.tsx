@@ -307,6 +307,13 @@ export default function PinDuzenle({
           }
           onKapat={() => setBuyuk(null)}
           notaOdaklan={buyuk.nota}
+          /* Yalnızca yeni eklenen dosyalar kırpılabiliyor; yüklenmiş medyayı
+             kırpmak yeniden yükleme demek, o ayrı bir iş. */
+          onKirp={
+            buyuk.tur === "kalan"
+              ? undefined
+              : (d) => setYeniler((l) => l.map((x, j) => (j === buyuk.i ? { ...x, dosya: d } : x)))
+          }
         />
       )}
 
