@@ -211,8 +211,11 @@ export default function Profil({
       )}
 
       <div className={baslik}>Pinler</div>
+      {/* İki sütun yerine üç: kartlar küçülüyor ve ekranda daha çok pin
+          görünüyor. İçerideki her şey (iğne başı, simge, ad) aynı oranda
+          küçültüldü, yoksa dar kartta yazı taşıyordu. */}
       {pinleri.length ? (
-        <div className="grid grid-cols-2 gap-3 px-4 pb-5">
+        <div className="grid grid-cols-3 gap-2.5 px-4 pb-5">
           {pinleri.map((p, i) => {
             return (
               <button
@@ -223,13 +226,13 @@ export default function Profil({
                 style={{ ...igneStil(p.yerTuru), transform: `rotate(${egim(i)}deg)` }}
                 className="relative aspect-[0.86] rounded-sm border-none bg-[var(--kag)] p-[3px] shadow-kagit"
               >
-                <span className="absolute -top-[5px] left-1/2 z-[2] size-2.5 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
+                <span className="absolute -top-1 left-1/2 z-[2] size-2 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
                 <div
                   className="relative grid size-full place-items-center overflow-hidden rounded-sm"
                   style={{ background: fotoZemin(p.yerTuru) }}
                 >
-                  <div className="opacity-30" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 34) }} />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(0,0,0,.6)] to-transparent px-2 pb-[7px] pt-4 text-left text-[11.5px] font-semibold leading-tight text-white">
+                  <div className="opacity-30" dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 26) }} />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(0,0,0,.6)] to-transparent px-1.5 pb-1.5 pt-3.5 text-left text-[10px] font-semibold leading-tight text-white">
                     {p.yerAdi}
                   </div>
                 </div>
