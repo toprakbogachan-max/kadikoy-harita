@@ -20,7 +20,7 @@ import PaylasimKarti from "@/components/PaylasimKarti";
 import Bildirimler from "@/components/Bildirimler";
 import KonumDugmesi from "@/components/KonumDugmesi";
 import { useVeri } from "@/lib/kanca";
-import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim, okunmamisBildirim } from "@/lib/veri";
+import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim, okunmamisBildirim, takiptekilerinYerleri } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { jetonGradyanlari } from "@/lib/gorsel";
@@ -60,7 +60,14 @@ export default function Sayfa() {
 function Uygulama() {
   const [ekran, setEkran] = useState<Ekran>("harita");
   const [bolge, setBolge] = useState("KADIKÖY");
-  const [filtre, setFiltre] = useState("acik");
+  /* Varsayılan artık "acik" DEĞİL. Saat bilgisi olmayan mekan is_open_now'da
+     null dönüyor ve "şu an açık" sorgusundan eleniyor — 412 mekanın 281'i
+     böyle. Yani uygulamayı ilk açan biri mekanların üçte ikisini hiç görmüyor
+     ve neden görmediğini anlayamıyordu. */
+  const [filtre, setFiltre] = useState("hepsi");
+  /* Hikâye şeridi haritaya dokunulunca kapanıyor: 92px yer açıyor, harita
+     ekranın %54'ünden ~%70'ine çıkıyor. Şeride dokunmak geri açıyor. */
+  const [seritAcik, setSeritAcik] = useState(true);
   const [kisiFiltre, setKisiFiltre] = useState<string | null>(null);
   const [secili, setSecili] = useState<string | null>(null);
   const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
@@ -98,6 +105,16 @@ function Uygulama() {
   const { veri: gorunenler, yukleniyor, hata } = useVeri<Yer[]>(
     async () => {
       if (kisiFiltre) return kisininYerleri(kisiFiltre, sorgu);
+      /* Takip filtresi yarıçapa bakmıyor: takip ettiklerinin pinlediği her
+         yeri görmek istersin, ekranın neresine düştüğünü değil. */
+      if (filtre === "takip") return takiptekilerinYerleri();
+      /* "Pinli": uygulamanın asıl içeriği. places_nearby zaten pin_count'a
+         göre sıralıyor, yani pinliler ilk satırlar — geniş çekip süzmek
+         ayrı bir sorgudan ucuz ve is_open bilgisini de koruyor. */
+      if (filtre === "pinli") {
+        const hepsi = await yerleriGetir({ ...sorgu, yaricapM: 4000, limit: 120, kategori: null, sadeceAcik: false });
+        return hepsi.filter((y) => (y.pinSayisi ?? 0) > 0);
+      }
       if (filtre === "kaydettiklerim") {
         const idler = new Set(await kaydettiklerim());
         if (!idler.size) return [];
@@ -189,7 +206,12 @@ function Uygulama() {
               </div>
             </header>
 
-            <HikayeSeridi secili={kisiFiltre} onSec={kisiSec} />
+            <HikayeSeridi
+              secili={kisiFiltre}
+              onSec={kisiSec}
+              acik={seritAcik}
+              onAc={() => setSeritAcik(true)}
+            />
 
             <div className="relative min-h-0 flex-1 overflow-hidden bg-su">
               <Harita
@@ -198,6 +220,7 @@ function Uygulama() {
                 onYerSec={setSecili}
                 onBolgeDegisti={setBolge}
                 onAlanDegisti={alaniGuncelle}
+                onEtkilesim={() => setSeritAcik(false)}
                 konum={konum}
                 konumaGit={konumaGit}
               />
@@ -230,16 +253,26 @@ function Uygulama() {
                 mesaj={
                   kisiFiltre
                     ? "Bu kişinin şu filtrede pinlediği yer yok."
-                    : filtre === "kaydettiklerim"
+                    : filtre === "pinli"
+                      ? "Bu çevrede henüz kimsenin pin attığı yer yok."
+                      : filtre === "takip"
+                      ? ben ? "Takip ettiklerin henüz hiçbir yere pin atmamış." : "Takip ettiklerini görmek için giriş yap."
+                      : filtre === "kaydettiklerim"
                       ? ben ? "Henüz bir yer kaydetmedin." : "Kaydettiklerini görmek için giriş yap."
                       : filtre === "acik"
                         ? "Şu an açık hiçbir yer yok. “Hepsi”ne bakabilirsin."
                         : "Bu kategoride yer yok."
                 }
               />
-            </div>
 
-            <FiltreCipleri secili={filtre} onSec={setFiltre} />
+              {/* Filtreler haritanın ÜZERİNDE yüzüyor, altında ayrı bir satır
+                  değil: 64px'lik satır yerleşimden çıkınca harita %49'dan
+                  ~%66'ya çıkıyor. Konum düğmesi de çakışmasın diye yukarı
+                  kaydırıldı (KonumDugmesi içindeki bottom değeri). */}
+              <div className="absolute inset-x-0 bottom-0 z-[4]">
+                <FiltreCipleri secili={filtre} onSec={setFiltre} />
+              </div>
+            </div>
           </>
         )}
 

@@ -471,6 +471,54 @@ export async function yerKoordinati(id: string): Promise<{ lat: number; lng: num
   return { lat, lng };
 }
 
+/**
+ * Takip ettiklerimin pinlediği mekanlar — haritadaki "Takip ettiklerim" çipi.
+ *
+ * Yarıçapa bakmıyor bilerek: takip ettiğin dört kişinin dokuz yeri varsa
+ * hepsini görmek istersin, ekranın neresine düştüklerini değil.
+ *
+ * Koordinat artık doğrudan geliyor (göç 10'un lat/lng alanları); önceden
+ * places_nearby'yi geniş yarıçapla çekip süzmek gerekiyordu.
+ */
+export async function takiptekilerinYerleri(): Promise<Yer[]> {
+  const id = await benimKimligim();
+  if (!id) return [];
+
+  const { data: takipler, error: th } = await db
+    .from("follows").select("following_id").eq("follower_id", id);
+  if (th) throw th;
+  const kimler = (takipler ?? []).map((t) => t.following_id as string);
+  if (!kimler.length) return [];
+
+  const { data, error } = await db
+    .from("pins")
+    .select("place_id, places!inner(id, slug, name, category, neighborhood, pin_count, cover_url, cover_path, lat, lng)")
+    .in("author_id", kimler)
+    .eq("status", "published");
+  if (error) throw error;
+
+  interface HamYer {
+    id: string; slug: string; name: string; category: PlaceCategory;
+    neighborhood: string | null; pin_count: number;
+    cover_url: string | null; cover_path: string | null;
+    lat: number | null; lng: number | null;
+  }
+  /* Aynı mekana birden fazla kişi pin atmış olabilir; harita tek işaret ister. */
+  const tekil = new Map<string, HamYer>();
+  for (const satir of (data ?? []) as unknown as { places: HamYer }[]) {
+    if (satir.places) tekil.set(satir.places.id, satir.places);
+  }
+
+  return [...tekil.values()].map((p): Yer => ({
+    id: p.id, slug: p.slug, ad: p.name, tur: p.category,
+    semt: p.neighborhood ?? "Kadıköy",
+    lat: p.lat ?? 0, lng: p.lng ?? 0,
+    saatler: null,
+    pinSayisi: p.pin_count,
+    kapak: kapakSec(p.cover_path, p.cover_url).url,
+  }));
+}
+
 export async function kisiAra(q: string, limit = 12): Promise<Kisi[]> {
   const n = aramaMetni(q.trim());
   if (n.length < 2) return [];

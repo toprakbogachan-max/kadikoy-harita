@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 /* MapLibre v6'da varsayılan export yok — isim alanı olarak alınır */
 import * as maplibregl from "maplibre-gl";
 import type { LayerSpecification } from "maplibre-gl";
@@ -13,12 +13,19 @@ import "maplibre-gl/dist/maplibre-gl.css";
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 import type { Yer } from "@/lib/model";
 import type { Konum } from "@/lib/konum";
-import { jetonSVG } from "@/lib/gorsel";
+import { jetonSVG, noktaSVG } from "@/lib/gorsel";
 
 const HARITA_STILI =
   process.env.NEXT_PUBLIC_MAP_STYLE ?? "https://tiles.openfreemap.org/styles/liberty";
 
 const POPULER_ESIK = 2;
+
+/* Pini olmayan mekanlar bu yakınlığın altında HİÇ çizilmiyor.
+   Sebebi: altlık harita onları zaten etiketliyor, jeton koymak aynı bilgiyi
+   ikinci kez söylüyor ve haritayı okunmaz yapıyor. Yakınlaşınca sessiz
+   nokta olarak beliriyorlar — dokunup mekan sayfasını açmak, oraya ilk
+   pini atmak için. */
+const PINSIZ_GORUNUR_ZOOM = 16;
 
 /** Yakınlaşmaya göre uygun isim ölçeği: sokakta mahalle, uzakta şehir. */
 function uygunSiniflar(z: number): string[] {
@@ -43,13 +50,19 @@ interface Props {
   konum?: Konum | null;
   /** konuma odaklanma isteği; sayı artınca harita oraya uçuyor */
   konumaGit?: number;
+  /** kullanıcı haritayı sürüklemeye/yakınlaştırmaya başladı */
+  onEtkilesim?: () => void;
 }
 
 export default function Harita({
   gorunenler, secili, onYerSec, onBolgeDegisti, onAlanDegisti, konum, konumaGit = 0,
+  onEtkilesim,
 }: Props) {
   const kapsayici = useRef<HTMLDivElement>(null);
   const harita = useRef<maplibregl.Map | null>(null);
+  /* Eşik geçildi mi — state, çünkü marker efektinin yeniden koşması gerekiyor.
+     Her zoom olayında değil, yalnızca eşik DEĞİŞTİĞİNDE yazılıyor. */
+  const [yakin, setYakin] = useState(false);
   const markerlar = useRef<Record<string, maplibregl.Marker>>({});
   const yerAdKatmanlari = useRef<string[]>([]);
   const benimIsaret = useRef<maplibregl.Marker | null>(null);
@@ -60,10 +73,12 @@ export default function Harita({
   const onSecRef = useRef(onYerSec);
   const onBolgeRef = useRef(onBolgeDegisti);
   const onAlanRef = useRef(onAlanDegisti);
+  const onEtkilesimRef = useRef(onEtkilesim);
   useEffect(() => {
     onSecRef.current = onYerSec;
     onBolgeRef.current = onBolgeDegisti;
     onAlanRef.current = onAlanDegisti;
+    onEtkilesimRef.current = onEtkilesim;
   });
 
   /* ---- haritayı bir kez kur ---- */
@@ -84,6 +99,24 @@ export default function Harita({
       },
     });
     harita.current = m;
+
+    /* Eşik geçişini izliyoruz. setState olay işleyicisinde, efekt gövdesinde
+       değil; ve yalnızca değer gerçekten değişince yazılıyor, yoksa her
+       zoom karesinde render tetiklenirdi. */
+    const zoomIzle = () => {
+      const y = m.getZoom() >= PINSIZ_GORUNUR_ZOOM;
+      setYakin((onceki) => (onceki === y ? onceki : y));
+    };
+    zoomIzle();
+    m.on("zoom", zoomIzle);
+
+    /* Kullanıcı haritayla uğraşmaya başladığında hikâye şeridi kapanıyor.
+       "movestart" DEĞİL "dragstart"/"zoomstart": movestart programlı
+       uçuşlarda da tetikleniyor (konuma git, mekana odaklan) ve şerit
+       kullanıcı dokunmadan kapanırdı. */
+    const etkilesim = () => onEtkilesimRef.current?.();
+    m.on("dragstart", etkilesim);
+    m.on("zoomstart", etkilesim);
     if (process.env.NODE_ENV === "development") {
       (window as unknown as { __harita?: unknown }).__harita = m;  // hata ayıklama
     }
@@ -269,7 +302,11 @@ export default function Harita({
        değişebiliyor. Eskiden 12 sabit mekan gizlenip gösteriliyordu; şimdi
        kümede olmayan marker haritadan SÖKÜLÜYOR, yoksa filtre değiştikçe
        DOM'da yüzlerce ölü marker birikir. */
-    const gelen = new Set(gorunenler.map((y) => y.id));
+    /* Pinsizler eşiğin altında hiç çizilmiyor — soru buydu: pini olmayan
+       mekan haritada neden dursun? Yakından, ilk pini atılabilsin diye. */
+    const cizilecek = gorunenler.filter((y) => (y.pinSayisi ?? 0) > 0 || yakin);
+
+    const gelen = new Set(cizilecek.map((y) => y.id));
     for (const [id, mk] of Object.entries(markerlar.current)) {
       if (!gelen.has(id)) {
         mk.remove();
@@ -277,7 +314,7 @@ export default function Harita({
       }
     }
 
-    gorunenler.forEach((y) => {
+    cizilecek.forEach((y) => {
       /* "açık mı" veritabanında hesaplanıyor (is_open_now, Europe/Istanbul).
          Üç durum olduğu gibi jetona geçiyor: null'u "kapalı"ya indirgemek
          bilmediğimiz şeyi biliyormuş gibi göstermek olurdu. */
@@ -301,17 +338,23 @@ export default function Harita({
           .setLngLat([y.lng, y.lat])
           .addTo(m);
       }
+      const pinli = (y.pinSayisi ?? 0) > 0;
       const el = mk.getElement();
+      el.classList.toggle("nokta", !pinli && !seciliMi);
       const ic = el.querySelector(".jeton-ic");
-      if (ic) ic.innerHTML = jetonSVG(y, acik, populer, seciliMi);
+      /* Pinsiz mekan jeton değil nokta: hiyerarşi buradan geliyor. Seçiliyken
+         jetona dönüyor, yoksa dokunduğun şey görünmez kalırdı. */
+      if (ic) ic.innerHTML = (pinli || seciliMi)
+        ? jetonSVG(y, acik, populer, seciliMi)
+        : noktaSVG(y, acik);
       el.setAttribute(
         "aria-label",
         `${y.ad}, ${y.tur}, ${y.acik === null ? "saat bilgisi yok" : acik ? "açık" : "kapalı"}, ${y.pinSayisi ?? 0} pin`,
       );
       el.classList.toggle("secili", seciliMi);
-      el.style.zIndex = seciliMi ? "10" : populer ? "5" : "1";
+      el.style.zIndex = seciliMi ? "10" : populer ? "5" : pinli ? "3" : "1";
     });
-  }, [gorunenler, secili]);
+  }, [gorunenler, secili, yakin]);
 
   /* Konumlandırma satır içi: maplibre-gl.css `.maplibregl-map{position:relative}`
      tanımı Tailwind'in `absolute` sınıfını eziyor, kapsayıcı yükseklik alamıyor. */

@@ -68,7 +68,8 @@ export default function KonumDugmesi({
             ? `Konumuma git${konum ? ` (±${Math.round(konum.dogruluk)} m)` : ""} · çift dokunuş kapatır`
             : "Konumumu göster"
         }
-        className={`absolute bottom-3 right-3 z-[3] grid size-10 place-items-center rounded-full border border-[var(--cizgi)] shadow-kagit2 ${
+        /* Filtre şeridi haritanın altında yüzdüğü için düğme onun üstünde duruyor. */
+        className={`absolute bottom-[74px] right-3 z-[3] grid size-10 place-items-center rounded-full border border-[var(--cizgi)] shadow-kagit2 ${
           acik ? "bg-[#2F6FB8] text-white" : "bg-yuzey text-murekkep"
         } ${durum === "isteniyor" ? "animate-pulse" : ""}`}
       >

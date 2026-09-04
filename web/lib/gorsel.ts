@@ -69,6 +69,25 @@ const ALEV =
   "M12 1.4c0 0-1.1 3.3-3.3 5.3C6.3 8.8 5.1 10.8 5.1 13.3a6.9 6.9 0 0 0 13.8 0c0-2.2-.9-3.9-2.3-5.3-.6.9-1.3 1.3-2 1.1 1-2.5-.3-5.8-2.6-7.7z";
 
 /**
+ * Sessiz nokta — pini olmayan mekanlar için.
+ *
+ * Neden ayrı bir biçim: pinsiz mekan haritada jeton olmayı hak etmiyor.
+ * Altlık harita onu zaten etiketliyor (OpenMapTiles adı yazıyor), üstüne
+ * ikinci bir işaret koymak gürültü. Ama dokunulabilir olması gerekiyor —
+ * mekan sayfasını açıp oraya ilk pini atabilmek için. Nokta bu ikisini
+ * uzlaştırıyor: görünür ama öne çıkmıyor.
+ */
+export function noktaSVG(y: Pick<Yer, "tur">, acik: boolean | null): string {
+  const r = RENK[y.tur] ?? RENK.kapali;
+  const S = 13, m = S / 2;
+  return `<svg viewBox="0 0 ${S} ${S}" width="${S}" height="${S}" style="display:block">
+    <circle cx="${m}" cy="${m}" r="${m - 2.2}" fill="${acik === false ? RENK.kapali.ana : r.ana}"
+            fill-opacity="${acik === null ? 0.5 : 0.78}"
+            stroke="#fff" stroke-width="1.6" stroke-opacity=".9"/>
+  </svg>`;
+}
+
+/**
  * Jeton pin: düz kuşbakışı jeton. Merkez açık, kenar koyu (küreye tepeden
  * bakınca kenarlar kıvrılıp kararır), sol üstte parlama yayı.
  * Açık = kategori renginde, kapalı = gri. Popüler = altın halka + alev rozeti.
