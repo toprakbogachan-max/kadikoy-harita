@@ -357,11 +357,18 @@ export default function Harita({
   }, [gorunenler, secili, yakin]);
 
   /* Konumlandırma satır içi: maplibre-gl.css `.maplibregl-map{position:relative}`
-     tanımı Tailwind'in `absolute` sınıfını eziyor, kapsayıcı yükseklik alamıyor. */
+     tanımı Tailwind'in `absolute` sınıfını eziyor, kapsayıcı yükseklik alamıyor.
+ 
+     zIndex: 0 tesadüf değil, YIĞIN BAĞLAMI kuruyor. Marker'ların kendi
+     z-index'i var (seçili 10, popüler 5, pinli 3, pinsiz 1); bağlam olmadan
+     bu değerler ÜST kapsayıcının bağlamında yarışıyordu ve popüler bir jeton
+     (5), haritanın üstünde yüzen filtre şeridinin (4) üstüne çiziliyordu.
+     Bağlam kurulunca harita bir bütün olarak 0'da duruyor, içindeki hiçbir
+     işaret dışarı taşamıyor. */
   return (
     <div
       ref={kapsayici}
-      style={{ position: "absolute", inset: 0 }}
+      style={{ position: "absolute", inset: 0, zIndex: 0 }}
       aria-label="Kadıköy haritası"
     />
   );
