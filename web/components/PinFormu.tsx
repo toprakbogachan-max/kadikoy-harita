@@ -8,6 +8,7 @@ import type { PlaceCategory } from "@/lib/types";
 import { TUR_AD } from "@/lib/paleti";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
 import YerSecici, { type YeniNokta, type Secim } from "./YerSecici";
+import BuyukGorsel from "./BuyukGorsel";
 
 /* Prototipten gelen seçenekler — şemada serbest metin, arayüzde sabit liste
    olması sonradan gruplamayı mümkün kılıyor ("çoğunlukla X için geliniyor"). */
@@ -61,6 +62,8 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
   );
 
   const [medyalar, setMedyalar] = useState<YeniMedya[]>([]);
+  /* Hangi görsel büyütülmüş; nota dokunularak açıldıysa imleç not alanına gider. */
+  const [buyuk, setBuyuk] = useState<{ i: number; nota?: boolean } | null>(null);
   const [kelimeler, setKelimeler] = useState<[string, string, string]>(["", "", ""]);
   const [senaryo, setSenaryo] = useState("");
   const [puan, setPuan] = useState(7);
@@ -206,19 +209,25 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           </label>
 
           {medyalar.map((m, i) => (
-            <div key={i} className="mb-2 flex gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
+            /* Düzenleme formuyla aynı davranış: karta dokununca görsel
+               büyüyor, nota dokununca aynı ekran not alanı odaklı açılıyor.
+               Önce yalnızca düzenlemede vardı — pin ATARKEN hâlâ tek satırlık
+               kutuya yazılıyordu, oysa notu asıl o an yazıyorsun. */
+            <div key={i} onClick={() => setBuyuk({ i })}
+                 className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
               <Onizleme dosya={m.dosya} />
               <div className="min-w-0 flex-1">
                 <div className="mb-1 truncate text-[12px] text-murekkep2">{m.dosya.name}</div>
-                <input
-                  value={m.not}
-                  onChange={(e) => setMedyalar((l) => l.map((x, j) => (j === i ? { ...x, not: e.target.value } : x)))}
-                  maxLength={120}
-                  placeholder="Bu görselin notu (isteğe bağlı)"
-                  className="w-full rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] outline-none focus:border-jeton"
-                />
+                <div
+                  onClick={(e) => { e.stopPropagation(); setBuyuk({ i, nota: true }); }}
+                  className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
+                    m.not ? "text-murekkep" : "text-murekkep2"
+                  }`}
+                >
+                  {m.not || "Bu görselin notu (isteğe bağlı)"}
+                </div>
               </div>
-              <button onClick={() => setMedyalar((l) => l.filter((_, j) => j !== i))}
+              <button onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
                 aria-label="Kaldır"
                 className="shrink-0 self-start border-none bg-transparent p-0 text-[14px] text-murekkep2">
                 ✕
@@ -335,6 +344,16 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           </p>
         )}
       </div>
+
+      {buyuk && medyalar[buyuk.i] && (
+        <BuyukGorsel
+          kaynak={{ tip: "dosya", dosya: medyalar[buyuk.i].dosya }}
+          not={medyalar[buyuk.i].not}
+          onNot={(v) => setMedyalar((l) => l.map((x, j) => (j === buyuk.i ? { ...x, not: v } : x)))}
+          onKapat={() => setBuyuk(null)}
+          notaOdaklan={buyuk.nota}
+        />
+      )}
 
       <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
         <button onClick={gonder} disabled={!gecerli || gonderiliyor}
