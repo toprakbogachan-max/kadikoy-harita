@@ -7,7 +7,7 @@ import Avatar from "./Avatar";
 
 interface Props {
   secili: string | null;
-  onSec: (k: string) => void;
+  onSec: (k: string, etiket: string) => void;
   /** false ise şerit ince bir çubuğa iniyor; haritaya yer açmak için */
   acik?: boolean;
   onAc?: () => void;
@@ -81,7 +81,7 @@ export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props
         return (
           <button
             key={p.id}
-            onClick={() => onSec(p.id)}
+            onClick={() => onSec(p.id, p.ben ? "Senin pinlerin" : `${p.ad}’in pinleri`)}
             aria-pressed={aktif}
             className="flex w-[58px] shrink-0 flex-col items-center gap-1.5 border-none bg-transparent p-0"
           >

@@ -14,6 +14,7 @@ import KartGorsel from "./KartGorsel";
 export default function Profil({
   kullaniciAdi,
   onYerAc,
+  onHaritada,
   onGirisIste,
   onPaylas,
   onAyarlar,
@@ -22,6 +23,8 @@ export default function Profil({
   /** boşsa oturumdaki kişi gösterilir */
   kullaniciAdi?: string;
   onYerAc: (id: string, oncelikliKisi?: string) => void;
+  /** Kişisel haritaya dokununca: bu kişinin pinleri ana haritada. */
+  onHaritada: (kisiId: string, etiket: string) => void;
   onGirisIste: () => void;
   onPaylas: () => void;
   onAyarlar: () => void;
@@ -156,9 +159,20 @@ export default function Profil({
       </div>
 
       <div className={baslik}>{benim ? "Senin" : kisi.ad + "’in"} Kadıköy haritası</div>
-      <div className="mx-4 mb-3.5 overflow-hidden rounded-sm bg-su shadow-kagit">
+      {/* Mini harita ÖLÜ bir resimdi: pinlerin nerede olduğunu gösteriyordu
+          ama üstüne dokununca hiçbir şey olmuyordu. Artık ana haritayı bu
+          kişinin pinlerine filtreleyip açıyor — şeritten birini seçmekle
+          aynı sonuç, yalnızca giriş noktası farklı. */}
+      <button
+        onClick={() => onHaritada(kisi.id, benim ? "Senin pinlerin" : `${kisi.ad}’in pinleri`)}
+        aria-label={`${benim ? "Senin" : kisi.ad + "’in"} pinlerini haritada göster`}
+        className="relative mx-4 mb-3.5 block w-[calc(100%-2rem)] overflow-hidden rounded-sm border-none bg-su p-0 shadow-kagit"
+      >
         <MiniHarita yerler={yerleri} />
-      </div>
+        <span className="absolute bottom-1.5 right-1.5 rounded-sm bg-[rgba(20,15,8,.55)] px-1.5 py-1 font-tabela text-[9px] uppercase tracking-[0.1em] text-white">
+          Haritada gör
+        </span>
+      </button>
 
       {/* Liste oluşturma yalnızca Ayarlar → Arşiv → Listelerim'in içinde
           duruyordu. Profilde "Listelerin" bölümü ve "Henüz listen yok." boş

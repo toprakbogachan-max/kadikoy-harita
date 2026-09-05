@@ -68,7 +68,10 @@ function Uygulama() {
   /* Hikâye şeridi haritaya dokunulunca kapanıyor: 92px yer açıyor, harita
      ekranın %54'ünden ~%70'ine çıkıyor. Şeride dokunmak geri açıyor. */
   const [seritAcik, setSeritAcik] = useState(true);
-  const [kisiFiltre, setKisiFiltre] = useState<string | null>(null);
+  /* Yalnızca id yetmiyordu: şerit sadece takip ettiklerini gösterdiği için
+     yabancı bir profilden filtrelenince kimin haritasına baktığın belli
+     olmuyor ve filtreyi kapatmanın yolu kalmıyordu. Ad da tutuluyor. */
+  const [kisiFiltre, setKisiFiltre] = useState<{ id: string; etiket: string } | null>(null);
   const [secili, setSecili] = useState<string | null>(null);
   const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
   const [alan, setAlan] = useState(MERKEZ);
@@ -104,7 +107,7 @@ function Uygulama() {
 
   const { veri: gorunenler, yukleniyor, hata } = useVeri<Yer[]>(
     async () => {
-      if (kisiFiltre) return kisininYerleri(kisiFiltre, sorgu);
+      if (kisiFiltre) return kisininYerleri(kisiFiltre.id, sorgu);
       /* Takip filtresi yarıçapa bakmıyor: takip ettiklerinin pinlediği her
          yeri görmek istersin, ekranın neresine düştüğünü değil. */
       if (filtre === "takip") return takiptekilerinYerleri();
@@ -118,7 +121,7 @@ function Uygulama() {
       }
       return yerleriGetir(sorgu);
     },
-    [sorgu, kisiFiltre, filtre, ben?.id, tazele],
+    [sorgu, kisiFiltre?.id, filtre, ben?.id, tazele],
     [],
   );
 
@@ -146,12 +149,23 @@ function Uygulama() {
 
   /* hikayeye dokununca kategori filtresi "hepsi"ye geçer, yoksa
      o kişinin pinlediği yerlerin hepsi görünmeyebilir */
-  const kisiSec = (k: string) => {
+  /* etiket hazır geliyor, ad değil: "Senin" + "’in pinleri" = "Senin’in
+     pinleri" oluyordu. İyelik ekini çağıran biliyor. */
+  const kisiSec = (k: string, etiket: string) => {
     setKisiFiltre((onceki) => {
-      const yeni = onceki === k ? null : k;
+      const yeni = onceki?.id === k ? null : { id: k, etiket };
       if (yeni) setFiltre("hepsi");
       return yeni;
     });
+  };
+
+  /* Profildeki kişisel haritaya dokununca: o kişinin pinleri ana haritada.
+     Şeritten kişi seçmekle aynı durum, yalnızca giriş noktası farklı. */
+  const kisininHaritasi = (k: string, etiket: string) => {
+    setKisiFiltre({ id: k, etiket });
+    setFiltre("hepsi");
+    setSecili(null);
+    setEkran("harita");
   };
 
   /* Bir KİŞİ üzerinden mekana gidiliyorsa (listesinden ya da pininden),
@@ -204,7 +218,7 @@ function Uygulama() {
             </header>
 
             <HikayeSeridi
-              secili={kisiFiltre}
+              secili={kisiFiltre?.id ?? null}
               onSec={kisiSec}
               acik={seritAcik}
               onAc={() => setSeritAcik(true)}
@@ -265,6 +279,21 @@ function Uygulama() {
                   ~%66'ya çıkıyor. Konum düğmesi de çakışmasın diye yukarı
                   kaydırıldı (KonumDugmesi içindeki bottom değeri). */}
               <div className="absolute inset-x-0 bottom-0 z-[4]">
+                {/* Kişi filtresi açıkken kimin haritasına baktığın yazıyor ve
+                    kapatılabiliyor: şerit yalnızca takip ettiklerini gösterdiği
+                    için yabancı biri seçiliyken hiçbir işaret kalmıyordu. */}
+                {kisiFiltre && (
+                  <div className="flex justify-center pb-1.5">
+                    <button
+                      onClick={() => setKisiFiltre(null)}
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--cizgi)] bg-yuzey px-3 py-1.5 font-tabela text-[10.5px] uppercase tracking-[0.1em] text-murekkep shadow-kagit"
+                    >
+                      {kisiFiltre.etiket}
+                      <span aria-hidden className="text-[12px] leading-none text-murekkep2">✕</span>
+                      <span className="sr-only">— filtreyi kaldır</span>
+                    </button>
+                  </div>
+                )}
                 <FiltreCipleri secili={filtre} onSec={setFiltre} />
               </div>
             </div>
@@ -319,6 +348,7 @@ function Uygulama() {
             <Profil
               kullaniciAdi={profilKisi}
               onYerAc={haritadaAc}
+              onHaritada={kisininHaritasi}
               onGirisIste={() => setGirisAcik(true)}
               onPaylas={() => setPaylasAcik(true)}
               onAyarlar={() => setAyarlarAcik(true)}
