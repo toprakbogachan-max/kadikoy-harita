@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pinAt, yerOlustur, yerKoordinati, type YeniMedya } from "@/lib/veri";
 import { fotograflariHazirla } from "@/lib/fotograf";
+import { useSiralama, siraStili } from "@/lib/siralama";
 import { useVeri } from "@/lib/kanca";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
@@ -106,14 +107,15 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
   /* Sıra ÖNEMLİ: ilk medya kartlarda kapak oluyor, gönderi karuselinde de
      ilk sırada açılıyor. Yükledikten sonra değiştirmenin yolu yoktu; tek
      çare silip yeniden yüklemekti. */
-  const tasi = (i: number, yon: -1 | 1) =>
+  const tasi = (nereden: number, nereye: number) =>
     setMedyalar((l) => {
-      const j = i + yon;
-      if (j < 0 || j >= l.length) return l;
       const k = [...l];
-      [k[i], k[j]] = [k[j], k[i]];
+      const [x] = k.splice(nereden, 1);
+      k.splice(nereye, 0, x);
       return k;
     });
+  const siraKap = useRef<HTMLDivElement>(null);
+  const tasinan = useSiralama(siraKap, medyalar.length, tasi);
 
   const yerHazir = !!yer || (!!yeniYer && yeniAd.trim().length > 1);
   const gecerli =
@@ -233,13 +235,17 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
             )}
           </label>
 
+          <div ref={siraKap}>
           {medyalar.map((m, i) => (
             /* Düzenleme formuyla aynı davranış: karta dokununca görsel
                büyüyor, nota dokununca aynı ekran not alanı odaklı açılıyor.
                Önce yalnızca düzenlemede vardı — pin ATARKEN hâlâ tek satırlık
                kutuya yazılıyordu, oysa notu asıl o an yazıyorsun. */
-            <div key={i} onClick={() => setBuyuk({ i })}
-                 className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
+            <div key={i}
+                 onClick={() => setBuyuk({ i })}
+                 data-sira={i}
+                 style={siraStili(tasinan, i, medyalar.length)}
+                 className="mb-2 flex cursor-pointer touch-manipulation select-none gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
               <div className="relative shrink-0">
                 <Onizleme dosya={m.dosya} />
                 {/* Sıranın neye yaradığını söylemeden ok koymak anlamsız
@@ -253,6 +259,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
               <div className="min-w-0 flex-1">
                 <div className="mb-1 truncate text-[12px] text-murekkep2">{m.dosya.name}</div>
                 <div
+                  data-suruklenmez
                   onClick={(e) => { e.stopPropagation(); setBuyuk({ i, nota: true }); }}
                   className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
                     m.not ? "text-murekkep" : "text-murekkep2"
@@ -261,32 +268,23 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                   {m.not || "Bu görselin notu (isteğe bağlı)"}
                 </div>
               </div>
-              <div className="flex shrink-0 flex-col items-center gap-1 self-start">
-                <button onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
+              <div className="flex shrink-0 flex-col items-center gap-2 self-start">
+                <button data-suruklenmez
+                  onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
                   aria-label="Kaldır"
                   className="border-none bg-transparent p-0 text-[14px] leading-none text-murekkep2">
                   ✕
                 </button>
-                {/* Sürükle-bırak değil ok: dokunmatikte satırın kendisi zaten
-                    dokunulabilir (görseli büyütüyor), sürükleme ikisini
-                    karıştırırdı. */}
+                {/* Tutamak sürüklemeyi GÖRÜNÜR kılıyor; sürüklemek için buna
+                    basmak şart değil, satırın boş alanı da tutuyor. */}
                 {medyalar.length > 1 && (
-                  <>
-                    <button onClick={(e) => { e.stopPropagation(); tasi(i, -1); }}
-                      disabled={i === 0} aria-label="Yukarı taşı"
-                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
-                      ∧
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); tasi(i, 1); }}
-                      disabled={i === medyalar.length - 1} aria-label="Aşağı taşı"
-                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
-                      ∨
-                    </button>
-                  </>
+                  <span aria-hidden className="text-[12px] leading-none text-murekkep2">⠿</span>
                 )}
               </div>
             </div>
           ))}
+
+          </div>
 
           <input ref={dosyaGirdi} type="file" accept="image/*,video/*" multiple
             onChange={dosyaEkle} className="hidden" />
@@ -298,7 +296,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           </button>
           <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
             Birden fazla ekleyebilirsin; her birine ayrı not yazabilirsin.
-            {medyalar.length > 1 && " Oklarla sıralayabilirsin — ilk sıradaki kapak olur."}
+            {medyalar.length > 1 && " Sürükleyerek sıralayabilirsin — ilk sıradaki kapak olur."}
           </p>
         </div>
 

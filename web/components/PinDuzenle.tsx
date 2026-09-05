@@ -8,6 +8,7 @@ import {
 } from "./PinFormu";
 import BuyukGorsel from "./BuyukGorsel";
 import { fotograflariHazirla } from "@/lib/fotograf";
+import { useSiralama, siraStili } from "@/lib/siralama";
 
 /** Listedeki bir satır: ya yüklenmiş medya ya da yeni seçilmiş dosya. */
 type Medya =
@@ -89,14 +90,15 @@ export default function PinDuzenle({
 
   const medyaSayisi = medyalar.length;
 
-  const tasi = (i: number, yon: -1 | 1) =>
+  const tasi = (nereden: number, nereye: number) =>
     setMedyalar((l) => {
-      const j = i + yon;
-      if (j < 0 || j >= l.length) return l;
       const k = [...l];
-      [k[i], k[j]] = [k[j], k[i]];
+      const [x] = k.splice(nereden, 1);
+      k.splice(nereye, 0, x);
       return k;
     });
+  const siraKap = useRef<HTMLDivElement>(null);
+  const tasinan = useSiralama(siraKap, medyalar.length, tasi);
 
   const notYaz = (i: number, v: string) =>
     setMedyalar((l) => l.map((x, j) => (j === i ? { ...x, not: v } : x)));
@@ -168,6 +170,7 @@ export default function PinDuzenle({
             <span className="ml-2 font-sayi normal-case tracking-normal">{medyaSayisi} dosya</span>
           </label>
 
+          <div ref={siraKap}>
           {medyalar.map((m, i) => (
             /* Satırın BOŞ alanına dokunmak da görseli büyütüyor: 52px'lik
                kutuyu parmakla tutturmak zor, kartın tamamı hedef olmalı.
@@ -175,7 +178,9 @@ export default function PinDuzenle({
                nota yazmaya çalışırken katman açılırdı. */
             <div key={m.tur === "kalan" ? m.yol : `yeni-${i}`}
                  onClick={() => setBuyuk({ i })}
-                 className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
+                 data-sira={i}
+                 style={siraStili(tasinan, i, medyalar.length)}
+                 className="mb-2 flex cursor-pointer touch-manipulation select-none gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
               <div className="relative shrink-0">
                 {m.tur === "kalan" ? (
                   /* Demo tohumunun medyası demo:// yolunda ve medyaUrl null
@@ -207,6 +212,7 @@ export default function PinDuzenle({
                     açılıyor ve imleç oradaki not alanına gidiyor — tek satırlık
                     kutuya 120 karakter sığmıyordu. */}
                 <div
+                  data-suruklenmez
                   onClick={(e) => { e.stopPropagation(); setBuyuk({ i, nota: true }); }}
                   className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
                     m.not ? "text-murekkep" : "text-murekkep2"
@@ -215,8 +221,8 @@ export default function PinDuzenle({
                   {m.not || "Bu görselin notu (isteğe bağlı)"}
                 </div>
               </div>
-              <div className="flex shrink-0 flex-col items-center gap-1 self-start">
-                <button
+              <div className="flex shrink-0 flex-col items-center gap-2 self-start">
+                <button data-suruklenmez
                   onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
                   disabled={medyaSayisi <= 1}
                   aria-label="Kaldır"
@@ -225,25 +231,16 @@ export default function PinDuzenle({
                 >
                   ✕
                 </button>
-                {/* Sürükle-bırak değil ok: satırın kendisi zaten dokunulabilir
-                    (görseli büyütüyor), sürükleme ikisini karıştırırdı. */}
+                {/* Tutamak sürüklemeyi GÖRÜNÜR kılıyor; sürüklemek için buna
+                    basmak şart değil, satırın boş alanı da tutuyor. */}
                 {medyalar.length > 1 && (
-                  <>
-                    <button onClick={(e) => { e.stopPropagation(); tasi(i, -1); }}
-                      disabled={i === 0} aria-label="Yukarı taşı"
-                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
-                      ∧
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); tasi(i, 1); }}
-                      disabled={i === medyalar.length - 1} aria-label="Aşağı taşı"
-                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
-                      ∨
-                    </button>
-                  </>
+                  <span aria-hidden className="text-[12px] leading-none text-murekkep2">⠿</span>
                 )}
               </div>
             </div>
           ))}
+
+          </div>
 
           <input ref={dosyaGirdi} type="file" accept="image/*,video/*" multiple
             onChange={dosyaEkle}
@@ -256,7 +253,7 @@ export default function PinDuzenle({
           </button>
           {medyalar.length > 1 && (
             <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
-              Oklarla sıralayabilirsin — ilk sıradaki kapak olur.
+              Sürükleyerek sıralayabilirsin — ilk sıradaki kapak olur.
             </p>
           )}
         </div>
