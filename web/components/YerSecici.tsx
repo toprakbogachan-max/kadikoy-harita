@@ -185,6 +185,18 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
     m.easeTo({ center: [secim.lng, secim.lat], zoom: SECIM_ZOOM, duration: 550 });
   }, [secim]);
 
+  /* Boş sonuçtaki kısayol: haritanın ORTASINA yeni nokta bırakıyor. Haritaya
+     dokunmakla aynı yol (aranan metin ad olarak gidiyor), yalnızca kullanıcı
+     doğru noktayı bulmak zorunda kalmıyor — iğne sürüklenebilir. */
+  const merkezeEkle = () => {
+    const m = harita.current;
+    if (!m) return;
+    const { lat, lng } = m.getCenter();
+    const ad = gecikmeli || undefined;
+    temizle();
+    onYeniNokta({ lat, lng, ad });
+  };
+
   const satir =
     "flex w-full items-center gap-2.5 border-none border-b border-[var(--cizgi)] bg-transparent px-2.5 py-2 text-left last:border-0";
 
@@ -256,10 +268,26 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
       )}
 
       {bosSonuc && (
-        <p className="mb-2 rounded-sm border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2.5 text-[12.5px] leading-snug">
-          <b>“{gecikmeli}”</b> ne bizde ne haritada bulunabildi. Aşağıdaki haritada
-          yerine dokun — bu adla yeni mekan olarak eklenecek.
-        </p>
+        <div className="mb-2 rounded-sm border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2.5">
+          <p className="text-[12.5px] leading-snug">
+            <b>“{gecikmeli}”</b> ne bizde ne haritada bulunabildi. Google Haritalar’da
+            olan her yer OpenStreetMap’te olmayabiliyor; o zaman ilk ekleyen sen
+            oluyorsun.
+          </p>
+          {/* Düğme ŞART: buradaki tek yönlendirme "aşağıdaki haritada yerine
+              dokun" cümlesiydi ve kullanıcıdan doğru noktayı ilk denemede
+              bulmasını istiyordu. Düğme iğneyi haritanın ortasına bırakıyor,
+              yerini sürükleyerek düzeltmek çok daha kolay. */}
+          <button
+            onClick={merkezeEkle}
+            className="mt-2 w-full rounded-sm border-none bg-jeton px-3 py-2 font-tabela text-[11.5px] uppercase tracking-[0.1em] text-white"
+          >
+            “{gecikmeli}” adıyla ekle
+          </button>
+          <p className="mt-1.5 text-[11px] leading-snug text-murekkep2">
+            İğne haritanın ortasına düşecek; sürükleyerek tam yerine getirebilirsin.
+          </p>
+        </div>
       )}
 
       {/* Servis çökerse sessiz kalmak yanlış olurdu: kullanıcı "yer yok"
