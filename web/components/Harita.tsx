@@ -52,11 +52,15 @@ interface Props {
   konumaGit?: number;
   /** kullanıcı haritayı sürüklemeye/yakınlaştırmaya başladı */
   onEtkilesim?: () => void;
+  /** Değiştiğinde harita gorunenler'in TAMAMINI kadraja alıyor. Kişi
+      filtresinde kullanılıyor: pinler birbirinden uzaksa hepsini görmek için
+      geri çekilmek gerekiyor. */
+  sigdir?: string | null;
 }
 
 export default function Harita({
   gorunenler, secili, onYerSec, onBolgeDegisti, onAlanDegisti, konum, konumaGit = 0,
-  onEtkilesim,
+  onEtkilesim, sigdir = null,
 }: Props) {
   const kapsayici = useRef<HTMLDivElement>(null);
   const harita = useRef<maplibregl.Map | null>(null);
@@ -257,6 +261,41 @@ export default function Harita({
       console.warn("konuma uçulamadı", e);
     }
   }, [konumaGit, konum]);
+
+  /* ---- kişinin pinlerinin tamamını kadraja al ----
+     Filtre uygulanınca harita olduğu yerde kalıyordu: kişinin pinleri
+     Moda'yla Yeldeğirmeni'ne dağılmışsa bir kısmı ekranın dışında kalıyor,
+     "bu kişinin haritası" diyip yarısını göstermiş oluyorduk. */
+  const sigdirilan = useRef<string | null>(null);
+  useEffect(() => {
+    const m = harita.current;
+    if (!sigdir) { sigdirilan.current = null; return; }
+    /* Liste filtreden SONRA geliyor; boşken kadraj hesaplanamaz, dolduğunda
+       efekt yeniden koşuyor. Bir kez: sonrasında kullanıcı haritayı gezerse
+       geri zıplamasın. */
+    if (!m || sigdirilan.current === sigdir || !gorunenler.length) return;
+    const noktalar = gorunenler.filter((y) => y.lat !== 0 && y.lng !== 0);
+    if (!noktalar.length) return;
+    sigdirilan.current = sigdir;
+    const kutu = new maplibregl.LngLatBounds();
+    noktalar.forEach((y) => kutu.extend([y.lng, y.lat]));
+    try {
+      /* stop(): yarım kalmış animasyon haritayı "hareket ediyor" durumunda
+         bırakıp sonraki çağrıları yutuyor */
+      m.stop();
+      m.fitBounds(kutu, {
+        /* Alt boşluk büyük: filtre çipleri ve kişi çipi haritanın üstünde
+           yüzüyor, en alttaki pin onların altında kalıyordu. */
+        padding: { top: 56, bottom: 120, left: 48, right: 48 },
+        /* Tek pinde fitBounds sonuna kadar yakınlaştırıyor; sokak seviyesi
+           yeter. */
+        maxZoom: 15.5,
+        duration: 800,
+      });
+    } catch (e) {
+      console.warn("kadraj alınamadı", e);
+    }
+  }, [sigdir, gorunenler]);
 
   /* ---- seçilen mekana odaklan ----
      Uzaktan bir jetona dokunulduğunda mekan sayfası açılıyor ama harita

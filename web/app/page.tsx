@@ -232,6 +232,7 @@ function Uygulama() {
                 onBolgeDegisti={setBolge}
                 onAlanDegisti={alaniGuncelle}
                 onEtkilesim={() => setSeritAcik(false)}
+                sigdir={kisiFiltre?.id ?? null}
                 konum={konum}
                 konumaGit={konumaGit}
               />
