@@ -194,9 +194,7 @@ function Kirpici({
   useDosyaSrc(dosya, zemin);
   const [olcu, setOlcu] = useState<{ en: number; boy: number } | null>(null);
   const [dogal, setDogal] = useState<{ en: number; boy: number } | null>(null);
-  /* null = kullanıcı kaydırıcıya dokunmadı; varsayılan aşağıda TÜMÜ SIĞSIN
-     olarak türetiliyor. Taban "çerçeveyi doldur" olduğu için başlangıçta
-     geniş fotoğraflar ortadan dar bir dilim hâlinde görünüyordu. */
+  /* null = kullanıcı kaydırıcıya dokunmadı; varsayılan aşağıda türetiliyor. */
   const [yakinEl, setYakinEl] = useState<number | null>(null);
   /* null = kullanıcı henüz oynatmadı. Başlangıç kadrajı ORTA: sıfırdan
      başlayınca geniş bir fotoğrafın sol kenarı çerçeveleniyordu. Efektte
@@ -221,7 +219,12 @@ function Kirpici({
   const taban = olcu && dogal ? Math.max(olcu.en / dogal.en, olcu.boy / dogal.boy) : 1;
   const sigdir = olcu && dogal ? Math.min(olcu.en / dogal.en, olcu.boy / dogal.boy) : 1;
   const enAz = sigdir / taban;
-  const yakin = yakinEl ?? enAz;
+  /* Varsayılan ÇERÇEVEYİ DOLDUR. Bir ara "tamamı sığsın" yapılmıştı ama
+     sığdırma boşluğu bulanık kopyayla dolduruyor ve o bulanıklık dosyaya
+     kaydediliyor: hiç dokunmadan Tamam'a basan kullanıcının fotoğrafı
+     kartlarda bulanık çıkıyordu. Küçültmek isteyen kaydırıcıyı sola çekiyor;
+     alt sınır hâlâ "tamamı sığsın". */
+  const yakin = yakinEl ?? 1;
   const en = dogal ? dogal.en * taban * yakin : 0;
   const boy = dogal ? dogal.boy * taban * yakin : 0;
   const kay = kayEl ?? (olcu ? { x: (olcu.en - en) / 2, y: (olcu.boy - boy) / 2 } : { x: 0, y: 0 });
