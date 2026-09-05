@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { pinGuncelle, pinSil, medyaUrl, type YeniMedya, type KalanMedya } from "@/lib/veri";
+import { pinGuncelle, pinSil, medyaUrl } from "@/lib/veri";
 import type { Pin } from "@/lib/model";
 import {
   Cip, Onizleme, SENARYOLAR, SIKLIKLAR, TEKRARLAR, METIN_MAX,
 } from "./PinFormu";
 import BuyukGorsel from "./BuyukGorsel";
 import { fotograflariHazirla } from "@/lib/fotograf";
+
+/** Listedeki bir satır: ya yüklenmiş medya ya da yeni seçilmiş dosya. */
+type Medya =
+  | { tur: "kalan"; yol: string; not: string }
+  | { tur: "yeni"; dosya: File; not: string };
 
 /** Yüklenmiş medya video mu — kırpma yalnızca fotoğraf için. */
 function kalanVideo(yol: string, pin: Pin): boolean {
@@ -47,15 +52,16 @@ export default function PinDuzenle({
   const [tekrar, setTekrar] = useState(pin.tekrar ?? "");
   const [fiyat, setFiyat] = useState(pin.fiyat != null ? String(pin.fiyat) : "");
 
-  /* Mevcut medyalar yol ile tutuluyor; silinen listeden çıkıyor. */
-  const [kalan, setKalan] = useState<KalanMedya[]>(
-    pin.medyalar.filter((m) => m.yol).map((m) => ({ yol: m.yol, not: m.not ?? "" })),
+  /* Yüklenmiş ve yeni eklenen medya TEK listede. Eskiden iki ayrı listeydi ve
+     kaydederken yeniler daima eskilerin arkasına geçiyordu: düzenlerken
+     eklediğin bir fotoğrafı kapak yapmanın yolu yoktu. */
+  const [medyalar, setMedyalar] = useState<Medya[]>(
+    pin.medyalar.filter((m) => m.yol).map((m) => ({ tur: "kalan", yol: m.yol, not: m.not ?? "" })),
   );
-  const [yeniler, setYeniler] = useState<YeniMedya[]>([]);
   const dosyaGirdi = useRef<HTMLInputElement>(null);
 
-  /* Hangi görsel büyütülmüş — kalan/yeni listesindeki konumuyla. */
-  const [buyuk, setBuyuk] = useState<{ tur: "kalan" | "yeni"; i: number; nota?: boolean } | null>(null);
+  /* Hangi görsel büyütülmüş — listedeki konumuyla. */
+  const [buyuk, setBuyuk] = useState<{ i: number; nota?: boolean } | null>(null);
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [siliniyor, setSiliniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
@@ -75,13 +81,25 @@ export default function PinDuzenle({
     setHazirlaniyor(true); setHata(null);
     try {
       const hazir = await fotograflariHazirla(secilen);
-      setYeniler((l) => [...l, ...hazir.map((d) => ({ dosya: d, not: "" }))]);
+      setMedyalar((l) => [...l, ...hazir.map((d): Medya => ({ tur: "yeni", dosya: d, not: "" }))]);
     } catch (err) {
       setHata(err instanceof Error ? err.message : String(err));
     } finally { setHazirlaniyor(false); }
   };
 
-  const medyaSayisi = kalan.length + yeniler.length;
+  const medyaSayisi = medyalar.length;
+
+  const tasi = (i: number, yon: -1 | 1) =>
+    setMedyalar((l) => {
+      const j = i + yon;
+      if (j < 0 || j >= l.length) return l;
+      const k = [...l];
+      [k[i], k[j]] = [k[j], k[i]];
+      return k;
+    });
+
+  const notYaz = (i: number, v: string) =>
+    setMedyalar((l) => l.map((x, j) => (j === i ? { ...x, not: v } : x)));
   const gecerli =
     kelimeler.every((k) => k.trim().length > 0) &&
     !!senaryo &&
@@ -96,8 +114,13 @@ export default function PinDuzenle({
         senaryo, puan,
         degisse, siklik, tekrar,
         fiyat: fiyat ? Number(fiyat) : undefined,
-        kalanMedyalar: kalan,
-        yeniMedyalar: yeniler,
+        /* Tek liste ikiye ayrılıyor ama HERKES kendi sırasını taşıyor:
+           sunucu ordering'i buradan yazıyor, yani araya girmiş yeni bir
+           fotoğraf yerinde kalıyor. */
+        kalanMedyalar: medyalar.flatMap((m, i) =>
+          m.tur === "kalan" ? [{ yol: m.yol, not: m.not, sira: i }] : []),
+        yeniMedyalar: medyalar.flatMap((m, i) =>
+          m.tur === "yeni" ? [{ dosya: m.dosya, not: m.not, sira: i }] : []),
       });
       onKaydedildi();
     } catch (e) {
@@ -145,34 +168,46 @@ export default function PinDuzenle({
             <span className="ml-2 font-sayi normal-case tracking-normal">{medyaSayisi} dosya</span>
           </label>
 
-          {kalan.map((m, i) => (
+          {medyalar.map((m, i) => (
             /* Satırın BOŞ alanına dokunmak da görseli büyütüyor: 52px'lik
                kutuyu parmakla tutturmak zor, kartın tamamı hedef olmalı.
-               Not alanı ve kaldırma düğmesi kendi tıklamalarını durduruyor,
-               yoksa nota yazmaya çalışırken katman açılırdı. */
-            <div key={m.yol} onClick={() => setBuyuk({ tur: "kalan", i })}
+               Not alanı ve düğmeler kendi tıklamalarını durduruyor, yoksa
+               nota yazmaya çalışırken katman açılırdı. */
+            <div key={m.tur === "kalan" ? m.yol : `yeni-${i}`}
+                 onClick={() => setBuyuk({ i })}
                  className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
-              {/* Küçük kutuya dokununca büyüyor: 52px'de ne fotoğraf seçilebiliyor
-                  ne de not rahat yazılabiliyordu. Demo tohumunun medyası demo://
-                  yolunda ve medyaUrl null dönüyor — boş <img> yerine yer tutucu. */}
-              <button onClick={() => setBuyuk({ tur: "kalan", i })} aria-label="Görseli büyüt"
-                      className="shrink-0 border-none bg-transparent p-0">
-                {medyaUrl(m.yol) ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={medyaUrl(m.yol)!} alt="" className="size-[52px] rounded-sm object-cover" />
+              <div className="relative shrink-0">
+                {m.tur === "kalan" ? (
+                  /* Demo tohumunun medyası demo:// yolunda ve medyaUrl null
+                     dönüyor — boş <img> yerine yer tutucu. */
+                  medyaUrl(m.yol) ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={medyaUrl(m.yol)!} alt="" className="size-[52px] rounded-sm object-cover" />
+                  ) : (
+                    <span className="grid size-[52px] place-items-center rounded-sm bg-[rgba(35,52,60,.07)] font-sayi text-[9px] text-murekkep2">
+                      görsel
+                    </span>
+                  )
                 ) : (
-                  <span className="grid size-[52px] place-items-center rounded-sm bg-[rgba(35,52,60,.07)] font-sayi text-[9px] text-murekkep2">
-                    görsel
+                  <Onizleme dosya={m.dosya} />
+                )}
+                {/* Sıranın neye yaradığını söylemeden ok koymak anlamsız
+                    olurdu: ilk sıradaki kapak. */}
+                {i === 0 && (
+                  <span className="absolute inset-x-0 bottom-0 bg-[rgba(20,15,8,.6)] py-[1px] text-center font-tabela text-[7.5px] uppercase tracking-[0.08em] text-white">
+                    Kapak
                   </span>
                 )}
-              </button>
+              </div>
               <div className="min-w-0 flex-1">
-                <div className="mb-1 font-sayi text-[10.5px] text-murekkep2">yüklenmiş</div>
-                {/* Artık düzenlenebilir alan DEĞİL, özet. Dokununca büyük ekran
+                <div className="mb-1 truncate font-sayi text-[10.5px] text-murekkep2">
+                  {m.tur === "kalan" ? "yüklenmiş" : m.dosya.name}
+                </div>
+                {/* Düzenlenebilir alan DEĞİL, özet. Dokununca büyük ekran
                     açılıyor ve imleç oradaki not alanına gidiyor — tek satırlık
                     kutuya 120 karakter sığmıyordu. */}
                 <div
-                  onClick={(e) => { e.stopPropagation(); setBuyuk({ tur: "kalan", i, nota: true }); }}
+                  onClick={(e) => { e.stopPropagation(); setBuyuk({ i, nota: true }); }}
                   className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
                     m.not ? "text-murekkep" : "text-murekkep2"
                   }`}
@@ -180,41 +215,33 @@ export default function PinDuzenle({
                   {m.not || "Bu görselin notu (isteğe bağlı)"}
                 </div>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); setKalan((l) => l.filter((_, j) => j !== i)); }}
-                disabled={medyaSayisi <= 1}
-                aria-label="Kaldır"
-                title={medyaSayisi <= 1 ? "En az bir görsel kalmalı" : "Kaldır"}
-                className="shrink-0 self-start border-none bg-transparent p-0 text-[14px] text-murekkep2 disabled:opacity-25"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-
-          {yeniler.map((m, i) => (
-            <div key={i} onClick={() => setBuyuk({ tur: "yeni", i })}
-                 className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
-              <button onClick={() => setBuyuk({ tur: "yeni", i })} aria-label="Görseli büyüt"
-                      className="shrink-0 border-none bg-transparent p-0">
-                <Onizleme dosya={m.dosya} />
-              </button>
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 truncate text-[12px] text-murekkep2">{m.dosya.name}</div>
-                <div
-                  onClick={(e) => { e.stopPropagation(); setBuyuk({ tur: "yeni", i, nota: true }); }}
-                  className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
-                    m.not ? "text-murekkep" : "text-murekkep2"
-                  }`}
+              <div className="flex shrink-0 flex-col items-center gap-1 self-start">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
+                  disabled={medyaSayisi <= 1}
+                  aria-label="Kaldır"
+                  title={medyaSayisi <= 1 ? "En az bir görsel kalmalı" : "Kaldır"}
+                  className="border-none bg-transparent p-0 text-[14px] leading-none text-murekkep2 disabled:opacity-25"
                 >
-                  {m.not || "Bu görselin notu (isteğe bağlı)"}
-                </div>
+                  ✕
+                </button>
+                {/* Sürükle-bırak değil ok: satırın kendisi zaten dokunulabilir
+                    (görseli büyütüyor), sürükleme ikisini karıştırırdı. */}
+                {medyalar.length > 1 && (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); tasi(i, -1); }}
+                      disabled={i === 0} aria-label="Yukarı taşı"
+                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
+                      ∧
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); tasi(i, 1); }}
+                      disabled={i === medyalar.length - 1} aria-label="Aşağı taşı"
+                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
+                      ∨
+                    </button>
+                  </>
+                )}
               </div>
-              <button onClick={(e) => { e.stopPropagation(); setYeniler((l) => l.filter((_, j) => j !== i)); }}
-                aria-label="Kaldır"
-                className="shrink-0 self-start border-none bg-transparent p-0 text-[14px] text-murekkep2">
-                ✕
-              </button>
             </div>
           ))}
 
@@ -227,6 +254,11 @@ export default function PinDuzenle({
             className="w-full rounded-sm border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-[13px] text-murekkep2 disabled:opacity-50">
             {hazirlaniyor ? "Fotoğraf hazırlanıyor…" : "+ Fotoğraf / video ekle"}
           </button>
+          {medyalar.length > 1 && (
+            <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
+              Oklarla sıralayabilirsin — ilk sıradaki kapak olur.
+            </p>
+          )}
         </div>
 
         {/* ---- üç kelime ---- */}
@@ -310,39 +342,30 @@ export default function PinDuzenle({
         </div>
       </div>
 
-      {buyuk && (buyuk.tur === "kalan" ? kalan[buyuk.i] : yeniler[buyuk.i]) && (
-        <BuyukGorsel
-          kaynak={
-            buyuk.tur === "kalan"
-              ? { tip: "yol", yol: kalan[buyuk.i].yol }
-              : { tip: "dosya", dosya: yeniler[buyuk.i].dosya }
-          }
-          not={buyuk.tur === "kalan" ? kalan[buyuk.i].not : yeniler[buyuk.i].not}
-          onNot={(v) =>
-            buyuk.tur === "kalan"
-              ? setKalan((l) => l.map((x, j) => (j === buyuk.i ? { ...x, not: v } : x)))
-              : setYeniler((l) => l.map((x, j) => (j === buyuk.i ? { ...x, not: v } : x)))
-          }
-          onKapat={() => setBuyuk(null)}
-          notaOdaklan={buyuk.nota}
-          /* Yüklenmiş bir görseli kırpmak onu YENİ dosya yapıyor: kırpılmış
-             hâli yüklenip eskisi düşüyor (pinGuncelle zaten listede olmayan
-             medyayı siliyor). Notu taşınıyor. Birden çok görsel varsa kırpılan
-             sona geçiyor — sıra kalanlardan sonra veriliyor.
-             Video kırpılamaz: karesi yok, çerçeveleyecek bir şey yok. */
-          onKirp={
-            buyuk.tur === "kalan"
-              ? kalanVideo(kalan[buyuk.i].yol, pin)
+      {buyuk && medyalar[buyuk.i] && (() => {
+        const m = medyalar[buyuk.i];
+        const video = m.tur === "kalan" ? kalanVideo(m.yol, pin) : m.dosya.type.startsWith("video");
+        return (
+          <BuyukGorsel
+            kaynak={m.tur === "kalan" ? { tip: "yol", yol: m.yol } : { tip: "dosya", dosya: m.dosya }}
+            not={m.not}
+            onNot={(v) => notYaz(buyuk.i, v)}
+            onKapat={() => setBuyuk(null)}
+            notaOdaklan={buyuk.nota}
+            /* Yüklenmiş bir görseli kırpmak onu YENİ dosya yapıyor: kırpılmış
+               hâli yüklenip eskisi düşüyor (pinGuncelle listede olmayan medyayı
+               siliyor). Notunu ve SIRASINI koruyor — tek liste olduğu için
+               kırpılan fotoğraf artık sona atlamıyor.
+               Video kırpılamaz: karesi yok, çerçeveleyecek bir şey yok. */
+            onKirp={
+              video
                 ? undefined
-                : (d) => {
-                    const eski = kalan[buyuk.i];
-                    setKalan((l) => l.filter((_, j) => j !== buyuk.i));
-                    setYeniler((l) => [...l, { dosya: d, not: eski.not }]);
-                  }
-              : (d) => setYeniler((l) => l.map((x, j) => (j === buyuk.i ? { ...x, dosya: d } : x)))
-          }
-        />
-      )}
+                : (d) => setMedyalar((l) => l.map((x, j) =>
+                    j === buyuk.i ? { tur: "yeni", dosya: d, not: x.not } : x))
+            }
+          />
+        );
+      })()}
 
       <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
         <button onClick={gonder} disabled={!gecerli || gonderiliyor}

@@ -740,6 +740,8 @@ export async function takiptemiyim(kisiId: string): Promise<boolean> {
 export interface YeniMedya {
   dosya: File;
   not: string;
+  /** Yalnızca pinGuncelle için: bkz. KalanMedya.sira. pinAt yok sayıyor. */
+  sira?: number;
 }
 
 export interface YeniPin {
@@ -815,6 +817,9 @@ export async function pinSil(pinId: string): Promise<void> {
 export interface KalanMedya {
   yol: string;
   not: string;
+  /** Karışık sıra: eski ve yeni medya tek listede sıralanabiliyor. Verilmezse
+      dizideki konumu kullanılıyor. */
+  sira?: number;
 }
 
 export interface PinGuncelleme {
@@ -851,7 +856,7 @@ export async function pinGuncelle(pinId: string, g: PinGuncelleme): Promise<void
   }
 
   /* 1) Yeni dosyalar yükleniyor. Yol düzeni pinAt ile aynı: <kimlik>/<...> */
-  const yuklenen: { yol: string; tur: "photo" | "video"; not: string }[] = [];
+  const yuklenen: { yol: string; tur: "photo" | "video"; not: string; sira: number }[] = [];
   for (let i = 0; i < g.yeniMedyalar.length; i++) {
     const m = g.yeniMedyalar[i];
     const uzanti = (m.dosya.name.split(".").pop() ?? "jpg").toLowerCase().slice(0, 5);
@@ -865,15 +870,19 @@ export async function pinGuncelle(pinId: string, g: PinGuncelleme): Promise<void
         cacheControl: "31536000",
       });
     if (error) throw new Error(`Dosya yüklenemedi: ${error.message}`);
-    yuklenen.push({ yol, tur: m.dosya.type.startsWith("video") ? "video" : "photo", not: m.not });
+    yuklenen.push({
+      yol, tur: m.dosya.type.startsWith("video") ? "video" : "photo", not: m.not,
+      sira: m.sira ?? g.kalanMedyalar.length + i,
+    });
   }
 
-  /* 2) Yeni satırlar. Sıralama kalanların ardından devam ediyor. */
+  /* 2) Yeni satırlar. Sıra çağırandan geliyor: yeni fotoğraf da kapak
+        olabilsin diye eski ve yeni medya tek listede sıralanıyor. */
   if (yuklenen.length) {
     const { error } = await db.from("pin_media").insert(
-      yuklenen.map((u, i) => ({
+      yuklenen.map((u) => ({
         pin_id: pinId, kind: u.tur, storage_path: u.yol,
-        caption: u.not.trim() || null, ordering: g.kalanMedyalar.length + i,
+        caption: u.not.trim() || null, ordering: u.sira,
       })),
     );
     if (error) {
@@ -886,7 +895,7 @@ export async function pinGuncelle(pinId: string, g: PinGuncelleme): Promise<void
   for (let i = 0; i < g.kalanMedyalar.length; i++) {
     const k = g.kalanMedyalar[i];
     const { error } = await db.from("pin_media")
-      .update({ caption: k.not.trim() || null, ordering: i })
+      .update({ caption: k.not.trim() || null, ordering: k.sira ?? i })
       .eq("pin_id", pinId).eq("storage_path", k.yol);
     if (error) throw error;
   }
