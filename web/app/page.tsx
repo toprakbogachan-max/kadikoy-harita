@@ -232,7 +232,16 @@ function Uygulama() {
                 onBolgeDegisti={setBolge}
                 onAlanDegisti={alaniGuncelle}
                 onEtkilesim={() => setSeritAcik(false)}
-                sigdir={kisiFiltre?.id ?? null}
+                /* Kişi filtresi gibi takip/kaydettiklerim de haritanın
+                   tamamına dağılıyor; hangi filtreye geçildiyse kadraj
+                   yenilensin diye anahtar filtrenin kendisini taşıyor.
+                   Kategori ve "şu an açık" dışarıda: onlar görünen alanın
+                   sorgusu, haritayı oynatmaları istenmiyor. */
+                sigdir={
+                  kisiFiltre ? `kisi:${kisiFiltre.id}`
+                  : filtre === "takip" || filtre === "kaydettiklerim" ? `filtre:${filtre}`
+                  : null
+                }
                 konum={konum}
                 konumaGit={konumaGit}
               />
