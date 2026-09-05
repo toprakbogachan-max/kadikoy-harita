@@ -373,14 +373,14 @@ export async function kisininListeleri(kisiId: string): Promise<Liste[]> {
   const { data, error } = await db
     .from("lists")
     .select(`id, owner_id, slug, title, intro,
-             list_items ( ordering, places ( id, slug, name, category, neighborhood ) )`)
+             list_items ( ordering, places ( id, slug, name, category, neighborhood, lat, lng, pin_count ) )`)
     .eq("owner_id", kisiId)
     .order("created_at", { ascending: false });
   if (error) throw error;
 
   interface HamListe {
     id: string; owner_id: string; slug: string; title: string; intro: string | null;
-    list_items: { ordering: number; places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null } }[];
+    list_items: { ordering: number; places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; lat: number | null; lng: number | null; pin_count: number | null } }[];
   }
   return (data as unknown as HamListe[]).map((l) => ({
     id: l.id, sahip: l.owner_id, slug: l.slug, baslik: l.title, not: l.intro,
@@ -389,7 +389,12 @@ export async function kisininListeleri(kisiId: string): Promise<Liste[]> {
       .map((li): Yer => ({
         id: li.places.id, slug: li.places.slug, ad: li.places.name,
         tur: li.places.category, semt: li.places.neighborhood ?? "Kadıköy",
-        lat: 0, lng: 0, saatler: null,
+        /* Koordinat artık buradan geliyor: lat/lng places üstünde hesaplanan
+           alanlar olarak tanımlı, PostgREST okuyabiliyor. Önce 0,0 yazılıyordu
+           ve liste ekranlarında harita çizilemiyordu. */
+        lat: li.places.lat ?? 0, lng: li.places.lng ?? 0, saatler: null,
+        /* Liste satırındaki "· N pin" bu olmadan hiç görünmüyordu. */
+        pinSayisi: li.places.pin_count ?? 0,
       })),
   }));
 }

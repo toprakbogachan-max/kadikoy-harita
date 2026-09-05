@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { Liste } from "@/lib/model";
 import { igneStil, simgeSvg, fotoZemin } from "@/lib/gorsel";
 import { TUR_AD } from "@/lib/paleti";
+import MiniHarita from "./MiniHarita";
 
 /**
  * Liste içeriği.
@@ -17,7 +18,7 @@ import { TUR_AD } from "@/lib/paleti";
  * ilk mekanların renk şeritlerini onlardan çiziyordu).
  */
 export default function ListeSayfasi({
-  liste, sahibi, onKapat, onYerAc,
+  liste, sahibi, onKapat, onYerAc, onHaritada,
 }: {
   liste: Liste;
   /** başkasının listesine bakarken sahibinin adı */
@@ -25,7 +26,12 @@ export default function ListeSayfasi({
   onKapat: () => void;
   /** oncelikliKisi: mekan sayfası bu kişinin pinini önce göstersin */
   onYerAc: (yerId: string, oncelikliKisi?: string) => void;
+  /** Listenin tamamını ana haritada göster. */
+  onHaritada?: (liste: Liste) => void;
 }) {
+  /* Koordinatsız kayıt varsa (eski bir listede ya da mekan silinmişse)
+     haritada gösterilecek bir şey yok, o zaman hiç çizilmiyor. */
+  const haritalik = liste.yerler.filter((y) => y.lat !== 0 && y.lng !== 0);
   useEffect(() => {
     const el = (e: KeyboardEvent) => { if (e.key === "Escape") onKapat(); };
     window.addEventListener("keydown", el);
@@ -53,6 +59,29 @@ export default function ListeSayfasi({
           <p className="border-b border-[var(--cizgi)] px-4 py-3 font-el text-[15px] leading-snug">
             {liste.not}
           </p>
+        )}
+
+        {/* Liste düz bir addan ibaretti: "Yağmurlu günde Kadıköy" deyip
+            mekanların birbirine yakın mı, ilçeye dağılmış mı olduğunu
+            göstermiyordu. Harita listenin şeklini bir bakışta veriyor;
+            dokununca ana harita bu listeye kadraj alıyor. */}
+        {haritalik.length > 0 && (
+          onHaritada ? (
+            <button
+              onClick={() => onHaritada(liste)}
+              aria-label={`${liste.baslik} listesini haritada göster`}
+              className="relative m-4 block w-[calc(100%-2rem)] overflow-hidden rounded-sm border-none bg-su p-0 shadow-kagit"
+            >
+              <MiniHarita yerler={haritalik} />
+              <span className="absolute bottom-1.5 right-1.5 rounded-sm bg-[rgba(20,15,8,.55)] px-1.5 py-1 font-tabela text-[9px] uppercase tracking-[0.1em] text-white">
+                Haritada gör
+              </span>
+            </button>
+          ) : (
+            <div className="m-4 overflow-hidden rounded-sm bg-su shadow-kagit">
+              <MiniHarita yerler={haritalik} />
+            </div>
+          )
         )}
 
         {liste.yerler.length ? (

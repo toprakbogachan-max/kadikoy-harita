@@ -21,7 +21,7 @@ import Bildirimler from "@/components/Bildirimler";
 import KonumDugmesi from "@/components/KonumDugmesi";
 import { useVeri } from "@/lib/kanca";
 import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim, okunmamisBildirim, takiptekilerinYerleri } from "@/lib/veri";
-import type { Yer } from "@/lib/model";
+import type { Yer, Liste } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { jetonGradyanlari } from "@/lib/gorsel";
 import { useKonum, kadikoydeMi } from "@/lib/konum";
@@ -72,6 +72,9 @@ function Uygulama() {
      yabancı bir profilden filtrelenince kimin haritasına baktığın belli
      olmuyor ve filtreyi kapatmanın yolu kalmıyordu. Ad da tutuluyor. */
   const [kisiFiltre, setKisiFiltre] = useState<{ id: string; etiket: string } | null>(null);
+  /* Liste odağı: haritada yalnızca o listenin mekanları. Sunucuya sorulmuyor,
+     Liste.yerler artık koordinat da taşıyor. */
+  const [listeFiltre, setListeFiltre] = useState<{ id: string; etiket: string; yerler: Yer[] } | null>(null);
   const [secili, setSecili] = useState<string | null>(null);
   const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
   const [alan, setAlan] = useState(MERKEZ);
@@ -107,6 +110,7 @@ function Uygulama() {
 
   const { veri: gorunenler, yukleniyor, hata } = useVeri<Yer[]>(
     async () => {
+      if (listeFiltre) return listeFiltre.yerler;
       if (kisiFiltre) return kisininYerleri(kisiFiltre.id, sorgu);
       /* Takip filtresi yarıçapa bakmıyor: takip ettiklerinin pinlediği her
          yeri görmek istersin, ekranın neresine düştüğünü değil. */
@@ -121,7 +125,7 @@ function Uygulama() {
       }
       return yerleriGetir(sorgu);
     },
-    [sorgu, kisiFiltre?.id, filtre, ben?.id, tazele],
+    [sorgu, listeFiltre?.id, kisiFiltre?.id, filtre, ben?.id, tazele],
     [],
   );
 
@@ -154,15 +158,31 @@ function Uygulama() {
   const kisiSec = (k: string, etiket: string) => {
     setKisiFiltre((onceki) => {
       const yeni = onceki?.id === k ? null : { id: k, etiket };
-      if (yeni) setFiltre("hepsi");
+      if (yeni) { setFiltre("hepsi"); setListeFiltre(null); }
       return yeni;
     });
   };
+
+  /* Listeyi haritada göster — kişininki gibi, kaynağı liste. */
+  const listeyiAc = (l: Liste) => {
+    setListeFiltre({
+      id: l.id,
+      etiket: l.baslik,
+      yerler: l.yerler.filter((y) => y.lat !== 0 && y.lng !== 0),
+    });
+    setKisiFiltre(null);
+    setFiltre("hepsi");
+    setSecili(null);
+    setEkran("harita");
+  };
+
+  const odagiBirak = () => { setKisiFiltre(null); setListeFiltre(null); };
 
   /* Profildeki kişisel haritaya dokununca: o kişinin pinleri ana haritada.
      Şeritten kişi seçmekle aynı durum, yalnızca giriş noktası farklı. */
   const kisininHaritasi = (k: string, etiket: string) => {
     setKisiFiltre({ id: k, etiket });
+    setListeFiltre(null);
     setFiltre("hepsi");
     setSecili(null);
     setEkran("harita");
@@ -238,7 +258,8 @@ function Uygulama() {
                    Kategori ve "şu an açık" dışarıda: onlar görünen alanın
                    sorgusu, haritayı oynatmaları istenmiyor. */
                 sigdir={
-                  kisiFiltre ? `kisi:${kisiFiltre.id}`
+                  listeFiltre ? `liste:${listeFiltre.id}`
+                  : kisiFiltre ? `kisi:${kisiFiltre.id}`
                   : filtre === "takip" || filtre === "kaydettiklerim" ? `filtre:${filtre}`
                   : null
                 }
@@ -292,19 +313,22 @@ function Uygulama() {
                 {/* Kişi filtresi açıkken kimin haritasına baktığın yazıyor ve
                     kapatılabiliyor: şerit yalnızca takip ettiklerini gösterdiği
                     için yabancı biri seçiliyken hiçbir işaret kalmıyordu. */}
-                {kisiFiltre && (
+                {(kisiFiltre || listeFiltre) && (
                   <div className="flex justify-center pb-1.5">
                     <button
-                      onClick={() => setKisiFiltre(null)}
+                      onClick={odagiBirak}
                       className="flex items-center gap-1.5 rounded-full border border-[var(--cizgi)] bg-yuzey px-3 py-1.5 font-tabela text-[10.5px] uppercase tracking-[0.1em] text-murekkep shadow-kagit"
                     >
-                      {kisiFiltre.etiket}
+                      {(listeFiltre ?? kisiFiltre)!.etiket}
                       <span aria-hidden className="text-[12px] leading-none text-murekkep2">✕</span>
                       <span className="sr-only">— filtreyi kaldır</span>
                     </button>
                   </div>
                 )}
-                <FiltreCipleri secili={filtre} onSec={setFiltre} />
+                {/* Çipe dokunmak odağı bırakıyor: kişi/liste odağı sorguyu
+                    tamamen devraldığı için, odak açıkken çipler görünürde
+                    hiçbir şey yapmıyordu. */}
+                <FiltreCipleri secili={filtre} onSec={(f) => { odagiBirak(); setFiltre(f); }} />
               </div>
             </div>
           </>
@@ -359,6 +383,7 @@ function Uygulama() {
               kullaniciAdi={profilKisi}
               onYerAc={haritadaAc}
               onHaritada={kisininHaritasi}
+              onListeHaritada={listeyiAc}
               onGirisIste={() => setGirisAcik(true)}
               onPaylas={() => setPaylasAcik(true)}
               onAyarlar={() => setAyarlarAcik(true)}
@@ -398,6 +423,7 @@ function Uygulama() {
             onKapat={() => setAyarlarAcik(false)}
             onYerAc={(id) => { setAyarlarAcik(false); haritadaAc(id); }}
             onGonderiAc={(id, liste) => { setAyarlarAcik(false); setGonderi({ id, liste }); }}
+            onListeHaritada={(l) => { setAyarlarAcik(false); listeyiAc(l); }}
             onListeOlustur={() => setListeAcik(true)}
           />
         )}

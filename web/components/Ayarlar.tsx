@@ -16,6 +16,7 @@ interface Props {
   onYerAc: (yerId: string) => void;
   onGonderiAc: (pinId: string, liste: string[]) => void;
   onListeOlustur: () => void;
+  onListeHaritada: (liste: Liste) => void;
 }
 
 /**
@@ -26,7 +27,7 @@ interface Props {
  * profiles.is_public sütunu ve okuma policy'si ona bakıyor, yoksa kapalı
  * profilin verisi yine herkese açık olurdu.
  */
-export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur }: Props) {
+export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur, onListeHaritada }: Props) {
   const { ben, cikisYap, tazele } = useOturum();
   const [arsiv, setArsiv] = useState<ArsivTuru | null>(null);
   const [profilAcik, setProfilAcik] = useState(false);
@@ -76,6 +77,7 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur 
         onYerAc={onYerAc}
         onGonderiAc={onGonderiAc}
         onListeOlustur={onListeOlustur}
+        onListeHaritada={onListeHaritada}
       />
     );
   }

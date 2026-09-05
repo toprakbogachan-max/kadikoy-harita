@@ -15,6 +15,7 @@ export default function Profil({
   kullaniciAdi,
   onYerAc,
   onHaritada,
+  onListeHaritada,
   onGirisIste,
   onPaylas,
   onAyarlar,
@@ -25,6 +26,8 @@ export default function Profil({
   onYerAc: (id: string, oncelikliKisi?: string) => void;
   /** Kişisel haritaya dokununca: bu kişinin pinleri ana haritada. */
   onHaritada: (kisiId: string, etiket: string) => void;
+  /** Listenin tamamını ana haritada göster. */
+  onListeHaritada: (liste: Liste) => void;
   onGirisIste: () => void;
   onPaylas: () => void;
   onAyarlar: () => void;
@@ -89,6 +92,7 @@ export default function Profil({
         sahibi={benim ? undefined : kisi.ad}
         onKapat={() => setAcikListe(null)}
         onYerAc={onYerAc}
+        onHaritada={onListeHaritada}
       />
     );
   }

@@ -16,6 +16,7 @@ interface Props {
   onYerAc: (yerId: string, oncelikliKisi?: string) => void;
   onGonderiAc: (pinId: string, liste: string[]) => void;
   onListeOlustur: () => void;
+  onListeHaritada: (liste: Liste) => void;
 }
 
 const BASLIK = {
@@ -26,7 +27,7 @@ const BASLIK = {
 
 /** Ayarlardan açılan arşiv ekranları — üçü de aynı çerçeveyi paylaşıyor. */
 export default function Arsiv({
-  tur, pinler, yerler, listeler, onKapat, onYerAc, onGonderiAc, onListeOlustur,
+  tur, pinler, yerler, listeler, onKapat, onYerAc, onGonderiAc, onListeOlustur, onListeHaritada,
 }: Props) {
   const [acikListe, setAcikListe] = useState<Liste | null>(null);
   const [silinen, setSilinen] = useState<Set<string>>(new Set());
@@ -48,6 +49,7 @@ export default function Arsiv({
         liste={acikListe}
         onKapat={() => setAcikListe(null)}
         onYerAc={onYerAc}
+        onHaritada={onListeHaritada}
       />
     );
   }

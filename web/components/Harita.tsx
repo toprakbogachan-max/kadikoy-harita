@@ -117,8 +117,17 @@ export default function Harita({
     /* Kullanıcı haritayla uğraşmaya başladığında hikâye şeridi kapanıyor.
        "movestart" DEĞİL "dragstart"/"zoomstart": movestart programlı
        uçuşlarda da tetikleniyor (konuma git, mekana odaklan) ve şerit
-       kullanıcı dokunmadan kapanırdı. */
-    const etkilesim = () => onEtkilesimRef.current?.();
+       kullanıcı dokunmadan kapanırdı.
+
+       originalEvent şart: zoomstart PROGRAMLI yakınlık değişiminde de
+       tetikleniyor. Kadraj alınırken şerit kapanıyor, kapsayıcı 66px uzuyor
+       ve kadraj animasyonu ortasında çerçeve kayıyordu — listenin en üstteki
+       pini bu yüzden ekranın 3px dışında kalıyordu. Kullanıcı hareketinde
+       originalEvent dolu, programlıda boş. */
+    const etkilesim = (e?: { originalEvent?: unknown }) => {
+      if (!e?.originalEvent) return;
+      onEtkilesimRef.current?.();
+    };
     m.on("dragstart", etkilesim);
     m.on("zoomstart", etkilesim);
     if (process.env.NODE_ENV === "development") {
@@ -177,8 +186,7 @@ export default function Harita({
     };
 
     m.on("load", () => {
-      m.resize();
-      yerAdKatmanlari.current = ((m.getStyle().layers ?? []) as LayerSpecification[])
+        yerAdKatmanlari.current = ((m.getStyle().layers ?? []) as LayerSpecification[])
         .filter((l) => "source-layer" in l && l["source-layer"] === "place")
         .map((l) => l.id);
       basligiGuncelle();
@@ -271,11 +279,16 @@ export default function Harita({
     const m = harita.current;
     if (!sigdir) { sigdirilan.current = null; return; }
     /* Liste filtreden SONRA geliyor; boşken kadraj hesaplanamaz, dolduğunda
-       efekt yeniden koşuyor. Bir kez: sonrasında kullanıcı haritayı gezerse
-       geri zıplamasın. */
+       efekt yeniden koşuyor. useVeri bayat sonucu değil BOŞ dizi döndürdüğü
+       için burada bir önceki filtrenin verisine kadraj alma tehlikesi yok.
+       Bir kez: sonrasında kullanıcı haritayı gezerse geri zıplamasın. */
     if (!m || sigdirilan.current === sigdir || !gorunenler.length) return;
     const noktalar = gorunenler.filter((y) => y.lat !== 0 && y.lng !== 0);
     if (!noktalar.length) return;
+    /* Kapsayıcı ölçülemiyorsa kadraj saçma çıkıyor (hesap 0x0'a göre yapılıyor);
+       bayrak yazılmadan çıkılıyor ki ölçü gelince tekrar denensin. */
+    const kap = m.getContainer();
+    if (!kap.clientWidth || !kap.clientHeight) return;
     sigdirilan.current = sigdir;
     const kutu = new maplibregl.LngLatBounds();
     noktalar.forEach((y) => kutu.extend([y.lng, y.lat]));
@@ -285,15 +298,26 @@ export default function Harita({
       m.stop();
       m.fitBounds(kutu, {
         /* Alt boşluk büyük: filtre çipleri ve kişi çipi haritanın üstünde
-           yüzüyor, en alttaki pin onların altında kalıyordu. */
-        padding: { top: 56, bottom: 120, left: 48, right: 48 },
+           yüzüyor, en alttaki pin onların altında kalıyordu. Küçük ekranda
+           dolgu yüksekliği yiyip bitirmesin diye üst sınır var. */
+        padding: {
+          top: Math.min(56, kap.clientHeight * 0.12),
+          bottom: Math.min(120, kap.clientHeight * 0.24),
+          left: Math.min(48, kap.clientWidth * 0.14),
+          right: Math.min(48, kap.clientWidth * 0.14),
+        },
         /* Tek pinde fitBounds sonuna kadar yakınlaştırıyor; sokak seviyesi
            yeter. */
         maxZoom: 15.5,
-        duration: 800,
+        /* ANLIK, animasyonlu değil. Süreli çağrı ölçüldü: kamera hiç
+           kıpırdamıyordu (konsoldan aynı sınırlarla elle çağrılınca çalışıyor,
+           efektin içinden çalışmıyor). Zaten ekran değişerek gelindiği için
+           uçuşun anlatacağı bir şey de yok. */
+        duration: 0,
       });
     } catch (e) {
       console.warn("kadraj alınamadı", e);
+      sigdirilan.current = null;
     }
   }, [sigdir, gorunenler]);
 
@@ -342,8 +366,11 @@ export default function Harita({
        kümede olmayan marker haritadan SÖKÜLÜYOR, yoksa filtre değiştikçe
        DOM'da yüzlerce ölü marker birikir. */
     /* Pinsizler eşiğin altında hiç çizilmiyor — soru buydu: pini olmayan
-       mekan haritada neden dursun? Yakından, ilk pini atılabilsin diye. */
-    const cizilecek = gorunenler.filter((y) => (y.pinSayisi ?? 0) > 0 || yakin);
+       mekan haritada neden dursun? Yakından, ilk pini atılabilsin diye.
+       Odak varken (kişi/liste/takip) bu kural kalkıyor: küme zaten küçük ve
+       kasıtlı, "bu listeyi göster" deyip yarısını gizlemek olmaz. Kaydedilmiş
+       ama henüz pinlenmemiş mekanlar tam olarak buraya düşüyordu. */
+    const cizilecek = gorunenler.filter((y) => !!sigdir || (y.pinSayisi ?? 0) > 0 || yakin);
 
     const gelen = new Set(cizilecek.map((y) => y.id));
     for (const [id, mk] of Object.entries(markerlar.current)) {
@@ -393,7 +420,7 @@ export default function Harita({
       el.classList.toggle("secili", seciliMi);
       el.style.zIndex = seciliMi ? "10" : populer ? "5" : pinli ? "3" : "1";
     });
-  }, [gorunenler, secili, yakin]);
+  }, [gorunenler, secili, yakin, sigdir]);
 
   /* Konumlandırma satır içi: maplibre-gl.css `.maplibregl-map{position:relative}`
      tanımı Tailwind'in `absolute` sınıfını eziyor, kapsayıcı yükseklik alamıyor.
