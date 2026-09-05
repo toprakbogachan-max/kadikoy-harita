@@ -103,6 +103,18 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
     } finally { setHazirlaniyor(false); }
   };
 
+  /* Sıra ÖNEMLİ: ilk medya kartlarda kapak oluyor, gönderi karuselinde de
+     ilk sırada açılıyor. Yükledikten sonra değiştirmenin yolu yoktu; tek
+     çare silip yeniden yüklemekti. */
+  const tasi = (i: number, yon: -1 | 1) =>
+    setMedyalar((l) => {
+      const j = i + yon;
+      if (j < 0 || j >= l.length) return l;
+      const k = [...l];
+      [k[i], k[j]] = [k[j], k[i]];
+      return k;
+    });
+
   const yerHazir = !!yer || (!!yeniYer && yeniAd.trim().length > 1);
   const gecerli =
     yerHazir &&
@@ -228,7 +240,16 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                kutuya yazılıyordu, oysa notu asıl o an yazıyorsun. */
             <div key={i} onClick={() => setBuyuk({ i })}
                  className="mb-2 flex cursor-pointer gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
-              <Onizleme dosya={m.dosya} />
+              <div className="relative shrink-0">
+                <Onizleme dosya={m.dosya} />
+                {/* Sıranın neye yaradığını söylemeden ok koymak anlamsız
+                    olurdu: ilk sıradaki kapak. */}
+                {i === 0 && (
+                  <span className="absolute inset-x-0 bottom-0 bg-[rgba(20,15,8,.6)] py-[1px] text-center font-tabela text-[7.5px] uppercase tracking-[0.08em] text-white">
+                    Kapak
+                  </span>
+                )}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 truncate text-[12px] text-murekkep2">{m.dosya.name}</div>
                 <div
@@ -240,11 +261,30 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                   {m.not || "Bu görselin notu (isteğe bağlı)"}
                 </div>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
-                aria-label="Kaldır"
-                className="shrink-0 self-start border-none bg-transparent p-0 text-[14px] text-murekkep2">
-                ✕
-              </button>
+              <div className="flex shrink-0 flex-col items-center gap-1 self-start">
+                <button onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
+                  aria-label="Kaldır"
+                  className="border-none bg-transparent p-0 text-[14px] leading-none text-murekkep2">
+                  ✕
+                </button>
+                {/* Sürükle-bırak değil ok: dokunmatikte satırın kendisi zaten
+                    dokunulabilir (görseli büyütüyor), sürükleme ikisini
+                    karıştırırdı. */}
+                {medyalar.length > 1 && (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); tasi(i, -1); }}
+                      disabled={i === 0} aria-label="Yukarı taşı"
+                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
+                      ∧
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); tasi(i, 1); }}
+                      disabled={i === medyalar.length - 1} aria-label="Aşağı taşı"
+                      className="border-none bg-transparent p-0 text-[13px] leading-none text-murekkep2 disabled:opacity-25">
+                      ∨
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           ))}
 
@@ -258,6 +298,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           </button>
           <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
             Birden fazla ekleyebilirsin; her birine ayrı not yazabilirsin.
+            {medyalar.length > 1 && " Oklarla sıralayabilirsin — ilk sıradaki kapak olur."}
           </p>
         </div>
 
