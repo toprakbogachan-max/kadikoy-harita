@@ -473,7 +473,9 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
                   <span className="font-sayi text-[10.5px] text-murekkep2">{zaman(pin.saat)}</span>
                   <span className="ml-auto font-sayi text-[13px] font-bold text-jeton">{pin.puan}</span>
                 </div>
-                <p className="line-clamp-3 font-el text-[15px] leading-snug">{pin.metin}</p>
+                {pin.metin.trim() && (
+                  <p className="line-clamp-3 font-el text-[15px] leading-snug">{pin.metin}</p>
+                )}
               </div>
             </button>
 

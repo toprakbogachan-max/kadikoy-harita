@@ -332,7 +332,10 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
             </div>
           )}
 
-          <p className="line-clamp-4 font-el text-[16px] leading-snug">{p.metin}</p>
+          {/* Not artık zorunlu değil; boşken boş bir satır bırakmıyoruz. */}
+          {p.metin.trim() && (
+            <p className="line-clamp-4 font-el text-[16px] leading-snug">{p.metin}</p>
+          )}
 
           <div className="mt-2 flex flex-wrap gap-1.5">
             {p.senaryo && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">{p.senaryo}</span>}

@@ -124,9 +124,11 @@ export default function Arsiv({
                         <span className="truncate text-[12.5px] font-semibold">{p.yerAdi}</span>
                         <span className="ml-auto shrink-0 font-sayi text-[12px] font-bold text-jeton">{p.puan}</span>
                       </span>
-                      <span className="mt-1 line-clamp-2 block text-[12.5px] leading-snug text-murekkep2">
-                        {p.metin}
-                      </span>
+                      {p.metin.trim() && (
+                        <span className="mt-1 line-clamp-2 block text-[12.5px] leading-snug text-murekkep2">
+                          {p.metin}
+                        </span>
+                      )}
                       <span className="mt-1 block font-sayi text-[10.5px] text-murekkep2">{zaman(p.saat)}</span>
                     </span>
                   </button>

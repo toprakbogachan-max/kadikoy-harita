@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { pinGuncelle, pinSil, medyaUrl, type YeniMedya, type KalanMedya } from "@/lib/veri";
 import type { Pin } from "@/lib/model";
 import {
-  Cip, Onizleme, SENARYOLAR, SIKLIKLAR, TEKRARLAR, METIN_MIN, METIN_MAX,
+  Cip, Onizleme, SENARYOLAR, SIKLIKLAR, TEKRARLAR, METIN_MAX,
 } from "./PinFormu";
 import BuyukGorsel from "./BuyukGorsel";
 import { fotograflariHazirla } from "@/lib/fotograf";
@@ -83,7 +83,6 @@ export default function PinDuzenle({
 
   const medyaSayisi = kalan.length + yeniler.length;
   const gecerli =
-    metin.trim().length >= METIN_MIN &&
     kelimeler.every((k) => k.trim().length > 0) &&
     !!senaryo &&
     medyaSayisi > 0;
@@ -267,7 +266,7 @@ export default function PinDuzenle({
           <label className={etiket}>
             Gitmeden bilinmesi gereken
             <span className="ml-2 font-sayi normal-case tracking-normal">
-              {metin.trim().length}/{METIN_MIN} en az
+              {metin.trim().length ? `${metin.trim().length}/${METIN_MAX}` : "İstersen boş bırak"}
             </span>
           </label>
           <textarea value={metin} onChange={(e) => setMetin(e.target.value)}

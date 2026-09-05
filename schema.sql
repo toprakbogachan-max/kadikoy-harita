@@ -147,7 +147,10 @@ create table if not exists pins (
   place_id    uuid not null references places(id) on delete cascade,
 
   -- ---- kalite kapısı: BRIEF'te zorunlu sayılan alanlar (formda da zorunlu) ----
-  body        text not null check (char_length(body) between 15 and 1000),  -- somut not
+  -- body ZORUNLU DEĞİL (göç 13): en az 15 karakter isteniyordu, söyleyecek
+  -- somut bir şeyi olmayan kullanıcı pin atamıyordu. Boş not '' olarak
+  -- yazılıyor; NULL olsaydı arayüzde "null mı boş mu" ayrımı çıkardı.
+  body        text not null check (char_length(body) <= 1000),              -- somut not
   words       text[] not null check (array_length(words, 1) = 3),           -- üç kelime
   scenario    text not null,                                               -- geliş senaryosu
   -- Prototip yarım puan gösteriyor (8.5/10), o yüzden smallint değil numeric.

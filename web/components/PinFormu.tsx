@@ -19,7 +19,9 @@ export const TEKRARLAR = ["evet", "belki", "hayır"];
 const TURLER: PlaceCategory[] = ["kahve", "yemek", "bar", "tatli", "kultur", "park", "otel", "magaza", "diger"];
 
 /* Şemadaki check ile aynı sınırlar — sunucuya boşuna gidip hata almayalım */
-export const METIN_MIN = 15;
+/* METIN_MIN kaldırıldı (göç 13): not artık zorunlu değil. Bir şey yazmak
+   zorunda kalan kullanıcı pin ATMIYORDU; fotoğraf, puan, üç kelime ve
+   senaryo zaten kalite kapısını tutuyor. */
 export const METIN_MAX = 1000;
 
 interface Props {
@@ -106,8 +108,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
     yerHazir &&
     medyalar.length > 0 &&
     kelimeler.every((k) => k.trim().length > 0) &&
-    !!senaryo &&
-    metin.trim().length >= METIN_MIN;
+    !!senaryo;
 
   const gonder = async () => {
     setGonderiliyor(true); setHata(null);
@@ -300,15 +301,17 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
         {/* ---- metin ---- */}
         <div className={alan}>
-          <label className={etiket} htmlFor="metin">Gitmeden bilinmesi gereken <Zorunlu /></label>
+          <label className={etiket} htmlFor="metin">Gitmeden bilinmesi gereken</label>
           <textarea id="metin" value={metin} onChange={(e) => setMetin(e.target.value)}
             maxLength={METIN_MAX} rows={4}
             placeholder="Hangi masaya otur, ne zaman git, neye dikkat et…"
             className={girdi + " resize-none leading-snug"} />
-          <div className={`mt-1 text-right font-sayi text-[11px] ${
-            metin.trim().length < METIN_MIN ? "text-murekkep2" : "text-jeton"
-          }`}>
-            {metin.trim().length}/{METIN_MIN} en az
+          {/* Sayaç yalnızca yazmaya başlayınca: boşken "0/1000" görmek, boş
+              bırakılamazmış gibi duruyordu. */}
+          <div className="mt-1 text-right font-sayi text-[11px] text-murekkep2">
+            {metin.trim().length
+              ? `${metin.trim().length}/${METIN_MAX}`
+              : "İstersen boş bırak"}
           </div>
         </div>
 
