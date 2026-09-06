@@ -11,10 +11,14 @@
 -- ============================================================
 
 -- ---------- prototipin hayali mekanları ----------
+-- Not: demo mekanların koordinatları uydurma ama KARADA olmak zorunda.
+-- demo-poyraz ve demo-sahil denize düşüyordu (ilçe sınırı çokgeniyle test
+-- edildi); ikisi de düzeltildi. demo-sahil artık parkın OSM'deki gerçek
+-- merkezinde.
 insert into places (slug, name, category, neighborhood, geo, opening_hours, status)
 values
   ('demo-poyraz', 'Poyraz Kahve', 'kahve'::place_category, 'Moda',
-   st_point(29.0246, 40.9788)::geography, '[{"d":1,"open":"08:00","close":"22:00"},{"d":2,"open":"08:00","close":"22:00"},{"d":3,"open":"08:00","close":"22:00"},{"d":4,"open":"08:00","close":"22:00"},{"d":5,"open":"08:00","close":"23:30"},{"d":6,"open":"09:00","close":"23:30"},{"d":0,"open":"09:00","close":"21:00"}]'::jsonb, 'published'),
+   st_point(29.0255, 40.9805)::geography, '[{"d":1,"open":"08:00","close":"22:00"},{"d":2,"open":"08:00","close":"22:00"},{"d":3,"open":"08:00","close":"22:00"},{"d":4,"open":"08:00","close":"22:00"},{"d":5,"open":"08:00","close":"23:30"},{"d":6,"open":"09:00","close":"23:30"},{"d":0,"open":"09:00","close":"21:00"}]'::jsonb, 'published'),
   ('demo-iskele', 'İskele Meyhanesi', 'yemek'::place_category, 'Rıhtım',
    st_point(29.0243, 40.9917)::geography, '[{"d":2,"open":"18:00","close":"01:00"},{"d":3,"open":"18:00","close":"01:00"},{"d":4,"open":"18:00","close":"01:00"},{"d":5,"open":"18:00","close":"02:00"},{"d":6,"open":"18:00","close":"02:00"},{"d":0,"open":"18:00","close":"00:00"}]'::jsonb, 'published'),
   ('demo-firin', 'Yeldeğirmeni Fırın', 'tatli'::place_category, 'Yeldeğirmeni',
@@ -24,7 +28,7 @@ values
   ('demo-kitap', 'Bahariye Kitap & Kahve', 'kahve'::place_category, 'Bahariye',
    st_point(29.0292, 40.9879)::geography, '[{"d":1,"open":"10:00","close":"21:00"},{"d":2,"open":"10:00","close":"21:00"},{"d":3,"open":"10:00","close":"21:00"},{"d":4,"open":"10:00","close":"21:00"},{"d":5,"open":"10:00","close":"22:00"},{"d":6,"open":"10:00","close":"22:00"},{"d":0,"open":"11:00","close":"20:00"}]'::jsonb, 'published'),
   ('demo-sahil', 'Moda Sahil Parkı', 'park'::place_category, 'Moda',
-   st_point(29.0301, 40.9772)::geography, '[{"d":0,"open":"00:00","close":"23:59"},{"d":1,"open":"00:00","close":"23:59"},{"d":2,"open":"00:00","close":"23:59"},{"d":3,"open":"00:00","close":"23:59"},{"d":4,"open":"00:00","close":"23:59"},{"d":5,"open":"00:00","close":"23:59"},{"d":6,"open":"00:00","close":"23:59"}]'::jsonb, 'published'),
+   st_point(29.0281, 40.9802)::geography, '[{"d":0,"open":"00:00","close":"23:59"},{"d":1,"open":"00:00","close":"23:59"},{"d":2,"open":"00:00","close":"23:59"},{"d":3,"open":"00:00","close":"23:59"},{"d":4,"open":"00:00","close":"23:59"},{"d":5,"open":"00:00","close":"23:59"},{"d":6,"open":"00:00","close":"23:59"}]'::jsonb, 'published'),
   ('demo-plak', 'Akmar Plak', 'kultur'::place_category, 'Bahariye',
    st_point(29.0284, 40.9892)::geography, '[{"d":1,"open":"11:00","close":"20:00"},{"d":2,"open":"11:00","close":"20:00"},{"d":3,"open":"11:00","close":"20:00"},{"d":4,"open":"11:00","close":"20:00"},{"d":5,"open":"11:00","close":"21:00"},{"d":6,"open":"11:00","close":"21:00"}]'::jsonb, 'published'),
   ('demo-bar', 'Boğa Bar', 'bar'::place_category, 'Rıhtım',
