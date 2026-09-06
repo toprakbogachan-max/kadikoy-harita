@@ -6,11 +6,10 @@ mekanlar ve o mekanlara bıraktıkları deneyim notları duruyor.
 **Canlı:** https://kadikoy-harita.vercel.app
 
 <p align="center">
-  <img src="docs/01-harita.png"    alt="Harita ekranı — Bahariye çevresindeki pinler" width="270">
-  <img src="docs/02-pin-formu.png" alt="Pin atma formu — zorunlu alanlar" width="270">
-  <img src="docs/03-profil.png"    alt="Profil — kişinin kendi Kadıköy haritası" width="270">
+  <img src="docs/01-harita.png"    alt="Harita ekranı — Bahariye çevresindeki pinler" width="300">
+  <img src="docs/02-pin-formu.png" alt="Pin atma formu — zorunlu alanlar" width="300">
 </p>
-<p align="center"><sub>Harita · pin formu · profil</sub></p>
+<p align="center"><sub>Harita · pin formu</sub></p>
 
 ---
 
