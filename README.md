@@ -5,6 +5,13 @@ mekanlar ve o mekanlara bıraktıkları deneyim notları duruyor.
 
 **Canlı:** https://kadikoy-harita.vercel.app
 
+<p align="center">
+  <img src="docs/01-harita.png"    alt="Harita ekranı — Bahariye çevresindeki pinler" width="270">
+  <img src="docs/02-pin-formu.png" alt="Pin atma formu — zorunlu alanlar" width="270">
+  <img src="docs/03-profil.png"    alt="Profil — kişinin kendi Kadıköy haritası" width="270">
+</p>
+<p align="center"><sub>Harita · pin formu · profil</sub></p>
+
 ---
 
 ## Neden
@@ -30,6 +37,7 @@ Tek yıldız yok. Google Maps'te her yer 4.3 çıkıyor ve hiçbir şey ayırt e
 
 Zorunlu alanlar bir kalite kapısı: fotoğraf ve somut not istendiğinde "çok güzeldi"
 yazan üşengeç pin kendiliğinden eleniyor. Moderasyon yerine formun kendisi filtreliyor.
+Formun kendisi yukarıdaki ikinci ekran görüntüsünde.
 
 Mekan sayfasında **ortalama gösterilmiyor, dağılım gösteriliyor:**
 
@@ -86,6 +94,7 @@ Yaklaşık 9.300 satır, 53 dosya, 17 veritabanı göçü.
 ├── BRIEF.md                   # ürün kararları ve gerekçeleri
 ├── kadikoy-harita-mimari.md   # mimari notlar
 ├── prototip.html              # tasarım referansı (çalışan arayüz prototipi)
+├── docs/                      # README ekran görüntüleri
 └── web/
     ├── app/                   # App Router sayfaları ve route handler'ları
     ├── components/            # arayüz bileşenleri
