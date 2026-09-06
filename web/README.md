@@ -75,8 +75,11 @@ bağlantı localhost'a gider. Var olan hesaplarla şifreyle girişte gerekmiyor.
 ### Bilinmesi gerekenler
 
 - **Adres herkese açık.** Vercel bağlantısı olan herkes uygulamayı açabilir.
-- **Demo hesapların şifresi depoda yazılı** (`demo12345`). Bağlantıyı paylaşırsan
-  o hesaplarla giriş yapıp pin atılabilir. Demo için sorun değil, canlıda değil.
+- **Demo hesapların şifresi depoda yazılı** (`demo12345`) — depo herkese açık
+  olduğu için bu bilinçli. Demo hesaplar `scripts/goc/15-demo-salt-okunur.sql`
+  ile **salt-okunur**: uygulamayı gezebilirler ama pin, yorum, beğeni, liste,
+  takip dahil hiçbir yazma işlemi yapamazlar. Kısıt RLS'te (`public.demo_hesap()`),
+  arayüzde değil — API'ye doğrudan istek atmak da işe yaramaz.
 - **anon anahtarı istemci paketine girer** — normal. Güvenlik RLS'te, anahtarda
   değil; kimin neyi görüp yazabileceği schema.sql'deki policy'lerde tanımlı.
 - Yayına çıkmadan önce `scripts/tohum/tohum-temizle.sql` çalıştırılmalı —

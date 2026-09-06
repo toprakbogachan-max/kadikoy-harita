@@ -695,14 +695,29 @@ drop policy if exists p_sources_none on place_sources;
 create policy p_sources_none  on place_sources for select using (false);
 
 -- yazma: herkes serbest ama sadece kendi adına
+-- Demo hesaplar (e-postası @demo.invalid) uygulamayı gezebilir ama hiçbir şey
+-- yazamaz: şifreleri depoda açık yazılı olduğu için canlı veriye dokunmamalılar.
+-- Kimlik testi JWT'deki e-postadan yapılıyor, auth.users okunmuyor.
+create or replace function public.demo_hesap()
+returns boolean
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(auth.jwt() ->> 'email', '') like '%@demo.invalid'
+$$;
+
 drop policy if exists p_profiles_write on profiles;
-create policy p_profiles_write  on profiles for update using (id = auth.uid());
+create policy p_profiles_write on profiles for update
+  using (id = auth.uid() and not public.demo_hesap());
 -- Trigger security definer olduğu için normalde buna gerek yok; istemci kendi
 -- profilini elle oluşturmak isterse diye duruyor. Başkasının adına açamaz.
 drop policy if exists p_profiles_insert on profiles;
-create policy p_profiles_insert on profiles for insert with check (id = auth.uid());
+create policy p_profiles_insert on profiles for insert
+  with check (id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_places_insert on places;
-create policy p_places_insert  on places for insert with check (auth.uid() is not null);
+create policy p_places_insert on places for insert
+  with check (auth.uid() is not null and not public.demo_hesap());
 -- place_facts wiki tarzı ama İMZALI: yazan kişi kayda geçiyor.
 -- "for all using (auth.uid() is not null)" idi — giriş yapan herkes her
 -- mekanın künyesini silebiliyordu. warning alanı mekan sayfasının en üstünde
@@ -711,46 +726,62 @@ create policy p_places_insert  on places for insert with check (auth.uid() is no
 drop policy if exists p_facts_write on place_facts;
 drop policy if exists p_facts_ekle on place_facts;
 create policy p_facts_ekle on place_facts for insert
-  with check (auth.uid() is not null and updated_by = auth.uid());
+  with check (auth.uid() is not null and updated_by = auth.uid()
+              and not public.demo_hesap());
 drop policy if exists p_facts_guncelle on place_facts;
 create policy p_facts_guncelle on place_facts for update
-  using (auth.uid() is not null) with check (updated_by = auth.uid());
+  using (auth.uid() is not null and not public.demo_hesap())
+  with check (updated_by = auth.uid() and not public.demo_hesap());
 -- DELETE policy'si bilerek yok.
 
 drop policy if exists p_pins_insert on pins;
-create policy p_pins_insert on pins for insert with check (author_id = auth.uid());
+create policy p_pins_insert on pins for insert
+  with check (author_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_pins_update on pins;
-create policy p_pins_update on pins for update using (author_id = auth.uid());
+create policy p_pins_update on pins for update
+  using (author_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_pins_delete on pins;
-create policy p_pins_delete on pins for delete using (author_id = auth.uid());
+create policy p_pins_delete on pins for delete
+  using (author_id = auth.uid() and not public.demo_hesap());
 
 drop policy if exists p_media_write on pin_media;
 create policy p_media_write on pin_media for all
-  using (exists (select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()))
-  with check (exists (select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()));
+  using (not public.demo_hesap() and exists (
+    select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()))
+  with check (not public.demo_hesap() and exists (
+    select 1 from pins where pins.id = pin_media.pin_id and pins.author_id = auth.uid()));
 
 drop policy if exists p_likes_write on pin_likes;
 create policy p_likes_write on pin_likes for all
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = auth.uid() and not public.demo_hesap())
+  with check (user_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_comments_insert on pin_comments;
-create policy p_comments_insert on pin_comments for insert with check (author_id = auth.uid());
+create policy p_comments_insert on pin_comments for insert
+  with check (author_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_comments_delete on pin_comments;
-create policy p_comments_delete on pin_comments for delete using (author_id = auth.uid());
+create policy p_comments_delete on pin_comments for delete
+  using (author_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_follows_write on follows;
 create policy p_follows_write on follows for all
-  using (follower_id = auth.uid()) with check (follower_id = auth.uid());
+  using (follower_id = auth.uid() and not public.demo_hesap())
+  with check (follower_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_saves_write on saves;
 create policy p_saves_write on saves for all
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = auth.uid() and not public.demo_hesap())
+  with check (user_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_lists_write on lists;
 create policy p_lists_write on lists for all
-  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+  using (owner_id = auth.uid() and not public.demo_hesap())
+  with check (owner_id = auth.uid() and not public.demo_hesap());
 drop policy if exists p_list_items_write on list_items;
 create policy p_list_items_write on list_items for all
-  using (exists (select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()))
-  with check (exists (select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()));
+  using (not public.demo_hesap() and exists (
+    select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()))
+  with check (not public.demo_hesap() and exists (
+    select 1 from lists where lists.id = list_items.list_id and lists.owner_id = auth.uid()));
 drop policy if exists p_reports_insert on reports;
-create policy p_reports_insert on reports for insert with check (auth.uid() is not null);
+create policy p_reports_insert on reports for insert
+  with check (auth.uid() is not null and not public.demo_hesap());
 
 -- ============================================================
 --  10. ÖRNEK KAYIT

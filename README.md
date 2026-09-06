@@ -69,6 +69,10 @@ Yaklaşık 9.300 satır, 53 dosya, 17 veritabanı göçü.
   URL'den kurduğu için Turbopack bundle'a almıyor ve harita boş kalıyor; worker
   `public/maplibre/` altından veriliyor (`scripts/maplibre-worker-kopyala.mjs`,
   `predev`/`prebuild` adımında çalışır).
+- **Demo hesaplar salt-okunur.** Depo herkese açık olduğu için demo hesapların
+  şifresi de açık; buna karşılık bu hesaplar veritabanı düzeyinde hiçbir şey
+  yazamıyor (`public.demo_hesap()`, `scripts/goc/15-demo-salt-okunur.sql`).
+  Kısıt arayüzde değil RLS'te olduğu için API'ye doğrudan istek atmak da işe yaramıyor.
 - **Next.js 16 geçişi.** `middleware.ts` → `proxy.ts` olarak yeniden adlandırıldı;
   Supabase oturum yenilemesi buna göre yazıldı.
 

@@ -85,6 +85,7 @@ let sql = `-- ============================================================
 --  GERÇEK KULLANICI GELMEDEN ÖNCE tohum-temizle.sql ÇALIŞTIRILMALI.
 --
 --  Demo hesap şifresi: demo12345   (e-postalar @demo.invalid — teslim edilemez)
+--  Bu hesaplar salt-okunur: goc/15-demo-salt-okunur.sql yazma politikalarını kapatır.
 -- ============================================================
 
 -- ---------- prototipin hayali mekanları ----------

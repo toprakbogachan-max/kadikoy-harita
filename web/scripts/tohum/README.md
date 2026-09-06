@@ -43,6 +43,10 @@ slug `demo-*` · e-posta `@demo.invalid` · medya yolu `demo://*`
 
 Demo hesap şifresi: `demo12345`
 
+Bu hesaplar **salt-okunur** (`../goc/15-demo-salt-okunur.sql`). Şifre depoda açık
+yazılı olduğu için canlıda hiçbir şey yazamamaları gerekiyor; kısıt RLS
+politikalarında, `public.demo_hesap()` fonksiyonuyla uygulanıyor.
+
 ## Panoya alma
 
 SQL Editor'a yapıştırmak için **mutlaka** bu scripti kullan:
