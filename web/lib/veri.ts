@@ -203,6 +203,22 @@ export async function kunyeYaz(yerId: string, k: YeniKunye): Promise<void> {
   if (error) throw error;
 }
 
+/** Çalışma saati — places.opening_hours. null = "bilmiyoruz" (kapalı DEĞİL). */
+export async function yerSaatiYaz(
+  yerId: string,
+  saatler: { d: number; open: string; close: string }[] | null,
+): Promise<void> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  /* Doğrudan UPDATE değil RPC: places'ta UPDATE politikası yok ve olmamalı.
+     Göç 14'teki yer_saati_yaz yalnızca bu sütunu açıyor. */
+  const { error } = await db.rpc("yer_saati_yaz", {
+    in_place: yerId,
+    in_saatler: saatler && saatler.length ? saatler : null,
+  });
+  if (error) throw error;
+}
+
 export async function mekanOzeti(yerId: string, bakanId?: string): Promise<PlaceSummary> {
   const { data, error } = await db.rpc("place_summary", {
     in_place: yerId,

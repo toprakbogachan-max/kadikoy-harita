@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { kunyeYaz, type Kunye } from "@/lib/veri";
+import { kunyeYaz, yerSaatiYaz, type Kunye } from "@/lib/veri";
 
 /**
  * Künye düzenleme — mekanın olgusal bilgileri.
@@ -20,12 +20,17 @@ import { kunyeYaz, type Kunye } from "@/lib/veri";
  * künye 180 TL diyordu. Fiyat artık pinlerin medyanından hesaplanıyor:
  * daha doğru, ve pinler biriktikçe kendini güncelliyor.
  */
+/* Dizin = şemadaki d (0=Pazar), JS getDay() ile aynı. */
+const GUNLER = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
+
 export default function KunyeDuzenle({
-  yerId, yerAdi, mevcut, onKapat, onKaydedildi,
+  yerId, yerAdi, mevcut, saatler, onKapat, onKaydedildi,
 }: {
   yerId: string;
   yerAdi: string;
   mevcut: Kunye | null;
+  /** places.opening_hours — [[gun, "HH:MM", "HH:MM"]]; null = bilinmiyor */
+  saatler: number[][] | null;
   onKapat: () => void;
   onKaydedildi: () => void;
 }) {
@@ -38,6 +43,25 @@ export default function KunyeDuzenle({
   const [rezervasyonNotu, setRezervasyonNotu] = useState(mevcut?.rezervasyonNotu ?? "");
   const [enIyiSaat, setEnIyiSaat] = useState(mevcut?.enIyiSaat ?? "");
   const [sadeceNakit, setSadeceNakit] = useState(mevcut?.sadeceNakit === true);
+  /* Gün dizisi 0=Pazar (şemadaki d ile aynı). Bilinmiyorsa hepsi kapalı
+     başlıyor ve hiçbir şey yazılmıyor — "kapalı" ile "bilmiyoruz" farklı. */
+  const [gunler, setGunler] = useState<{ acik: boolean; o: string; k: string }[]>(() =>
+    Array.from({ length: 7 }, (_, g) => {
+      const v = saatler?.find((s) => s[0] === g);
+      return v
+        ? { acik: true, o: String(v[1]), k: String(v[2]) }
+        : { acik: false, o: "09:00", k: "22:00" };
+    }),
+  );
+  /* Karşılaştırma için başlangıç hâli — kaydederken değişip değişmediğini
+     anlamak gerekiyor. */
+  const [baslangicSaatleri] = useState(() =>
+    (saatler ?? [])
+      .map((v) => ({ d: Number(v[0]), open: String(v[1]), close: String(v[2]) }))
+      .sort((a, b) => a.d - b.d),
+  );
+  const [hepsiO, setHepsiO] = useState("09:00");
+  const [hepsiK, setHepsiK] = useState("22:00");
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
@@ -57,6 +81,16 @@ export default function KunyeDuzenle({
         enIyiSaat: enIyiSaat.trim() || null,
         sadeceNakit: sadeceNakit ? true : null,
       });
+      /* Çalışma saati places'ta duruyor (is_open_now onu okuyor), place_facts'te
+         değil; ayrı çağrı. Hiçbir gün işaretli değilse null yazılıyor: mekan
+         "saat bilgisi yok"a geri dönüyor.
+         DEĞİŞMEDİYSE hiç çağrılmıyor: künyenin başka bir alanını düzelten
+         kullanıcıya saat yazma yetkisi/hatası bulaşmasın. */
+      const yeniSaatler = gunler.flatMap((v, g) =>
+        v.acik && v.o && v.k ? [{ d: g, open: v.o, close: v.k }] : []);
+      if (JSON.stringify(yeniSaatler) !== JSON.stringify(baslangicSaatleri)) {
+        await yerSaatiYaz(yerId, yeniSaatler);
+      }
       onKaydedildi();
     } catch (e) {
       setHata(e instanceof Error ? e.message : String(e));
@@ -121,6 +155,68 @@ export default function KunyeDuzenle({
               maxLength={80} placeholder="örn. hafta sonu 2 gün önceden"
               className={girdi + " mt-2"} />
           )}
+        </div>
+
+        {/* ---- çalışma saati ---- */}
+        <div className="mb-4">
+          <span className={etiket}>Çalışma saati</span>
+          <p className="mb-2 text-[11.5px] leading-snug text-murekkep2">
+            Girilmezse mekan “saat bilgisi yok” olarak kalıyor ve “Şu an açık”
+            filtresinde çıkmıyor. Bilmediğin günü işaretleme — boş bırakmak
+            “kapalı” demek değil.
+          </p>
+
+          {/* Tek tek yedi satır doldurmak sıkıcı: çoğu yer her gün aynı
+              saatte açık. Bu satır hepsini bir dokunuşta dolduruyor. */}
+          <div className="mb-2 flex items-center gap-1.5 rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2">
+            <span className="shrink-0 text-[12.5px] text-murekkep2">Her gün</span>
+            <input type="time" value={hepsiO} onChange={(e) => setHepsiO(e.target.value)}
+              aria-label="Her gün açılış"
+              className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-kagit px-1.5 py-1 font-sayi text-[12.5px]" />
+            <span className="shrink-0 text-murekkep2">–</span>
+            <input type="time" value={hepsiK} onChange={(e) => setHepsiK(e.target.value)}
+              aria-label="Her gün kapanış"
+              className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-kagit px-1.5 py-1 font-sayi text-[12.5px]" />
+            <button
+              onClick={() => setGunler(Array.from({ length: 7 }, () => ({ acik: true, o: hepsiO, k: hepsiK })))}
+              className="shrink-0 rounded-sm border-none bg-jeton px-2 py-1.5 font-tabela text-[10.5px] uppercase tracking-[0.1em] text-white">
+              Uygula
+            </button>
+          </div>
+
+          {/* Pazartesiden başlıyor: haftanın günleri Türkiye'de böyle okunuyor.
+              Dizideki sıra ise 0=Pazar, çünkü şemadaki d ve JS getDay() öyle. */}
+          {[1, 2, 3, 4, 5, 6, 0].map((g) => {
+            const v = gunler[g];
+            const yaz = (y: Partial<typeof v>) =>
+              setGunler((l) => l.map((x, j) => (j === g ? { ...x, ...y } : x)));
+            return (
+              <div key={g} className="mb-1.5 flex items-center gap-1.5">
+                <button onClick={() => yaz({ acik: !v.acik })} aria-pressed={v.acik}
+                  className={`w-[52px] shrink-0 rounded-sm py-1.5 font-tabela text-[10.5px] uppercase tracking-[0.08em] ${
+                    v.acik ? "border-none bg-jeton text-white" : "border border-[var(--cizgi)] bg-yuzey text-murekkep2"
+                  }`}>
+                  {GUNLER[g]}
+                </button>
+                {v.acik ? (
+                  <>
+                    <input type="time" value={v.o} onChange={(e) => yaz({ o: e.target.value })}
+                      aria-label={`${GUNLER[g]} açılış`}
+                      className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-yuzey px-1.5 py-1 font-sayi text-[12.5px]" />
+                    <span className="shrink-0 text-murekkep2">–</span>
+                    <input type="time" value={v.k} onChange={(e) => yaz({ k: e.target.value })}
+                      aria-label={`${GUNLER[g]} kapanış`}
+                      className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-yuzey px-1.5 py-1 font-sayi text-[12.5px]" />
+                  </>
+                ) : (
+                  <span className="flex-1 text-[12px] text-murekkep2">kapalı / bilinmiyor</span>
+                )}
+              </div>
+            );
+          })}
+          <p className="mt-1 text-[11.5px] leading-snug text-murekkep2">
+            Gece yarısını geçen saatler yazılabilir: 20:00–02:00 ertesi güne sarkar.
+          </p>
         </div>
 
         <label className="mb-4 block">

@@ -624,6 +624,7 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
           yerId={yerId}
           yerAdi={yer.ad}
           mevcut={yer.kunye}
+          saatler={yer.saatler}
           onKapat={() => setKunyeAcik(false)}
           onKaydedildi={() => { setKunyeAcik(false); setKunyeSayac((n) => n + 1); }}
         />

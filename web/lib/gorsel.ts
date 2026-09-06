@@ -82,7 +82,7 @@ export function noktaSVG(y: Pick<Yer, "tur">, acik: boolean | null): string {
   const S = 13, m = S / 2;
   return `<svg viewBox="0 0 ${S} ${S}" width="${S}" height="${S}" style="display:block">
     <circle cx="${m}" cy="${m}" r="${m - 2.2}" fill="${acik === false ? RENK.kapali.ana : r.ana}"
-            fill-opacity="${acik === null ? 0.5 : 0.78}"
+            fill-opacity="0.78"
             stroke="#fff" stroke-width="1.6" stroke-opacity=".9"/>
   </svg>`;
 }
@@ -90,7 +90,8 @@ export function noktaSVG(y: Pick<Yer, "tur">, acik: boolean | null): string {
 /**
  * Jeton pin: düz kuşbakışı jeton. Merkez açık, kenar koyu (küreye tepeden
  * bakınca kenarlar kıvrılıp kararır), sol üstte parlama yayı.
- * Açık = kategori renginde, kapalı = gri. Popüler = altın halka + alev rozeti.
+ * Açık ve saati bilinmeyen = kategori renginde, BİLİNEN kapalı = gri.
+ * Popüler = altın halka + alev rozeti.
  */
 export function jetonSVG(
   y: Pick<Yer, "tur">,
@@ -102,10 +103,14 @@ export function jetonSVG(
   populer: boolean,
   secili: boolean,
 ): string {
-  const bilinmiyor = acik === null;
   const anahtar = acik === false ? "kapali" : y.tur;
   const r = RENK[anahtar] ?? RENK.kapali;
-  const solukluk = bilinmiyor ? 0.62 : 1;
+  /* Saati BİLİNMEYEN mekan artık açık olanla aynı çiziliyor: eskiden soluk ve
+     kesik kenarlıydı, kullanıcı bunu "eksik/bozuk kayıt" diye okuyordu —
+     oysa jeton saat hakkında hiçbir iddiada bulunmuyor. Bilgi kaybolmuyor:
+     mekan sayfası "saat bilgisi yok" diyor ve "Şu an açık" filtresi bu
+     mekanları hâlâ dışarıda bırakıyor. Yalnızca BİLİNEN kapalı gri kalıyor. */
+  const parlak = acik !== false;
   const R = 14, S = 24;
   const rz = populer ? R * 1.1 : R;
   const k = (rz * 2 * 0.62) / S;
@@ -115,18 +120,17 @@ export function jetonSVG(
     <g transform="translate(${yari} ${yari})">
       <circle class="halka" r="${rz + 3.4}" fill="none" stroke="#23343C" stroke-width="1.6" opacity="${secili ? 1 : 0}"/>
       ${populer ? `<circle r="${rz + 1.7}" fill="none" stroke="#E0A33E" stroke-width="1.4" opacity="${acik ? 1 : 0.5}"/>` : ""}
-      <circle r="${rz}" fill="url(#jeton-${anahtar})" opacity="${solukluk}"/>
+      <circle r="${rz}" fill="url(#jeton-${anahtar})"/>
       <circle r="${rz}" fill="none" stroke="${populer ? "#E0A33E" : r.golge}"
               stroke-width="${populer ? 1.1 : 0.7}"
-              ${bilinmiyor ? `stroke-dasharray="2.4 2"` : ""}
-              opacity="${populer ? (acik ? 0.95 : 0.5) : 0.55}"/>
+              opacity="${populer ? (parlak ? 0.95 : 0.5) : 0.55}"/>
       <path d="M ${-rz * 0.72} ${-rz * 0.34} a ${rz * 0.8} ${rz * 0.8} 0 0 1 ${rz * 0.98} ${-rz * 0.5}"
-            fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity="${acik === true ? 0.55 : 0.35}"/>
+            fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity="${parlak ? 0.55 : 0.35}"/>
       <g transform="translate(${(-S * k) / 2} ${(-S * k) / 2}) scale(${k})" fill="none" stroke="#fff"
-         stroke-width="${1.9 / k}" stroke-linecap="round" stroke-linejoin="round" opacity="${acik === true ? 0.97 : 0.8}">${SIMGE[y.tur] ?? ""}</g>
+         stroke-width="${1.9 / k}" stroke-linecap="round" stroke-linejoin="round" opacity="${parlak ? 0.97 : 0.8}">${SIMGE[y.tur] ?? ""}</g>
       ${populer ? `<g transform="translate(${rz * 0.66} ${-rz * 0.98})">
-        <circle r="6.6" fill="#3B2C12" opacity="${acik ? 1 : 0.55}"/>
-        <g transform="translate(-4.3 -4.3) scale(${8.6 / 24})" opacity="${acik ? 1 : 0.55}"><path d="${ALEV}" fill="#E0A33E"/></g></g>` : ""}
+        <circle r="6.6" fill="#3B2C12" opacity="${parlak ? 1 : 0.55}"/>
+        <g transform="translate(-4.3 -4.3) scale(${8.6 / 24})" opacity="${parlak ? 1 : 0.55}"><path d="${ALEV}" fill="#E0A33E"/></g></g>` : ""}
     </g>
   </svg>`;
 }
