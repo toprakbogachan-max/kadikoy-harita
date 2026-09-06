@@ -1,160 +1,148 @@
 # Kadıköy Harita
 
-Şehir keşif uygulaması. Merkezinde harita var; üstünde kullanıcıların pinlediği
-mekanlar ve o mekanlara bıraktıkları deneyim notları duruyor.
+A city-discovery web app. A map is the home screen; on it sit the places people
+have pinned and the experience notes they left on those places.
 
-**Canlı:** https://kadikoy-harita.vercel.app
+**Live:** https://kadikoy-harita.vercel.app · **Türkçe:** [README.tr.md](README.tr.md)
 
 <p align="center">
-  <img src="docs/01-harita.png"    alt="Harita ekranı — Bahariye çevresindeki pinler" width="300">
-  <img src="docs/02-pin-formu.png" alt="Pin atma formu — zorunlu alanlar" width="300">
+  <img src="docs/01-harita.png"    alt="Map screen — pins around Bahariye" width="300">
+  <img src="docs/02-pin-formu.png" alt="Pin form — required fields" width="300">
 </p>
-<p align="center"><sub>Harita · pin formu</sub></p>
+<p align="center"><sub>Map · pin form</sub></p>
+
+> The interface, the copy and the code identifiers are all in Turkish — this is a
+> product built for one neighbourhood in Istanbul, and the language is part of that.
 
 ---
 
-## Neden
+## Why
 
-Fikir bir Barcelona seyahatinden çıktı: turist olarak yemek ya da gezi mekanı bulmak
-için TikTok ve Instagram'ı tek tek taramak yorucu, üstelik asıl kritik bilgi eksik
-kalıyor — rezervasyon gerekiyor muymuş, mekan o gün kapalıymış.
+The idea came out of a trip to Barcelona. Finding somewhere to eat as a tourist meant
+combing through TikTok and Instagram one post at a time, and the information that
+actually mattered was still missing — whether you needed a reservation, whether the
+place was even open that day.
 
-Google Maps "burada ne var" sorusuna cevap veriyor. Bu uygulama
-**"gitmeden ne bilmem lazım"** ve **"bana uygun mu"** sorularına cevap veriyor.
-Ürünün her kararı bu ayrımdan türedi.
-
----
-
-## Değerlendirme sistemi
-
-Tek yıldız yok. Google Maps'te her yer 4.3 çıkıyor ve hiçbir şey ayırt edilmiyor,
-çünkü yıldız "ne kadar iyi" ölçüyor. Buradaki alanlar "**bana** uygun mu" ölçüyor.
-
-**Pin atarken zorunlu:** fotoğraf · üç kelime · geliş senaryosu · bana hitap puanı (1–10) · somut not (≥15 karakter)
-
-**İsteğe bağlı:** bir şey değişse · hangi sıklıkla gelinir · tekrar gider misin · kişi başı ödenen · servis · atmosfer · fiyat-performans
-
-Zorunlu alanlar bir kalite kapısı: fotoğraf ve somut not istendiğinde "çok güzeldi"
-yazan üşengeç pin kendiliğinden eleniyor. Moderasyon yerine formun kendisi filtreliyor.
-Formun kendisi yukarıdaki ikinci ekran görüntüsünde.
-
-Mekan sayfasında **ortalama gösterilmiyor, dağılım gösteriliyor:**
-
-- Üç kelimeler → frekansa göre kelime bulutu; mekanın kimliği bu
-- Puanlar → 1–10 dağılım çubuğu, ayrıca **takip ettiklerinin ayrı ortalaması**
-  (zevkine güvendiğin beş kişi 8 verdiyse kalabalığın 6.5'i seni ilgilendirmiyor)
-- "Bir şey değişse" notları → alt alta liste; pratikte mekanın yapılacaklar listesi
+Google Maps answers "what is here". This app answers **"what do I need to know before
+I go"** and **"is this place for me"**. Every product decision follows from that split.
 
 ---
 
-## Üç yüzey
+## The rating system
 
-| Yüzey | İş |
+There is no single star score. On Google Maps everything lands at 4.3 and nothing is
+distinguishable, because a star measures "how good is it". The fields here measure
+"is it right for **me**".
+
+**Required when you drop a pin:** photo · three words · the occasion you came for · personal-fit score (1–10) · a concrete note (≥15 characters)
+
+**Optional:** what you'd change · how often you'd come · would you return · spend per person · service · atmosphere · value
+
+The required fields are a quality gate. Once a photo and a specific note are demanded,
+the lazy "it was lovely" pin drops out on its own. The form does the filtering, not a
+moderation queue — the second screenshot above is that form.
+
+A place page **does not show an average, it shows a distribution:**
+
+- Three-word tags → a frequency-weighted word cloud; this is the place's identity
+- Scores → a 1–10 distribution bar, plus **a separate average from the people you follow**
+  (if five people whose taste you trust gave it an 8, the crowd's 6.5 is not your concern)
+- "What you'd change" notes → listed one under another; in practice, the venue's to-do list
+
+---
+
+## Three surfaces
+
+| Surface | Job |
 |---|---|
-| **Harita** | Nerede ne var. Açılış ekranı; keşif yüzeyi bu. |
-| **Akış** | Kim ne paylaştı. Üç sekme — Keşfet (beğeni ÷ tazelik), Popüler (ham beğeni, haftalık), Takip (kronolojik). Üçünün sıralaması kasıtlı olarak farklı. |
-| **Profil** | Kişinin kendi haritası. `/@kullanici` bağlantısı dışarıda paylaşılabilir. |
+| **Map** | What is where. The landing screen; this is the discovery surface. |
+| **Feed** | Who posted what. Three tabs — Discover (likes ÷ freshness), Popular (raw likes, weekly), Following (chronological). The three orderings are deliberately different. |
+| **Profile** | A person's own map. The `/@username` link is meant to be shared outside the app. |
 
 ---
 
-## Teknik
+## Stack
 
 **Next.js 16** (App Router) · **React 19** · **TypeScript** · **Tailwind CSS 4**
 **Supabase** — Postgres + PostGIS, Row Level Security, Storage, Auth
-**MapLibre GL** — harita karoları OpenFreeMap üzerinden
+**MapLibre GL** — map tiles via OpenFreeMap
 
-Yaklaşık 9.300 satır, 53 dosya, 17 veritabanı göçü.
+Roughly 9,300 lines across 53 files, with 17 database migrations.
 
-### Öne çıkan teknik kararlar
+### Decisions worth calling out
 
-- **Güvenlik anahtarda değil, veritabanında.** `anon` anahtarı zaten istemci
-  paketine giriyor; kimin neyi görüp yazabileceği tamamen `schema.sql` içindeki
-  RLS politikalarında tanımlı. `service_role` anahtarı hiçbir yerde kullanılmıyor.
-- **Coğrafi sorgular PostGIS'te.** Mekan arama, yakınlık ve Kadıköy sınırı kontrolü
-  istemcide değil veritabanında çalışıyor.
-- **MapLibre worker'ı elle servis ediliyor.** MapLibre worker'ı kendi içinde string
-  URL'den kurduğu için Turbopack bundle'a almıyor ve harita boş kalıyor; worker
-  `public/maplibre/` altından veriliyor (`scripts/maplibre-worker-kopyala.mjs`,
-  `predev`/`prebuild` adımında çalışır).
-- **Demo hesaplar salt-okunur.** Depo herkese açık olduğu için demo hesapların
-  şifresi de açık; buna karşılık bu hesaplar veritabanı düzeyinde hiçbir şey
-  yazamıyor (`public.demo_hesap()`, `scripts/goc/15-demo-salt-okunur.sql`).
-  Kısıt arayüzde değil RLS'te olduğu için API'ye doğrudan istek atmak da işe yaramıyor.
-- **Next.js 16 geçişi.** `middleware.ts` → `proxy.ts` olarak yeniden adlandırıldı;
-  Supabase oturum yenilemesi buna göre yazıldı.
+- **Security lives in the database, not in a key.** The `anon` key ships in the client
+  bundle by design; who may read and write what is defined entirely by the RLS policies
+  in `schema.sql`. The `service_role` key is never used anywhere.
+- **Geo queries run in PostGIS.** Place search, proximity and the "is this inside
+  Kadıköy" check all run in the database rather than on the client.
+- **The MapLibre worker is served by hand.** MapLibre builds its worker from a string
+  URL at runtime, so Turbopack never bundles it and the map comes up blank; the worker
+  is served from `public/maplibre/` instead (`scripts/maplibre-worker-kopyala.mjs`,
+  wired into `predev`/`prebuild`).
+- **Demo accounts are read-only.** The repo is public, so the demo password is public
+  too — and those accounts cannot write anything at the database level
+  (`public.demo_hesap()`, `scripts/goc/15-demo-salt-okunur.sql`). The restriction is in
+  RLS rather than in the UI, so going straight at the API does not get around it.
+- **Next.js 16 migration.** `middleware.ts` was renamed to `proxy.ts`, and Supabase
+  session refresh was rewritten to match.
 
 ---
 
-## Yapı
+## Layout
 
 ```
 .
-├── schema.sql                 # veritabanı şeması + RLS politikaları
-├── BRIEF.md                   # ürün kararları ve gerekçeleri
-├── kadikoy-harita-mimari.md   # mimari notlar
-├── prototip.html              # tasarım referansı (çalışan arayüz prototipi)
-├── docs/                      # README ekran görüntüleri
+├── schema.sql                 # database schema + RLS policies
+├── BRIEF.md                   # product decisions and the reasoning behind them (TR)
+├── kadikoy-harita-mimari.md   # architecture notes (TR)
+├── prototip.html              # design reference — a working UI prototype
+├── docs/                      # README screenshots
 └── web/
-    ├── app/                   # App Router sayfaları ve route handler'ları
-    ├── components/            # arayüz bileşenleri
-    ├── lib/                   # veri erişimi, sıralama, coğrafya, oturum
+    ├── app/                   # App Router pages and route handlers
+    ├── components/            # UI components
+    ├── lib/                   # data access, ranking, geography, session
     └── scripts/
-        ├── goc/               # veritabanı göçleri (sırayla çalıştırılır)
-        └── tohum/             # demo veri üretimi
+        ├── goc/               # database migrations (run in order)
+        └── tohum/             # demo data generation
 ```
 
 ---
 
-## Kurulum
+## Running it
 
 ```bash
 git clone https://github.com/toprakbogachan-max/kadikoy-harita.git
 cd kadikoy-harita/web
 npm install
-cp .env.local.example .env.local   # Supabase URL + anon key doldur
+cp .env.local.example .env.local   # fill in the Supabase URL + anon key
 npm run dev
 ```
 
-Veritabanı için Supabase'de yeni bir proje aç, `schema.sql` dosyasını SQL Editor'de
-çalıştır, ardından `web/scripts/goc/` altındaki göçleri numara sırasıyla uygula.
+For the database: create a Supabase project, run `schema.sql` in the SQL Editor, then
+apply the migrations under `web/scripts/goc/` in numerical order.
 
-`.env.local` git'e girmez.
-
----
-
-## Tasarım
-
-Metafor **mantar pano**: harita pano, mekanlar toplu iğne, yorumlar iğnelenmiş
-post-it'ler. Tema açık ve kağıt tonlarında — zemin `#F6F1E4`, pano `#E9DFC9`,
-mürekkep `#23343C`, vurgu pirinç `#B8801A`. Oswald (tabela), Karla (metin),
-JetBrains Mono (sayı).
+`.env.local` is never committed.
 
 ---
 
-## Durum
+## Design
 
-Aktif geliştirmede. Tek şehir, tek semt — İstanbul / Kadıköy. Hedef yaklaşık
-200 mekan, boş harita ürünü öldürdüğü için ilk içerik elle dolduruluyor.
-
----
-
-## English summary
-
-**Kadıköy Harita** is a city-discovery web app for the Kadıköy district of Istanbul.
-A map is the home screen; users drop pins on places and attach concrete, structured
-experience notes — a photo, three descriptive words, the scenario they came for, a
-personal-fit score, and a specific note. Instead of a single star average it shows a
-distribution, plus a separate average from the people you follow.
-
-Built with Next.js 16 (App Router), React 19, TypeScript and Tailwind CSS 4 on top of
-Supabase (Postgres with PostGIS, Row Level Security, Storage, Auth), with MapLibre GL
-for the map. Authorization lives entirely in Postgres RLS policies rather than in the
-client. Roughly 9,300 lines across 53 files and 17 database migrations.
-
-Interface language and code identifiers are Turkish throughout.
+The metaphor is a **cork board**: the map is the board, places are push pins, reviews
+are pinned notes. Light, paper-toned theme — ground `#F6F1E4`, board `#E9DFC9`, ink
+`#23343C`, brass accent `#B8801A`. Oswald for signage, Karla for body text,
+JetBrains Mono for figures.
 
 ---
 
-## Lisans
+## Status
 
-MIT — `LICENSE` dosyasına bakın.
+Under active development. One city, one district — Istanbul / Kadıköy. The target is
+roughly 200 places, seeded by hand, because an empty map kills the product before
+anyone gets to use it.
+
+---
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
