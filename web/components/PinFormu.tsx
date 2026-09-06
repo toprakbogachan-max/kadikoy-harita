@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { pinAt, yerOlustur, yerKoordinati, type YeniMedya } from "@/lib/veri";
 import { fotograflariHazirla } from "@/lib/fotograf";
 import { useSiralama, siraStili } from "@/lib/siralama";
+import { karadaMi } from "@/lib/kadikoy-icinde";
 import { useVeri } from "@/lib/kanca";
 import type { Yer } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
@@ -200,6 +201,17 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
               <div className="mb-2 font-tabela text-[11px] uppercase tracking-[0.11em] text-jeton">
                 Yeni mekan
               </div>
+              {/* ENGEL değil uyarı: sınır çokgeni 201 noktaya sadeleştirilmiş,
+                  kıyıdaki gerçek bir yer de dışarıda çıkabiliyor (İBB Moda
+                  İskelesi Kütüphanesi iskelenin üstünde ve bu testte "dışarıda"
+                  görünüyor). Karar kullanıcının. */}
+              {!karadaMi(yeniYer.lat, yeniYer.lng) && (
+                <p className="mb-2 rounded-sm border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2 text-[12px] leading-snug">
+                  Bu nokta <b>Kadıköy’ün karası dışında</b> görünüyor — deniz ya da
+                  başka bir ilçe olabilir. İğneyi haritada sürükleyerek düzeltebilirsin.
+                  İskele gibi gerçekten suyun üstündeki bir yer için olduğu gibi bırak.
+                </p>
+              )}
               <input value={yeniAd} onChange={(e) => setYeniAd(e.target.value)}
                 maxLength={60} placeholder="Mekanın adı" className={girdi} />
               <div className="mt-2 flex flex-wrap gap-1.5">

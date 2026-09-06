@@ -9,6 +9,10 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    /* lib/kadikoy-icinde.ts kendi testinden (scripts/kontrol/kara-testi.mjs)
+       doğrudan import edilebilsin diye: Node .ts'i çalıştırıyor ama uzantısız
+       yol çözemiyor. noEmit true olduğu için bu ayar güvenli. */
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
