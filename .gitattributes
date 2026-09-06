@@ -1,0 +1,5 @@
+# GitHub dil istatistikleri: proje TypeScript, ama tasarım prototipi ve
+# yardımcı scriptler JavaScript olarak sayılıp dili yanlış gösteriyordu.
+prototip.html            linguist-vendored
+web/scripts/**           linguist-vendored
+*.sql                    linguist-detectable
