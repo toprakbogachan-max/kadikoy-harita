@@ -66,12 +66,12 @@ body {
 /* ---------- kullanıcının kendi konumu ----------
    Jeton dilinden ayrı bilerek: bu bir mekan değil, sen. Mavi/çelik tonu
    pirinç jetonlarla karışmasın diye seçildi. */
-.benim-konum { position: relative; width: 22px; height: 22px; }
+.benim-konum { position: relative; width: 28px; height: 28px; }
 .benim-konum-nokta {
-  position: absolute; inset: 5px;
+  position: absolute; inset: 6px;
   border-radius: 50%;
   background: #2F6FB8;
-  border: 2.5px solid #fff;
+  border: 3px solid #fff;
   box-shadow: 0 1px 4px rgba(20, 15, 8, .45);
 }
 .benim-konum-hale {
