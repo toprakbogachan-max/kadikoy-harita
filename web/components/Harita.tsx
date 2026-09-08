@@ -67,6 +67,11 @@ export default function Harita({
   /* Eşik geçildi mi — state, çünkü marker efektinin yeniden koşması gerekiyor.
      Her zoom olayında değil, yalnızca eşik DEĞİŞTİĞİNDE yazılıyor. */
   const [yakin, setYakin] = useState(false);
+  /* Stil yüklendi mi. Kadraj animasyonu buna bakıyor: MapLibre stil gelmeden
+     animasyon karesi zamanlamıyor, süreli fitBounds sessizce hiçbir şey
+     yapmıyor. Olayı doğrudan dinlemek yerine state: efekt `load`'dan sonra
+     yeniden koşsun, dinleyici temizliğine bağlı kalmasın. */
+  const [haritaHazir, setHaritaHazir] = useState(false);
   const markerlar = useRef<Record<string, maplibregl.Marker>>({});
   const yerAdKatmanlari = useRef<string[]>([]);
   const benimIsaret = useRef<maplibregl.Marker | null>(null);
@@ -186,7 +191,8 @@ export default function Harita({
     };
 
     m.on("load", () => {
-        yerAdKatmanlari.current = ((m.getStyle().layers ?? []) as LayerSpecification[])
+      setHaritaHazir(true);
+      yerAdKatmanlari.current = ((m.getStyle().layers ?? []) as LayerSpecification[])
         .filter((l) => "source-layer" in l && l["source-layer"] === "place")
         .map((l) => l.id);
       basligiGuncelle();
@@ -282,7 +288,7 @@ export default function Harita({
        efekt yeniden koşuyor. useVeri bayat sonucu değil BOŞ dizi döndürdüğü
        için burada bir önceki filtrenin verisine kadraj alma tehlikesi yok.
        Bir kez: sonrasında kullanıcı haritayı gezerse geri zıplamasın. */
-    if (!m || sigdirilan.current === sigdir || !gorunenler.length) return;
+    if (!m || !haritaHazir || sigdirilan.current === sigdir || !gorunenler.length) return;
     const noktalar = gorunenler.filter((y) => y.lat !== 0 && y.lng !== 0);
     if (!noktalar.length) return;
     /* Kapsayıcı ölçülemiyorsa kadraj saçma çıkıyor (hesap 0x0'a göre yapılıyor);
@@ -292,6 +298,7 @@ export default function Harita({
     sigdirilan.current = sigdir;
     const kutu = new maplibregl.LngLatBounds();
     noktalar.forEach((y) => kutu.extend([y.lng, y.lat]));
+
     try {
       /* stop(): yarım kalmış animasyon haritayı "hareket ediyor" durumunda
          bırakıp sonraki çağrıları yutuyor */
@@ -309,17 +316,20 @@ export default function Harita({
         /* Tek pinde fitBounds sonuna kadar yakınlaştırıyor; sokak seviyesi
            yeter. */
         maxZoom: 15.5,
-        /* ANLIK, animasyonlu değil. Süreli çağrı ölçüldü: kamera hiç
-           kıpırdamıyordu (konsoldan aynı sınırlarla elle çağrılınca çalışıyor,
-           efektin içinden çalışmıyor). Zaten ekran değişerek gelindiği için
-           uçuşun anlatacağı bir şey de yok. */
-        duration: 0,
+        /* Süreli: fitBounds `linear` verilmedikçe flyTo kullanıyor — jetona
+           dokununca olan uçuşun AYNISI. Kadraj anlık sıçrayınca "haritada gör"
+           bambaşka bir ekrana ışınlanmak gibi duruyordu; uçuş Kadıköy'ün
+           neresine bakmaya başladığını gösteriyor.
+           Hareketi azalt tercihi olanda MapLibre süreyi kendiliğinden
+           sıfırlıyor (essential vermiyoruz): onlarda eski anlık davranış
+           sürüyor, doğrusu da bu. */
+        duration: 900,
       });
     } catch (e) {
       console.warn("kadraj alınamadı", e);
       sigdirilan.current = null;
     }
-  }, [sigdir, gorunenler]);
+  }, [sigdir, gorunenler, haritaHazir]);
 
   /* ---- seçilen mekana odaklan ----
      Uzaktan bir jetona dokunulduğunda mekan sayfası açılıyor ama harita
