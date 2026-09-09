@@ -30,3 +30,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# kişisel dosyalar — bu repo public, buraya asla kişisel belge girmez
+Claude outputs/
