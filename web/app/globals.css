@@ -89,3 +89,14 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .benim-konum-hale { animation: none; opacity: .5; }
 }
+
+/* MapLibre'nin atıf kontrolü (Harita.tsx'teki attributionControl) varsayılan
+   olarak sağ alt köşede duruyor — ama FiltreCipleri şeridi haritanın tam
+   genişliğinde, en altına bindiriliyor (page.tsx: "absolute inset-x-0
+   bottom-0 z-[4]") ve atfı tamamen örtüyor. Mekan verileri OpenStreetMap'ten
+   geldiği için bu atıf ODbL gereği zorunlu, kaybolmamalı. Çip şeridinin
+   yüksekliği (bkz. FiltreCipleri.tsx yorumu: "64px'lik satır") + üstündeki
+   dikey boşluk payı kadar yukarı taşıyoruz. */
+.maplibregl-ctrl-bottom-right {
+  bottom: 84px !important;
+}

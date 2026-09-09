@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { useState } from "react";
 import { RENK, KAGIT, TUR_AD } from "@/lib/paleti";
 import { egim } from "@/lib/gorsel";
@@ -82,18 +80,24 @@ export default function FiltreCipleri({
      ama çipler okunur kalsın diye yumuşak bir degrade. */
   return (
     <div className="shrink-0 bg-[linear-gradient(to_top,rgba(244,238,224,.97)_55%,rgba(244,238,224,0))] pt-4">
-      <div className="flex gap-3 overflow-x-auto px-4 py-3.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {ANA.map((c, i) => (
-          <Cip key={c.id} id={c.id} ad={c.ad} i={i}
-               aktif={secili === c.id} onTikla={() => { setTurAcik(false); onSec(c.id); }} />
-        ))}
-        <Cip
-          id={seciliTur?.id ?? "tur"}
-          ad={seciliTur ? `${seciliTur.ad} ▾` : "Tür ▾"}
-          i={ANA.length}
-          aktif={!!seciliTur}
-          onTikla={() => setTurAcik((a) => !a)}
-        />
+      {/* Şerit "Tür"e kadar kayıyor ama scrollbar'ı gizli (aşağıda), bu yüzden
+          sağda kaymanın devam ettiğini gösteren bir uç fade şart — yoksa
+          "Şu an açık" sonrası her şey keşfedilmeden kesiliyormuş gibi duruyor. */}
+      <div className="relative">
+        <div className="flex gap-3 overflow-x-auto px-4 py-3.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {ANA.map((c, i) => (
+            <Cip key={c.id} id={c.id} ad={c.ad} i={i}
+                 aktif={secili === c.id} onTikla={() => { setTurAcik(false); onSec(c.id); }} />
+          ))}
+          <Cip
+            id={seciliTur?.id ?? "tur"}
+            ad={seciliTur ? `${seciliTur.ad} ▾` : "Tür ▾"}
+            i={ANA.length}
+            aktif={!!seciliTur}
+            onTikla={() => setTurAcik((a) => !a)}
+          />
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-[linear-gradient(to_right,rgba(244,238,224,0),rgba(244,238,224,.95))]" />
       </div>
 
       {turAcik && (
