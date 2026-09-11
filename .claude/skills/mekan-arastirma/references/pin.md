@@ -2,62 +2,109 @@
 
 Uygulama: https://kadikoy-harita.vercel.app · Pin atmadan önce **her seferinde ayrı izin al**.
 
-Giriş durumunu `get_page_text` ile doğrula — `localStorage` kontrolü hidrasyondan önce
-çalışırsa "giriş yapılmamış" gibi görünür ve yanlış rapor verirsin.
+Giriş durumunu PROFİL sekmesinden `get_page_text` ile doğrula — hangi hesapla girilmiş olduğu
+önemli. `localStorage` kontrolü hidrasyondan önce çalışırsa yanlış sonuç verir.
 
 ## Form alanları
 
-| Alan | Tip | Not |
-| --- | --- | --- |
-| MEKAN* | arama + seçim | OSM tabanlı; adı yaz, çıkan sonuçtan seç |
-| FOTOĞRAF YA DA VİDEO* | çoklu dosya | İlk yüklenen = KAPAK |
-| — her fotoğrafın notu | modal, **120 karakter** | Notu yaz → TAMAM |
-| ÜÇ KELİMEYLE ANLAT* | 3 input | `input[placeholder="1."]`, `"2."`, `"3."` |
-| GELİŞ SENARYOSU* | seçim | tek başına / çalışmak için / ilk buluşma / kalabalık grup / hızlı uğrak / uzun oturma |
-| BANA HİTAP PUANI* | `input[type=range]` | min 1, max 10, step 0.5 |
-| GİTMEDEN BİLİNMESİ GEREKEN | textarea, 1000 | somut bilgi, genel övgü değil |
-| BİR ŞEY DEĞİŞSE | opsiyonel | "İSTERSEN BİRKAÇ ŞEY DAHA" altında |
-| HANGİ SIKLIKLA GELİNİR | opsiyonel | |
-| TEKRAR GİDER MİSİN | opsiyonel | |
-| KİŞİ BAŞI ÖDEDİĞİN (₺) | opsiyonel | Maps fiyat bandından değil, gerçek deneyimden |
+| Alan | Tip / seçici |
+| --- | --- |
+| MEKAN* | `input[placeholder*="Mekan ara"]` — OSM araması |
+| FOTOĞRAF YA DA VİDEO* | gizli `input[type=file]`, `multiple` |
+| — her fotoğrafın notu | satırdaki **DIV**'e tıkla → modal açılır |
+| — modal alanı | `textarea[placeholder="İsteğe bağlı"]`, **120 karakter** |
+| — modal onayı | metni `TAMAM` olan button |
+| ÜÇ KELİMEYLE ANLAT* | `input[placeholder="1."/"2."/"3."]` |
+| GELİŞ SENARYOSU* | metni eşleşen button: tek başına / çalışmak için / ilk buluşma / kalabalık grup / hızlı uğrak / uzun oturma |
+| BANA HİTAP PUANI* | `input[type=range]` min 1 max 10 step 0.5 |
+| GİTMEDEN BİLİNMESİ GEREKEN | `textarea[placeholder^="Hangi masaya"]`, 1000 |
+| BİR ŞEY DEĞİŞSE | `input[placeholder="Ne olsa daha iyi olurdu?"]` |
+| KİŞİ BAŞI ÖDEDİĞİN | `input[placeholder="örn. 250"]` |
+| Yayınla | metni `PAYLAŞ` olan button |
 
-Formun kendi uyarısı: *"Fotoğraf, üç kelime, senaryo, puan ve somut bir not zorunlu.
-'Çok güzeldi' yazan pin kimseye yaramıyor."* — notları buna göre yaz.
+Not satırındaki DIV'i bulmak:
 
-## Doldurma sırası
+```js
+[...document.querySelectorAll('*')]
+  .filter(e => e.children.length===0 && (e.textContent||'').includes('görselin notu'))[0].click();
+```
 
-1. Mekanı ara ve seç (**önce bu** — sonra haritaya dokunma)
-2. Fotoğrafları yükle, kapak olacak kareyi ilk sıraya koy
-3. Her fotoğrafın notunu modalden gir (120 karakter sınırına dikkat, kırpma değil kısalt)
-4. Üç kelime → senaryo → puan
-5. Gitmeden bilinmesi gereken
-6. Opsiyoneller
-7. Kaydet
+Notu dolu bir satırı yeniden açmak için `'görselin notu'` yerine o notun bir parçasını ara.
+
+## Hazır yardımcılar (sayfa yüklendikten sonra bir kez enjekte et)
+
+```js
+window.__setV=function(el,val){var P=el.tagName==='TEXTAREA'?HTMLTextAreaElement:HTMLInputElement;
+  Object.getOwnPropertyDescriptor(P.prototype,'value').set.call(el,val);
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  el.dispatchEvent(new Event('change',{bubbles:true}));};
+window.__setNote=function(t){var ta=[...document.querySelectorAll('textarea')]
+  .find(x=>(x.placeholder||'')==='İsteğe bağlı'); if(!ta)return 'yok'; window.__setV(ta,t); return ta.value.length;};
+window.__tamam=function(){var b=[...document.querySelectorAll('button')]
+  .find(x=>(x.innerText||'').trim()==='TAMAM'); if(b){b.click();return 'ok';} return 'yok';};
+window.__notAc=function(){var n=[...document.querySelectorAll('*')]
+  .filter(e=>e.children.length===0&&(e.textContent||'').indexOf('görselin notu')>-1);
+  if(n.length){n[0].click(); return n.length;} return 0;};
+```
+
+## Fotoğraf yükleme
+
+Görselleri uygulama origin'inden `fetch` et (lh3.googleusercontent.com CORS'a izin veriyor),
+`File`'a çevir, `DataTransfer` ile gizli input'a bırak:
+
+```js
+window.__files=[];
+for (const [i,u] of urls.entries()){
+  const r=await fetch(u); const b=await r.blob();
+  window.__files.push(new File([b], 'mekan-'+(i+1)+'.jpg', {type:'image/jpeg'}));
+}
+var inp=document.querySelector('input[type=file]');
+var dt=new DataTransfer(); window.__files.forEach(f=>dt.items.add(f));
+inp.files=dt.files; inp.dispatchEvent(new Event('change',{bubbles:true}));
+```
+
+**Bir kez gönder ve say.** `change` olayını tekrar tetiklemek dosyaları **ekliyor**, değiştirmiyor:
+üç deneme 15 dosya yaptı. Gönderdikten sonra `innerText` içinde "N dosya" kontrol et; yanlışsa
+formu kapatıp baştan başla.
+
+URL'leri sayfalar arası taşımak için `window.name` kullan (cross-origin gezinmede hayatta kalıyor).
+
+## Mekan haritada yoksa (yeni mekan)
+
+Uygulamanın yer veritabanı OSM tabanlı; Google Haritalar'daki her mekan orada yok
+(Basta! Street Food Bar, Semolina, Brekkie Breakfast Club yoktu). Doğru yol:
+
+1. Formu **taze aç** — mini harita varsayılan geniş görünümde olur (Kadıköy geneli).
+2. Mekanın tam adını arama kutusuna yaz.
+3. **Mini haritada hedef pikseline tıkla** → "YENİ MEKAN" paneli adı doldurulmuş olarak açılır.
+4. Kategori çipini seç (Kahve / Yemek / Bar / Tatlı / Kültür / Park / Otel / Mağaza / Diğer).
+
+**"<AD> ADIYLA EKLE" butonunu kullanma.** Mini haritayı sabit bir varsayılan merkeze
+(Bahariye) zoomluyor, ana haritanın konumunu dinlemiyor, ve iğneyi oradan hedefe sürüklemek
+mümkün olmuyor. Mini haritada zoom kontrolü yok, scroll-zoom kapalı.
+
+### Piksel hesabı
+
+Pencereyi bilinen bir genişliğe sabitle (`resize_window`, ör. 1512), sonra ekran görüntüsünden
+**Altıyol metro ikonunu** çapa al: `40.98998, 29.02853`.
+
+Varsayılan zoom'da, 1512 piksel genişlikte ekran görüntüsü için:
+
+```
+Δx =  (hedef_lng - 29.02853) / 3.226e-5      (doğu +)
+Δy = -(hedef_lat - 40.98998) / 2.438e-5      (güney +)
+tıklama = (altıyol_x + Δx, altıyol_y + Δy)
+```
+
+Doğrulama: BAHARİYE etiketi Altıyol'un ~154 piksel altında çıkmalı. Hedef haritanın altına
+taşarsa formu bir tık kaydır (harita yukarı gelir) ve yeniden ölç. ±15 piksel ≈ ±35 m, kabul
+edilebilir; iğne sonradan sürüklenerek düzeltilebilir.
 
 ## Tuzaklar
 
-- **Haritaya tıklama.** Form açıkken haritaya bir tık, mekan seçimini sıfırlayıp "YENİ MEKAN"
-  moduna düşürüyor. Fotoğraflar ve diğer alanlar kalıyor ama mekan bağı gidiyor; kurtarmak
-  için mekanı yeniden aratmak gerekiyor.
-- **React kontrollü inputlar** doğrudan `.value =` ile güncellenmiyor. Native prototype
-  setter + `input`/`change` event'i gerekiyor:
-
-```js
-function setNative(el, val){
-  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement : HTMLInputElement;
-  Object.getOwnPropertyDescriptor(proto.prototype,'value').set.call(el, val);
-  el.dispatchEvent(new Event('input',{bubbles:true}));
-  el.dispatchEvent(new Event('change',{bubbles:true}));
-}
-```
-
-- **Dosya yükleme** gizli `input[type=file]`'a DataTransfer ile:
-
-```js
-const dt = new DataTransfer();
-dt.items.add(new File([blob], 'foto1.jpg', {type:'image/jpeg'}));
-input.files = dt.files;
-input.dispatchEvent(new Event('change',{bubbles:true}));
-```
-
-Blob'ları uygulama origin'inde `fetch` ile al (lh3.googleusercontent.com CORS'a izin veriyor).
+- **✕ butonlarını topluca tıklama.** Fotoğraf satırlarının kaldır butonu ile modalın kapatma
+  butonu aynı `✕` metnini taşıyor; en alttakini tıklayan döngü modalı kapatıp formu siliyor.
+  Bir satırı kaldıracaksan o satırın kutusundan git.
+- Form açıkken **ana haritaya** tıklama; mekan seçimi sıfırlanıyor.
+- Pencere boyutu değişirse tüm piksel hesapları bozulur — `resize_window` ile sabitle.
+- React inputları `.value=` ile güncellenmiyor; `__setV` kullan.

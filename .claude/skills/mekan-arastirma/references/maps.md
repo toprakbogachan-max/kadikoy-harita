@@ -71,7 +71,46 @@ window.__read = function(mm){
 
 Kaydırma ile yorum sayısı artmıyorsa dur ve elindekiyle çalış — sonsuz döngüye girme.
 
-## Fotoğraf
+Pratikte mekan başına 10–20 güncel yorum çıkıyor; bazı mekanlarda Google 10'dan sonra
+yenisini yüklemiyor (panel dibe geliyor, `scrollHeight` sabit kalıyor). 10 uzun yorum tema
+çıkarmaya yetiyor ama örneklem küçük — pinin notunda kesinleştirici dil kullanma.
+
+Yorum metinleri "…" ile kesikse `button.w8nwRe` ("Devamı") düğmeleri henüz tıklanmamış
+demektir; biriktiriciyi durdurup hepsini tıkla, 1,5 sn bekle, sonra oku.
+
+## Fotoğraf — pratikte çalışan yol
+
+**Fotoğraf galerisi sekmesini kullanma.** Sol paneli boş yükleyip takılıyor, kategori
+sekmeleri ("Ortam", "Yeme-içme") güvenilmez. Bunun yerine **yorum akışından topla**: yorum
+paneli sağlıklı çalışıyor ve ziyaretçi kareleri zaten ambiyans + yemek karışımı.
+
+Yorum biriktiricisinin içine fotoğraf toplayıcısını da koy (yukarıdaki `__grab` `__ph`
+çağırıyor), yorumları kaydırırken fotoğraflar da birikir. Bir mekan için tipik olarak
+25–60 kare çıkıyor.
+
+```js
+window.__P=new Map();
+window.__ph=function(){
+  document.querySelectorAll('*').forEach(function(el){
+    var st=el.style&&el.style.backgroundImage;
+    if(st&&st.indexOf('googleusercontent')>-1&&st.indexOf('-k-no')>-1){
+      var m=st.match(/url\(["']?(.*?)["']?\)/);
+      if(m){var k=m[1].split('=')[0]; if(!window.__P.has(k)) window.__P.set(k,k+'=w800-h600-k-no');}
+    }});
+  document.querySelectorAll('img').forEach(function(i){
+    if(i.src&&i.src.indexOf('googleusercontent')>-1&&i.src.indexOf('-k-no')>-1&&i.width>40){
+      var k=i.src.split('=')[0]; if(!window.__P.has(k)) window.__P.set(k,k+'=w800-h600-k-no');}});
+};
+```
+
+Seçim: sayfaya numaralı kontakt sayfası bas, ekran görüntüsü al, numarayla seç. Sayfayı
+silmeden önce URL listesini `window.name`'e yaz — `document.body.innerHTML=''` DOM'u siliyor
+ama window değişkenleri kalıyor.
+
+Elemeler: menü panosu, fiş, QR kod, şarap etiketi, selfie. Mekan tabelası sahnenin parçası
+olduğu için sorun değil, ama okunabilir yazının hâkim olduğu kareyi alma.
+
+## Eski yöntem (kategori butonları — genelde bozuk)
 
 Fotoğraf sekmesindeki kategori butonları (`aria-label` = "Ortam", "Yeme-içme", "Hepsi")
 tıklanıp panel birkaç kez sonuna kaydırılarak toplanır:
