@@ -19,6 +19,9 @@ sonraki faza geçme.
 - **Excel, fotoğraftan önce gelir.** Mekanlar bulunur → tabloya dökülür → onay → sonra fotoğraf.
 - **Pin atma izni her seferinde ayrıca alınır.** "Mekan bul" demek "pin at" demek değildir.
 - **Fotoğraflarda yazı/filigran olmaz.** Ambiyans 2 + yemek 2 + opsiyonel 1 = mekan başına 5.
+- **Pin notları araştırma dili taşımaz.** "yorumlarda", "havuzda", "en çok tavsiye edilen"
+  gibi ifadeler nota girmez; not oraya gitmiş birinin anlattığı gibi okunur. Uydurma birinci
+  tekil deneyim de yazılmaz. Kural ve örnekler: `references/uslup.md` — **yayınlamadan önce oku.**
 - **Zaten pinli mekanlar havuza girmez.** Uygulamadan mevcut pin listesini çek, çıkar.
 - **Bu repo public.** Araştırma verisi (mekan listeleri, havuz tabloları) repoya girmez —
   ikinci beyinde durur. Bkz. `references/gecmis.md`.
@@ -103,6 +106,9 @@ Her mekan için çıkar:
 - Tekrar eden 3-5 şikâyet
 - Tek paragraf sentez
 - **Her fotoğrafa o karenin gösterdiği şeyle ilgili somut bir not** (genel övgü değil)
+
+Notları yazmadan önce `references/uslup.md` oku. Analizin kendisi Excel'de ve geçmiş
+dosyasında kalır; pine sadece mekanı bilen birinin söyleyeceği şey girer.
 
 ## KAPI B — Pin onayı
 
