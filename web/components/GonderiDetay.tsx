@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { fotoZemin, simgeSvg, zaman } from "@/lib/gorsel";
+import { fotoZeminGenis, simgeSvg, zaman } from "@/lib/gorsel";
 import { useVeri } from "@/lib/kanca";
 import { pinGetir, begeniDegistir, begendimMi, kayitDegistir, kayitliMi, medyaUrl, sikayetEttimMi } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
@@ -253,7 +253,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
         <div
           className="absolute inset-0 grid place-items-center overflow-hidden"
           style={{
-            background: fotoZemin(p.yerTuru),
+            background: fotoZeminGenis(p.yerTuru),
             paddingBottom: altBosluk,
             transition: "padding-bottom 220ms",
           }}

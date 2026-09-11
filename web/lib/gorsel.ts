@@ -25,6 +25,27 @@ export const fotoZemin = (tur: string) => {
 };
 
 /**
+ * Tam ekran zemin — ızgara kartındakinin kısılmış hâli.
+ *
+ * Doygunluk alanla ters orantılı çalışır: kart boyutunda canlı duran
+ * #E0271C, gönderi detayında bütün ekranı kaplayınca bağırıyor ve kağıt/
+ * pano paletinden (krem, kum, mürekkep, pirinç) kopuyordu. Fotoğraf
+ * object-contain olduğu için bu zemin aynı zamanda kadraj bandı; her
+ * fotoğraf görüntüleyicisi bu bandı nötr tutar, doygun renk fotoğrafın
+ * kendi renklerini de bozuyor.
+ *
+ * Kategori ipucu korunuyor ama mürekkebe karıştırılıyor: kırmızı yerine
+ * "kırmızıya çalan gece".
+ */
+const GECE = "#1B1510";
+export const fotoZeminGenis = (tur: string) => {
+  const r = RENK[tur] ?? RENK.kahve;
+  return `linear-gradient(160deg,
+    color-mix(in oklab, ${r.ana} 16%, ${GECE}) 0%,
+    color-mix(in oklab, ${r.golge} 9%, ${GECE}) 100%)`;
+};
+
+/**
  * "3 sa", "2 gün" — geçen süre.
  *
  * Girdi ondalık saat: veritabanındaki created_at'ten hesaplanıyor, tam sayı
