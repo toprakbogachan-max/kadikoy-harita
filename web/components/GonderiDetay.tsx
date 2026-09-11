@@ -43,6 +43,13 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
   const [begeniYerel, setBegeniYerel] = useState<boolean | null>(null);
   const [kayitYerel, setKayitYerel] = useState<boolean | null>(null);
   const govde = useRef<HTMLDivElement>(null);
+  const perde = useRef<HTMLDivElement>(null);
+  /* Fotoğrafa dokununca tüm yazı katmanı çekiliyor: uzun notlu gönderilerde
+     perde gövdenin yarısından fazlasını kaplıyor ve fotoğraf arkada kalıyordu.
+     Dokunmatikte medya geçişi zaten yatay kaydırmayla da yapılabildiği için
+     okları da gizlemek bir şey kaybettirmiyor. */
+  const [perdeAcik, setPerdeAcik] = useState(true);
+  const [olcu, setOlcu] = useState({ perde: 0, govde: 0 });
 
   const pinIndex = Math.max(0, liste.indexOf(pinId));
   /* Tek pin ayrı çekiliyor: akış listesi bellekte olsa da Reels'e doğrudan
@@ -160,7 +167,28 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
     };
   });
 
+  /* Perdenin yüksekliği içeriğe göre değişiyor (medya notu, kelimeler,
+     etiketler hepsi opsiyonel). Ölçüp fotoğrafın alanından düşüyoruz:
+     `place-items-center` böylece görseli perdenin arkasına değil, üstünde
+     kalan açık alana ortalıyor. */
+  useEffect(() => {
+    const pe = perde.current;
+    const go = govde.current;
+    if (!pe || !go) return;
+    const olc = () => setOlcu({ perde: pe.offsetHeight, govde: go.offsetHeight });
+    olc();
+    const gozlemci = new ResizeObserver(olc);
+    gozlemci.observe(pe);
+    gozlemci.observe(go);
+    return () => gozlemci.disconnect();
+  }, [p?.id, medyaIndex]);
+
   if (!p || !kisi) return null;
+
+  /* Perde gövdenin yarısından fazlasını kaplarsa fotoğraf iyice küçülüyor;
+     %52'de kesiyoruz — taşan kısım degradenin saydam ucuna denk geliyor. */
+  const altBosluk = perdeAcik ? Math.min(olcu.perde, olcu.govde * 0.52) : 0;
+  const perdeStil = perdeAcik ? "" : "pointer-events-none opacity-0";
 
   const medya = p.medyalar;
   const begendim = begeniYerel ?? begenimSunucu;
@@ -171,7 +199,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
   return (
     <div className="absolute inset-0 z-20 flex flex-col bg-[#1B1510]">
       {/* üst perde */}
-      <div className="absolute inset-x-0 top-0 z-[6] flex items-start justify-between gap-3 bg-gradient-to-b from-[rgba(12,9,5,.62)] to-transparent px-4 pb-8 pt-3.5">
+      <div className={`absolute inset-x-0 top-0 z-[6] flex items-start justify-between gap-3 bg-gradient-to-b from-[rgba(12,9,5,.62)] to-transparent px-4 pb-8 pt-3.5 transition-opacity duration-200 ${perdeStil}`}>
         <div>
           <h2 className="text-[20px] font-semibold leading-tight text-white">
             {kisi.ad}
@@ -224,7 +252,14 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
         {/* medya tam ekranı kaplar */}
         <div
           className="absolute inset-0 grid place-items-center overflow-hidden"
-          style={{ background: fotoZemin(p.yerTuru) }}
+          style={{
+            background: fotoZemin(p.yerTuru),
+            paddingBottom: altBosluk,
+            transition: "padding-bottom 220ms",
+          }}
+          /* Videoda dokunma kontrollere ait; yalnızca fotoğrafta perde açılıp
+             kapanıyor. */
+          onClick={m.tur === "video" ? undefined : () => setPerdeAcik((a) => !a)}
         >
           {/* Gerçek dosya varsa o gösterilir; tohum verisinde (demo://) yok,
               degrade + kategori simgesi yer tutucu olarak kalıyor. */}
@@ -250,7 +285,9 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
         </div>
 
         {coklu && (
-          <>
+          /* Konumlandırılmamış sarmalayıcı: içindeki `absolute` öğeler hâlâ
+             gövdeye göre yerleşiyor, sadece hep birlikte soluyorlar. */
+          <div className={`transition-opacity duration-200 ${perdeStil}`}>
             <span className="absolute right-3.5 top-[74px] z-[7] rounded-full bg-[rgba(20,15,8,.55)] px-1.5 py-0.5 font-sayi text-[10px] text-white">
               {medyaIndex + 1}/{medya.length}
             </span>
@@ -281,11 +318,14 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
             >
               ›
             </button>
-          </>
+          </div>
         )}
 
         {/* alt bilgi perdesi */}
-        <div className="absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgba(12,9,5,.92)] via-[rgba(12,9,5,.72)] to-transparent px-4 pb-4 pt-[70px] text-white">
+        <div
+          ref={perde}
+          className={`absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-[rgba(12,9,5,.92)] via-[rgba(12,9,5,.72)] to-transparent px-4 pb-4 pt-[70px] text-white transition-opacity duration-200 ${perdeStil}`}
+        >
           <div className="mb-2.5 flex items-center gap-2.5">
             {/* Fotoğrafa ve ada dokununca yazarın profili açılıyor. Önceden
                 gönderi detayından kişiye geçmenin hiçbir yolu yoktu: pini
