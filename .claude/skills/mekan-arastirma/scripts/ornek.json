@@ -1,0 +1,30 @@
+[
+ {
+  "mekan": "Rafine Moda",
+  "kategori": "Restoran",
+  "mutfak": "Kahvaltı / fine cuisine",
+  "semt": "Moda",
+  "adres": "Caferağa, Nene Hatun Sk. No:3A",
+  "puan": 4.5,
+  "yorum": 1598,
+  "kaynaklar": ["TikTok (2x)", "Gurman Atlas", "Oggusto"],
+  "fiyat": "₺600–800",
+  "acik": "Açık",
+  "durum": "Sırada",
+  "not": "Havuzdaki en güçlü çapraz doğrulama: hem sosyalde hem Vedat Milor listesinde"
+ },
+ {
+  "mekan": "Munchies Crepes & Pancakes",
+  "kategori": "Kafe",
+  "mutfak": "Krep / pancake",
+  "semt": "Moda",
+  "adres": "Caferağa, Moda Cd.",
+  "puan": 4.3,
+  "yorum": 1630,
+  "kaynaklar": ["Oggusto"],
+  "fiyat": "₺600–800",
+  "acik": "Kalıcı kapalı",
+  "durum": "Elendi",
+  "not": "Kalıcı olarak kapandı — öncelik skoru otomatik 0"
+ }
+]
