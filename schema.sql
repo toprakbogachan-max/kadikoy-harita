@@ -35,6 +35,10 @@ create table if not exists profiles (
   avatar_url    text,
   home_city     text default 'İstanbul',
   is_verified   boolean not null default false,
+  -- "Profilim herkese açık" ayarı. Kapatınca profil satırı RLS düzeyinde
+  -- görünmez olur (p_profiles_read) — kısıt arayüzde değil veritabanında.
+  -- goc/04-profil-ve-avatar.sql bunu var olan kurulumlara ekliyor.
+  is_public     boolean not null default true,
   -- sayaçlar (trigger'la güncellenir, her seferinde count(*) atmamak için)
   pin_count      integer not null default 0,
   follower_count integer not null default 0,
@@ -671,7 +675,14 @@ alter table reports       enable row level security;
 
 -- okuma
 drop policy if exists p_profiles_read on profiles;
-create policy p_profiles_read on profiles for select using (true);
+-- DİKKAT: burası "using (true)" İDİ. Bu dosya yeniden çalıştırılabilir
+-- olduğu için, goc/04 uygulanmış bir veritabanında schema.sql'i tekrar
+-- koşmak politikayı düşürüp gizlilik ayarını sessizce iptal ediyordu:
+-- "Profilim herkese açık"ı kapatmış herkesin profili yeniden okunur hâle
+-- geliyordu. Gizlilik metni bu ayarın veritabanı seviyesinde çalıştığını
+-- söylüyor — iki dosya artık aynı şeyi söylüyor.
+create policy p_profiles_read on profiles for select
+  using (is_public or id = auth.uid());
 drop policy if exists p_places_read on places;
 create policy p_places_read   on places   for select using (status = 'published');
 drop policy if exists p_facts_read on place_facts;
