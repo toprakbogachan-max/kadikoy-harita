@@ -19,10 +19,35 @@ const db = createClient();
 /**
  * "Ben kimim" artık sabit değil, oturumdan geliyor (lib/oturum.tsx).
  * Bu yardımcı, oturumu okuyamayan yerler için (veri katmanı React değil).
+ *
+ * SONUÇ ÖNBELLEĞE ALINIYOR. getUser() yerel bir çerez okuması değil: her
+ * çağrıda Supabase'e gidip jetonu doğruluyor, ölçümde 180-330 ms sürüyor.
+ * Bu yardımcı 26 yerde çağrıldığı için ilk açılışta her veri sorgusu asıl
+ * işine başlamadan önce fazladan bir ağ turu atıyordu — zincir uzuyordu.
+ *
+ * Neden güvenli: buradaki kimlik yalnızca sorguyu daraltmak için kullanılıyor,
+ * yetkiyi veren o değil. RLS politikalarının hepsi auth.uid()'i JWT'den
+ * okuyor ve istemcinin gönderdiği id'ye hiç bakmıyor (bkz. p_bildirim_oku,
+ * p_saves_write, p_follows_write). Yani bayat bir kimlik yetki kazandırmaz,
+ * yalnızca boş sonuç döndürür. Jeton tazelendiğinde ya da giriş/çıkış
+ * olduğunda önbellek zaten düşüyor.
  */
+let kimlikSozu: Promise<string | null> | null = null;
+
+/* Oturum her değiştiğinde (giriş, çıkış, jeton tazeleme) önbellek düşer.
+   Abonelik kurulurken INITIAL_SESSION bir kez tetikleniyor; önbellek o an
+   zaten boş olduğu için zararsız. */
+db.auth.onAuthStateChange(() => { kimlikSozu = null; });
+
 async function benimKimligim(): Promise<string | null> {
-  const { data } = await db.auth.getUser();
-  return data.user?.id ?? null;
+  /* Söz (promise) saklanıyor, sonuç değil: aynı anda başlayan onlarca çağrı
+     tek bir ağ isteğinde birleşsin. Hata olursa önbellek düşüyor ki sonraki
+     çağrı yeniden denesin, kalıcı bir "null" takılıp kalmasın. */
+  kimlikSozu ??= db.auth
+    .getUser()
+    .then(({ data }) => data.user?.id ?? null)
+    .catch(() => { kimlikSozu = null; return null; });
+  return kimlikSozu;
 }
 
 /* ---------- çeviriciler ---------- */
