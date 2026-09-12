@@ -10,8 +10,13 @@
   --color-pano:      #E9DFC9;   /* mantar pano */
   --color-yuzey:     #FFFDF6;   /* kabartılmış yüzey */
   --color-murekkep:  #23343C;   /* ana metin */
-  --color-murekkep2: #75858C;   /* soluk metin */
-  --color-jeton:     #B8801A;   /* pirinç — vurgu */
+  /* Soluk metin ve pirinç, WCAG AA'nın (4.5:1) altında kalıyordu: soluk metin
+     kağıt üstünde 3.39, pirinç butonun beyaz yazısı 3.42. İkisi de metin
+     taşıdığı için koyulaştırıldı — şimdi 4.57 ve 5.64. Pin jetonlarının
+     pirinci DEĞİŞMEDİ; onlar kategori renklerinden ve satır içi #B8801A
+     literallerinden türüyor, grafik olarak 3:1 eşiğine tabi. */
+  --color-murekkep2: #5F7078;   /* soluk metin */
+  --color-jeton:     #8A5F0F;   /* pirinç — vurgu ve buton zemini */
   --color-mercan:    #B8452F;   /* uyarı */
   --color-su:        #D2DFE2;
 

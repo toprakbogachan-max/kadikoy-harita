@@ -165,10 +165,11 @@ export default function PinDuzenle({
       <div className="min-h-0 flex-1 overflow-y-auto">
         {/* ---- görseller ---- */}
         <div className={alan}>
-          <label className={etiket}>
+          {/* Dosya girdisi gizli ve butondan tetikleniyor; başlık, label değil. */}
+          <div className={etiket}>
             Fotoğraf ya da video
             <span className="ml-2 font-sayi normal-case tracking-normal">{medyaSayisi} dosya</span>
-          </label>
+          </div>
 
           <div ref={siraKap}>
           {medyalar.map((m, i) => (
@@ -259,11 +260,11 @@ export default function PinDuzenle({
         </div>
 
         {/* ---- üç kelime ---- */}
-        <div className={alan}>
-          <label className={etiket}>Üç kelimeyle anlat</label>
+        <div className={alan} role="group" aria-labelledby="d-kelime-basligi">
+          <div className={etiket} id="d-kelime-basligi">Üç kelimeyle anlat</div>
           <div className="grid grid-cols-3 gap-2">
             {kelimeler.map((k, i) => (
-              <input key={i} value={k} maxLength={20}
+              <input key={i} value={k} maxLength={20} aria-label={`${i + 1}. kelime`}
                 onChange={(e) => setKelimeler((l) => l.map((x, j) => (j === i ? e.target.value : x)) as [string, string, string])}
                 placeholder={`${i + 1}.`} className={girdi} />
             ))}
@@ -271,8 +272,8 @@ export default function PinDuzenle({
         </div>
 
         {/* ---- senaryo ---- */}
-        <div className={alan}>
-          <label className={etiket}>Geliş senaryosu</label>
+        <div className={alan} role="group" aria-labelledby="d-senaryo-basligi">
+          <div className={etiket} id="d-senaryo-basligi">Geliş senaryosu</div>
           <div className="flex flex-wrap gap-1.5">
             {SENARYOLAR.map((sc) => (
               <Cip key={sc} secili={senaryo === sc} onTikla={() => setSenaryo(sc)}>{sc}</Cip>
@@ -282,37 +283,40 @@ export default function PinDuzenle({
 
         {/* ---- puan ---- */}
         <div className={alan}>
-          <label className={etiket}>
+          <label className={etiket} htmlFor="d-puan">
             Bana hitap puanı
             <span className="ml-2 font-sayi normal-case tracking-normal text-jeton">{puan}</span>
           </label>
-          <input type="range" min={1} max={10} step={0.5} value={puan}
+          <input id="d-puan" type="range" min={1} max={10} step={0.5} value={puan}
             onChange={(e) => setPuan(Number(e.target.value))} className="w-full" />
         </div>
 
         {/* ---- metin ---- */}
         <div className={alan}>
-          <label className={etiket}>
+          <label className={etiket} htmlFor="d-metin">
             Gitmeden bilinmesi gereken
             <span className="ml-2 font-sayi normal-case tracking-normal">
               {metin.trim().length ? `${metin.trim().length}/${METIN_MAX}` : "İstersen boş bırak"}
             </span>
           </label>
-          <textarea value={metin} onChange={(e) => setMetin(e.target.value)}
+          <textarea id="d-metin" value={metin} onChange={(e) => setMetin(e.target.value)}
             maxLength={METIN_MAX} rows={4} className={girdi + " resize-none"} />
         </div>
 
         {/* ---- isteğe bağlı ---- */}
-        <div className={alan}>
-          <label className={etiket}>İstersen birkaç şey daha</label>
+        {/* Dört ayrı denetim tek başlık altındaydı; başlık artık grubu
+            adlandırıyor, her denetim kendi etiketini taşıyor. */}
+        <div className={alan} role="group" aria-labelledby="d-ekstra-basligi">
+          <div className={etiket} id="d-ekstra-basligi">İstersen birkaç şey daha</div>
           <input value={degisse} onChange={(e) => setDegisse(e.target.value)}
+            aria-label="Bir şey değişse"
             maxLength={200} placeholder="Bir şey değişse…" className={girdi + " mb-2"} />
-          <div className="mb-2 flex flex-wrap gap-1.5">
+          <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Hangi sıklıkla gelinir">
             {SIKLIKLAR.map((sk) => (
               <Cip key={sk} secili={siklik === sk} onTikla={() => setSiklik(siklik === sk ? "" : sk)}>{sk}</Cip>
             ))}
           </div>
-          <div className="mb-2 flex flex-wrap gap-1.5">
+          <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Tekrar gider misin">
             {TEKRARLAR.map((tk) => (
               <Cip key={tk} secili={tekrar === tk} onTikla={() => setTekrar(tekrar === tk ? "" : tk)}>
                 tekrar gider miyim: {tk}
@@ -320,6 +324,7 @@ export default function PinDuzenle({
             ))}
           </div>
           <input value={fiyat} onChange={(e) => setFiyat(e.target.value.replace(/[^0-9]/g, ""))}
+            aria-label="Kişi başı ödediğin (₺)"
             inputMode="numeric" maxLength={5} placeholder="Kişi başı ödediğin (₺)" className={girdi} />
         </div>
 

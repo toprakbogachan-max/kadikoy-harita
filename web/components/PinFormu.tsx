@@ -172,7 +172,10 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
       <div className="min-h-0 flex-1 overflow-y-auto">
         {/* ---- mekan ---- */}
         <div className={alan}>
-          <label className={etiket}>Mekan <Zorunlu /></label>
+          {/* label DEĞİL: YerSecici'nin arama kutusu kendi aria-label'ını
+              taşıyor, buradaki yalnızca görsel başlık. Hiçbir girdiye
+              bağlanmayan <label> ekran okuyucuda boş bir etiket oluyordu. */}
+          <div className={etiket}>Mekan <Zorunlu /></div>
           <YerSecici
             secim={secim}
             secildi={!!yer || !!yeniYer}
@@ -240,12 +243,14 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
         {/* ---- medya ---- */}
         <div className={alan}>
-          <label className={etiket}>
+          {/* Dosya girdisi gizli ve butondan tetikleniyor; buton kendi metnini
+              taşıdığı için bu satır label değil, başlık. */}
+          <div className={etiket}>
             Fotoğraf ya da video <Zorunlu />
             {medyalar.length > 0 && (
               <span className="ml-2 font-sayi normal-case tracking-normal">{medyalar.length} dosya</span>
             )}
-          </label>
+          </div>
 
           <div ref={siraKap}>
           {medyalar.map((m, i) => (
@@ -313,11 +318,15 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
         </div>
 
         {/* ---- üç kelime ---- */}
-        <div className={alan}>
-          <label className={etiket}>Üç kelimeyle anlat <Zorunlu /></label>
+        {/* Üç kutu tek bir soruyu cevaplıyor: grup başlığı aria-labelledby ile
+            bağlanıyor, her kutu kaçıncı olduğunu kendi söylüyor. Tek bir
+            <label> üçüne birden bağlanamaz. */}
+        <div className={alan} role="group" aria-labelledby="kelime-basligi">
+          <div className={etiket} id="kelime-basligi">Üç kelimeyle anlat <Zorunlu /></div>
           <div className="flex gap-2">
             {[0, 1, 2].map((i) => (
               <input key={i} value={kelimeler[i]} maxLength={14} placeholder={`${i + 1}.`}
+                aria-label={`${i + 1}. kelime`} aria-required="true"
                 onChange={(e) => setKelimeler((k) => {
                   const y = [...k] as [string, string, string]; y[i] = e.target.value; return y;
                 })}
@@ -327,8 +336,8 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
         </div>
 
         {/* ---- senaryo ---- */}
-        <div className={alan}>
-          <label className={etiket}>Geliş senaryosu <Zorunlu /></label>
+        <div className={alan} role="group" aria-labelledby="senaryo-basligi">
+          <div className={etiket} id="senaryo-basligi">Geliş senaryosu <Zorunlu /></div>
           <div className="flex flex-wrap gap-1.5">
             {SENARYOLAR.map((s) => (
               <Cip key={s} secili={senaryo === s} onTikla={() => setSenaryo(s)}>{s}</Cip>
@@ -341,6 +350,8 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           <label className={etiket} htmlFor="puan">Bana hitap puanı <Zorunlu /></label>
           <div className="flex items-center gap-3">
             {/* step .5 — şemadaki check yarım adım zorunlu kılıyor */}
+            {/* aria-required YOK: slider rolü desteklemiyor, zaten kaydırıcının
+                her zaman bir değeri var — boş bırakılamıyor. */}
             <input id="puan" type="range" min={1} max={10} step={0.5} value={puan}
               onChange={(e) => setPuan(Number(e.target.value))}
               className="h-1 flex-1 accent-[var(--color-jeton)]" />
@@ -373,20 +384,20 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           </summary>
           <div className="mt-3 space-y-3">
             <div>
-              <label className={etiket}>Bir şey değişse</label>
-              <input value={degisse} onChange={(e) => setDegisse(e.target.value)}
+              <label className={etiket} htmlFor="degisse">Bir şey değişse</label>
+              <input id="degisse" value={degisse} onChange={(e) => setDegisse(e.target.value)}
                 maxLength={90} placeholder="Ne olsa daha iyi olurdu?" className={girdi} />
             </div>
-            <div>
-              <label className={etiket}>Hangi sıklıkla gelinir</label>
+            <div role="group" aria-labelledby="siklik-basligi">
+              <div className={etiket} id="siklik-basligi">Hangi sıklıkla gelinir</div>
               <div className="flex flex-wrap gap-1.5">
                 {SIKLIKLAR.map((s) => (
                   <Cip key={s} secili={siklik === s} onTikla={() => setSiklik(siklik === s ? "" : s)}>{s}</Cip>
                 ))}
               </div>
             </div>
-            <div>
-              <label className={etiket}>Tekrar gider misin</label>
+            <div role="group" aria-labelledby="tekrar-basligi">
+              <div className={etiket} id="tekrar-basligi">Tekrar gider misin</div>
               <div className="flex flex-wrap gap-1.5">
                 {TEKRARLAR.map((s) => (
                   <Cip key={s} secili={tekrar === s} onTikla={() => setTekrar(tekrar === s ? "" : s)}>{s}</Cip>
@@ -394,8 +405,8 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
               </div>
             </div>
             <div>
-              <label className={etiket}>Kişi başı ödediğin (₺)</label>
-              <input value={fiyat} onChange={(e) => setFiyat(e.target.value.replace(/\D/g, ""))}
+              <label className={etiket} htmlFor="fiyat">Kişi başı ödediğin (₺)</label>
+              <input id="fiyat" value={fiyat} onChange={(e) => setFiyat(e.target.value.replace(/\D/g, ""))}
                 inputMode="numeric" placeholder="örn. 250" className={girdi} />
             </div>
           </div>

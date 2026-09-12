@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOturum } from "@/lib/oturum";
+import YasalMetin from "./YasalMetin";
 
 type Mod = "giris" | "kayit";
 
@@ -22,6 +23,17 @@ export default function Giris({ onKapat }: { onKapat: () => void }) {
   const [hata, setHata] = useState<string | null>(null);
   const [bilgi, setBilgi] = useState<string | null>(null);
   const [gonderiliyor, setGonderiliyor] = useState(false);
+  const [yasal, setYasal] = useState<"sartlar" | "gizlilik" | null>(null);
+
+  /* Escape ile kapanma — diğer bütün modallerde var, burada eksikti.
+     Yasal metin açıkken devre dışı: onun kendi dinleyicisi var, ikisi birden
+     çalışsaydı tek Escape hem metni hem giriş ekranını kapatırdı. */
+  useEffect(() => {
+    if (yasal) return;
+    const el = (e: KeyboardEvent) => { if (e.key === "Escape") onKapat(); };
+    window.addEventListener("keydown", el);
+    return () => window.removeEventListener("keydown", el);
+  }, [onKapat, yasal]);
 
   const gonder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +61,11 @@ export default function Giris({ onKapat }: { onKapat: () => void }) {
   };
 
   const girdi = "w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2 text-[14px] text-murekkep outline-none placeholder:text-murekkep2 focus:border-jeton";
+
+  /* Form state'i burada duruyor, DOM'u değiştirmek onu sıfırlamıyor —
+     metinden dönünce girilen alanlar yerinde kalıyor. Ayarlar da aynı kalıbı
+     kullanıyor. */
+  if (yasal) return <YasalMetin tur={yasal} onKapat={() => setYasal(null)} />;
 
   return (
     <div role="dialog" aria-modal="true" aria-label={mod === "giris" ? "Giriş yap" : "Kayıt ol"}
@@ -104,6 +121,25 @@ export default function Giris({ onKapat }: { onKapat: () => void }) {
         {bilgi && (
           <p className="rounded-sm border border-[var(--cizgi)] bg-yuzey p-2.5 text-[13px] leading-snug">
             {bilgi}
+          </p>
+        )}
+
+        {/* Metinleri kabul etmeden hesap açılıyordu; şartlara yalnızca
+            Ayarlar'dan ulaşılabiliyordu. Ayrı onay kutusu yerine butonun
+            üstünde bağlantılı satır — kabul, gönderme eyleminin kendisi. */}
+        {mod === "kayit" && (
+          <p className="text-[12px] leading-snug text-murekkep2">
+            Hesap oluşturarak{" "}
+            <button type="button" onClick={() => setYasal("sartlar")}
+              className="border-none bg-transparent p-0 text-[12px] text-murekkep underline">
+              kullanım şartlarını
+            </button>{" "}
+            ve{" "}
+            <button type="button" onClick={() => setYasal("gizlilik")}
+              className="border-none bg-transparent p-0 text-[12px] text-murekkep underline">
+              gizlilik politikasını
+            </button>{" "}
+            kabul etmiş olursun.
           </p>
         )}
 

@@ -138,6 +138,14 @@ function Gizlilik() {
         Fotoğraflar aynı yerdeki dosya deposunda durur.
       </p>
 
+      <B>Çerezler</B>
+      <p>
+        Tek bir çerez kullanıyoruz: oturum çerezi. Tek işi girişini açık
+        tutmak — sekmeyi kapatıp geri geldiğinde yeniden şifre sormamak için.
+        Reklam, ölçüm ya da takip çerezi yok, bu yüzden karşına çerez onayı
+        penceresi de çıkmıyor.
+      </p>
+
       <B>Kimlerle paylaşıyoruz</B>
       <p>
         Kimseyle. Reklam vermiyoruz, veri satmıyoruz, üçüncü taraf takip
