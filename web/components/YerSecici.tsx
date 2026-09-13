@@ -198,22 +198,22 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
   };
 
   const satir =
-    "flex w-full items-center gap-2.5 border-none border-b border-[var(--cizgi)] bg-transparent px-2.5 py-2 text-left last:border-0";
+    "flex w-full items-center gap-2.5 border-none bg-transparent px-2.5 py-2 text-left last:border-0";
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2 rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0 text-murekkep2">
+      <div className="mb-2 flex items-center gap-2 rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0 text-gri-600">
           <circle cx="11" cy="11" r="7" /><path d="M16.2 16.2 21 21" />
         </svg>
         <input value={q} onChange={(e) => setQ(e.target.value)}
           placeholder="Mekan ara ya da haritadan seç" autoComplete="off"
           aria-label="Mekan ara"
-          className="w-full border-none bg-transparent text-[14px] outline-none placeholder:text-murekkep2" />
+          className="w-full border-none bg-transparent text-base outline-none placeholder:text-gri-600" />
       </div>
 
       {(yereller.length > 0 || yeniler.length > 0) && (
-        <div className="mb-2 max-h-[210px] overflow-y-auto rounded-sm border border-[var(--cizgi)] bg-yuzey">
+        <div className="mb-2 max-h-[210px] overflow-y-auto rounded-lg bg-yuzey shadow-kat-1">
           {yereller.length > 0 && (
             <ul className="list-none p-0">
               {yereller.map((y) => (
@@ -222,8 +222,8 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
                     <span style={igneStil(y.tur)} className="shrink-0"
                       dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 17, "var(--pin)") }} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-semibold">{y.ad}</span>
-                      <span className="block font-sayi text-[10.5px] text-murekkep2">
+                      <span className="block truncate text-sm font-semibold">{y.ad}</span>
+                      <span className="block font-sayi text-2xs text-gri-600">
                         {y.semt}{y.pinSayisi ? ` · ${y.pinSayisi} pin` : ""}
                       </span>
                     </span>
@@ -237,7 +237,7 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
             <>
               {/* Başlık, bunların bizde OLMADIĞINI söylüyor: seçilince yeni
                   mekan olarak açılacak, kullanıcı ilk pini atmış olacak. */}
-              <div className="border-y border-[var(--cizgi)] bg-[rgba(35,52,60,.04)] px-2.5 py-1.5 font-tabela text-[10px] uppercase tracking-[0.12em] text-murekkep2">
+              <div className="border-y border-[var(--cizgi)] bg-[rgba(35,52,60,.04)] px-2.5 py-1.5 font-tabela text-2xs uppercase tracking-[0.12em] text-gri-600">
                 Haritadan · henüz kayıtlı değil
               </div>
               <ul className="list-none p-0">
@@ -250,12 +250,12 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
                       <span style={igneStil(h.tur)} className="shrink-0 opacity-60"
                         dangerouslySetInnerHTML={{ __html: simgeSvg(h.tur, 17, "var(--pin)") }} />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-semibold">{h.ad}</span>
-                        <span className="block truncate font-sayi text-[10.5px] text-murekkep2">
+                        <span className="block truncate text-sm font-semibold">{h.ad}</span>
+                        <span className="block truncate font-sayi text-2xs text-gri-600">
                           {[h.semt, h.adres].filter(Boolean).join(" · ") || "Kadıköy"}
                         </span>
                       </span>
-                      <span className="shrink-0 font-tabela text-[10px] uppercase tracking-[0.1em] text-jeton">
+                      <span className="shrink-0 font-tabela text-2xs uppercase tracking-[0.1em] text-jeton">
                         Ekle
                       </span>
                     </button>
@@ -268,8 +268,8 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
       )}
 
       {bosSonuc && (
-        <div className="mb-2 rounded-sm border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2.5">
-          <p className="text-[12.5px] leading-snug">
+        <div className="mb-2 rounded-md border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2.5">
+          <p className="text-sm leading-snug">
             <b>“{gecikmeli}”</b> ne bizde ne haritada bulunabildi. Google Haritalar’da
             olan her yer OpenStreetMap’te olmayabiliyor; o zaman ilk ekleyen sen
             oluyorsun.
@@ -280,11 +280,11 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
               yerini sürükleyerek düzeltmek çok daha kolay. */}
           <button
             onClick={merkezeEkle}
-            className="mt-2 w-full rounded-sm border-none bg-jeton px-3 py-2 font-tabela text-[11.5px] uppercase tracking-[0.1em] text-white"
+            className="mt-2 w-full rounded-full border-none bg-gri-900 px-3 py-2 font-tabela text-xs uppercase tracking-[0.1em] text-white"
           >
             “{gecikmeli}” adıyla ekle
           </button>
-          <p className="mt-1.5 text-[11px] leading-snug text-murekkep2">
+          <p className="mt-1.5 text-xs leading-snug text-gri-600">
             İğne haritanın ortasına düşecek; sürükleyerek tam yerine getirebilirsin.
           </p>
         </div>
@@ -293,17 +293,17 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
       {/* Servis çökerse sessiz kalmak yanlış olurdu: kullanıcı "yer yok"
           sanıp aynı mekanın kopyasını açardı. */}
       {haritaHatasi && (
-        <p className="mb-2 text-[11.5px] leading-snug text-murekkep2">
+        <p className="mb-2 text-xs leading-snug text-gri-600">
           Haritadan arama şu an çalışmıyor — kendi kayıtlarımız aranmaya devam ediyor.
         </p>
       )}
 
-      <div ref={kapsayici} className="h-[220px] w-full overflow-hidden rounded-sm bg-su"
+      <div ref={kapsayici} className="h-[220px] w-full overflow-hidden rounded-md bg-su"
            style={{ position: "relative" }} />
-      <p className="mt-1 text-[10px] leading-snug text-murekkep2">
+      <p className="mt-1 text-2xs leading-snug text-gri-600">
         Mekanlar © OpenStreetMap katkıcıları · Karolar OpenFreeMap / © OpenMapTiles
       </p>
-      <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
+      <p className="mt-1.5 text-xs leading-snug text-gri-600">
         {!secildi
           ? "Aradığın yer yoksa haritada bir noktaya dokun, yeni mekan ekle."
           : !secim

@@ -97,27 +97,27 @@ export default function KunyeDuzenle({
     } finally { setGonderiliyor(false); }
   };
 
-  const girdi = "w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2 text-[14px] text-murekkep outline-none placeholder:text-murekkep2 focus:border-jeton";
-  const etiket = "mb-1.5 block font-tabela text-[11px] uppercase tracking-[0.12em] text-murekkep2";
+  const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton";
+  const etiket = "mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Künye düzenle"
          className="absolute inset-0 z-[44] flex flex-col bg-kagit">
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div className="min-w-0">
-          <h2 className="text-[20px] font-semibold leading-tight">Künye</h2>
-          <div className="mt-1.5 truncate font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+          <h2 className="text-xl font-semibold leading-tight">Künye</h2>
+          <div className="mt-1.5 truncate text-2xs font-bold uppercase tracking-etiket text-gri-700">
             {yerAdi}
           </div>
         </div>
         <button onClick={onKapat} disabled={gonderiliyor} aria-label="Kapat"
-          className="size-[30px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[15px] leading-none disabled:opacity-40">
+          className="size-[30px] shrink-0 rounded-lg bg-yuzey shadow-kat-1 text-base leading-none disabled:opacity-40">
           ✕
         </button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <p className="mb-4 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2.5 text-[12.5px] leading-snug text-murekkep2">
+        <p className="mb-4 rounded-lg bg-yuzey shadow-kat-1 p-2.5 text-sm leading-snug text-gri-600">
           Buradaki bilgiler <b className="text-murekkep">olgu</b>, deneyim değil — kim yazarsa
           yazsın aynı olmalı. Kendi deneyimini anlatmak için pin at. Yazdığın adınla
           görünüyor ve herkes düzeltebiliyor.
@@ -129,7 +129,7 @@ export default function KunyeDuzenle({
             maxLength={200} rows={3}
             placeholder="örn. Pazartesi kapalı · Kapıda sadece nakit"
             className={girdi + " resize-none"} />
-          <span className="mt-1 block text-[11.5px] leading-snug text-murekkep2">
+          <span className="mt-1 block text-xs leading-snug text-gri-600">
             Mekan sayfasının en üstünde kırmızı kutuda çıkıyor. Yalnızca gerçekten
             önemli, doğrulanabilir şeyler için.
           </span>
@@ -141,9 +141,9 @@ export default function KunyeDuzenle({
             {([["evet", "Gerekiyor"], ["hayir", "Gerekmiyor"], ["", "Bilinmiyor"]] as const).map(
               ([id, ad]) => (
                 <button key={ad} onClick={() => setRezervasyon(id)} aria-pressed={rezervasyon === id}
-                  className={`rounded-sm px-2.5 py-1.5 font-tabela text-[11px] uppercase tracking-[0.1em] ${
-                    rezervasyon === id ? "border-none bg-jeton text-white"
-                      : "border border-[var(--cizgi)] bg-yuzey text-murekkep2"
+                  className={`rounded-md px-2.5 py-1.5 font-tabela text-xs uppercase tracking-[0.1em] ${
+                    rezervasyon === id ? "border-none bg-gri-900 text-white"
+                      : "bg-yuzey shadow-kat-1 text-gri-600"
                   }`}>
                   {ad}
                 </button>
@@ -160,7 +160,7 @@ export default function KunyeDuzenle({
         {/* ---- çalışma saati ---- */}
         <div className="mb-4">
           <span className={etiket}>Çalışma saati</span>
-          <p className="mb-2 text-[11.5px] leading-snug text-murekkep2">
+          <p className="mb-2 text-xs leading-snug text-gri-600">
             Girilmezse mekan “saat bilgisi yok” olarak kalıyor ve “Şu an açık”
             filtresinde çıkmıyor. Bilmediğin günü işaretleme — boş bırakmak
             “kapalı” demek değil.
@@ -168,18 +168,18 @@ export default function KunyeDuzenle({
 
           {/* Tek tek yedi satır doldurmak sıkıcı: çoğu yer her gün aynı
               saatte açık. Bu satır hepsini bir dokunuşta dolduruyor. */}
-          <div className="mb-2 flex items-center gap-1.5 rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2">
-            <span className="shrink-0 text-[12.5px] text-murekkep2">Her gün</span>
+          <div className="mb-2 flex items-center gap-1.5 rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2">
+            <span className="shrink-0 text-sm text-gri-600">Her gün</span>
             <input type="time" value={hepsiO} onChange={(e) => setHepsiO(e.target.value)}
               aria-label="Her gün açılış"
-              className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-kagit px-1.5 py-1 font-sayi text-[12.5px]" />
-            <span className="shrink-0 text-murekkep2">–</span>
+              className="min-w-0 flex-1 rounded-lg bg-gomuk px-1.5 py-1 font-sayi text-sm" />
+            <span className="shrink-0 text-gri-600">–</span>
             <input type="time" value={hepsiK} onChange={(e) => setHepsiK(e.target.value)}
               aria-label="Her gün kapanış"
-              className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-kagit px-1.5 py-1 font-sayi text-[12.5px]" />
+              className="min-w-0 flex-1 rounded-lg bg-gomuk px-1.5 py-1 font-sayi text-sm" />
             <button
               onClick={() => setGunler(Array.from({ length: 7 }, () => ({ acik: true, o: hepsiO, k: hepsiK })))}
-              className="shrink-0 rounded-sm border-none bg-jeton px-2 py-1.5 font-tabela text-[10.5px] uppercase tracking-[0.1em] text-white">
+              className="shrink-0 rounded-full border-none bg-gri-900 px-2 py-1.5 font-tabela text-2xs uppercase tracking-[0.1em] text-white">
               Uygula
             </button>
           </div>
@@ -193,8 +193,8 @@ export default function KunyeDuzenle({
             return (
               <div key={g} className="mb-1.5 flex items-center gap-1.5">
                 <button onClick={() => yaz({ acik: !v.acik })} aria-pressed={v.acik}
-                  className={`w-[52px] shrink-0 rounded-sm py-1.5 font-tabela text-[10.5px] uppercase tracking-[0.08em] ${
-                    v.acik ? "border-none bg-jeton text-white" : "border border-[var(--cizgi)] bg-yuzey text-murekkep2"
+                  className={`w-[52px] shrink-0 rounded-md py-1.5 font-tabela text-2xs uppercase tracking-[0.08em] ${
+                    v.acik ? "border-none bg-gri-900 text-white" : "bg-yuzey shadow-kat-1 text-gri-600"
                   }`}>
                   {GUNLER[g]}
                 </button>
@@ -202,19 +202,19 @@ export default function KunyeDuzenle({
                   <>
                     <input type="time" value={v.o} onChange={(e) => yaz({ o: e.target.value })}
                       aria-label={`${GUNLER[g]} açılış`}
-                      className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-yuzey px-1.5 py-1 font-sayi text-[12.5px]" />
-                    <span className="shrink-0 text-murekkep2">–</span>
+                      className="min-w-0 flex-1 rounded-lg bg-yuzey shadow-kat-1 px-1.5 py-1 font-sayi text-sm" />
+                    <span className="shrink-0 text-gri-600">–</span>
                     <input type="time" value={v.k} onChange={(e) => yaz({ k: e.target.value })}
                       aria-label={`${GUNLER[g]} kapanış`}
-                      className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-yuzey px-1.5 py-1 font-sayi text-[12.5px]" />
+                      className="min-w-0 flex-1 rounded-lg bg-yuzey shadow-kat-1 px-1.5 py-1 font-sayi text-sm" />
                   </>
                 ) : (
-                  <span className="flex-1 text-[12px] text-murekkep2">kapalı / bilinmiyor</span>
+                  <span className="flex-1 text-sm text-gri-600">kapalı / bilinmiyor</span>
                 )}
               </div>
             );
           })}
-          <p className="mt-1 text-[11.5px] leading-snug text-murekkep2">
+          <p className="mt-1 text-xs leading-snug text-gri-600">
             Gece yarısını geçen saatler yazılabilir: 20:00–02:00 ertesi güne sarkar.
           </p>
         </div>
@@ -226,25 +226,25 @@ export default function KunyeDuzenle({
         </label>
 
         <button onClick={() => setSadeceNakit((v) => !v)} aria-pressed={sadeceNakit}
-          className="mb-4 flex w-full items-center justify-between rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-2.5 text-left">
-          <span className="text-[13.5px]">Sadece nakit</span>
-          <span className={`grid size-[20px] place-items-center rounded-sm text-[12px] ${
-            sadeceNakit ? "bg-jeton text-white" : "border border-[var(--cizgi)]"
+          className="mb-4 flex w-full items-center justify-between rounded-lg bg-yuzey shadow-kat-1 px-3 py-2.5 text-left">
+          <span className="text-base">Sadece nakit</span>
+          <span className={`grid size-[20px] place-items-center rounded-md text-sm ${
+            sadeceNakit ? "bg-gri-900 text-white" : "border border-[var(--cizgi)]"
           }`}>
             {sadeceNakit ? "✓" : ""}
           </span>
         </button>
 
         {hata && (
-          <p className="rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px]">
+          <p className="rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}
       </div>
 
-      <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
+      <div className="shrink-0 bg-yuzey p-3">
         <button onClick={gonder} disabled={gonderiliyor}
-          className="w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white disabled:opacity-40">
+          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
           {gonderiliyor ? "…" : "Kaydet"}
         </button>
       </div>

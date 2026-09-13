@@ -413,7 +413,7 @@ export async function kisileriGetir(): Promise<Record<string, Kisi>> {
 export async function kisininListeleri(kisiId: string): Promise<Liste[]> {
   const { data, error } = await db
     .from("lists")
-    .select(`id, owner_id, slug, title, intro,
+    .select(`id, owner_id, slug, title, intro, cover_url, cover_pos,
              list_items ( ordering, places ( id, slug, name, category, neighborhood, lat, lng, pin_count ) )`)
     .eq("owner_id", kisiId)
     .order("created_at", { ascending: false });
@@ -421,10 +421,14 @@ export async function kisininListeleri(kisiId: string): Promise<Liste[]> {
 
   interface HamListe {
     id: string; owner_id: string; slug: string; title: string; intro: string | null;
+    cover_url: string | null; cover_pos: number | null;
     list_items: { ordering: number; places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; lat: number | null; lng: number | null; pin_count: number | null } }[];
   }
   return (data as unknown as HamListe[]).map((l) => ({
     id: l.id, sahip: l.owner_id, slug: l.slug, baslik: l.title, not: l.intro,
+    /* cover_pos'u eski satırlarda null bulabiliriz (göç 16'dan önce yazılmış
+       liste yok ama sütun nullable okunabiliyor); ortadan kadraj varsayılan. */
+    kapak: l.cover_url, kapakKonum: l.cover_pos ?? 50,
     yerler: l.list_items
       .slice().sort((a, b) => a.ordering - b.ordering)
       .map((li): Yer => ({
@@ -1069,6 +1073,69 @@ export function medyaUrl(yol: string): string | null {
   return db.storage.from("pin-media").getPublicUrl(yol).data.publicUrl;
 }
 
+/**
+ * Boş durum kartının zemini — pin fotoğrafı olan, en çok pinlenmiş mekan.
+ *
+ * Neden ayrı bir sorgu: boş liste "bir hata" değil, uygulamanın en güçlü
+ * davet anı (corner-tasarim §6) ve o kartın arkasında gerçek bir mekan
+ * fotoğrafı olması gerekiyor — degrade yedek, asıl değil.
+ *
+ * Neden populerler() değil: o sorgu 8 profil + 9 mekan çekiyor, burada bir
+ * satır yetiyor. Ve çağıran YALNIZCA liste boşken çağırıyor, dolu akışta
+ * maliyeti sıfır.
+ *
+ * YALNIZCA cover_path, cover_url DEĞİL. Sebep hukuki: cover_url Wikimedia
+ * görselidir ve CC-BY atfı GÖRÜNÜR yerde göstermeyi şart koşar. Davet kartı
+ * dekoratif bir zemin, üstünde kredi satırı taşıyamaz — oraya bir Wikimedia
+ * görseli koymak lisansı ihlal ederdi. Kullanıcının kendi yüklediği
+ * fotoğrafta böyle bir zorunluluk yok.
+ */
+export async function davetGorseli(): Promise<string | null> {
+  const { data } = await db.from("places")
+    .select("cover_path")
+    .eq("status", "published")
+    .not("cover_path", "is", null)
+    .order("pin_count", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data?.cover_path ? medyaUrl(data.cover_path) : null;
+}
+
+/**
+ * Bir kapak/medya URL'ini istenen genişlikte KÜÇÜK KOPYAYA çevirir.
+ *
+ * Neden gerekiyor: depodaki fotoğraf 1600 piksel / ~280 KB (lib/fotograf.ts).
+ * Haritada 44 pikselik bir işaret için onu indirmek 160 işaretle 45 MB eder.
+ * Ölçülen kazanç: 282.880 bayt → 2.925 bayt (96px, kalite 60).
+ *
+ * İki kaynak var, ikisinin de ücretsiz küçültme yolu farklı:
+ *   1. Supabase Storage — /object/public/ yerine /render/image/public/ ve
+ *      genişlik parametresi. Dönüşüm sunucuda yapılıp CDN'de önbelleğe
+ *      alınıyor, yükleme hattına dokunmak gerekmiyor.
+ *   2. Wikimedia — kapak URL'leri zaten .../thumb/.../1280px-Ad.jpg
+ *      biçiminde; yalnızca baştaki sayıyı değiştirmek yeterli, kendi
+ *      küçültme hizmeti ücretsiz.
+ * Tanımadığı bir adres gelirse URL'e DOKUNMUYOR — bozuk bir bağlantı
+ * üretmektense büyük dosyayı göstermek yeğ.
+ */
+export function kucukUrl(url: string | null | undefined, genislik: number): string | null {
+  if (!url) return null;
+
+  if (url.includes("/storage/v1/object/public/")) {
+    const t = url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
+    const ayrac = t.includes("?") ? "&" : "?";
+    return `${t}${ayrac}width=${genislik}&height=${genislik}&resize=cover&quality=60`;
+  }
+
+  if (url.includes("upload.wikimedia.org/") && url.includes("/thumb/")) {
+    /* .../thumb/a/ab/Ad.jpg/1280px-Ad.jpg → .../96px-Ad.jpg
+       Sorgu dizesi (utm_*) korunuyor; kaldırmanın bir faydası yok. */
+    return url.replace(/\/(\d+)px-/, `/${genislik}px-`);
+  }
+
+  return url;
+}
+
 /* ---------- arşiv ---------- */
 
 /** Beğendiğim pinler — arşiv ekranı */
@@ -1105,6 +1172,10 @@ export async function kaydettigimYerler(): Promise<Yer[]> {
 
 export async function listeOlustur(
   baslik: string, not: string, yerIdler: string[],
+  /* Kapak isteğe bağlı: kapaksız liste kategori degradesine düşüyor, boş
+     gri kutu göstermiyoruz. Kapak zaten yüklenmiş olarak geliyor
+     (listeKapakYukle), burada yalnızca satıra bağlanıyor. */
+  kapak?: { url: string | null; konum?: number },
 ): Promise<string> {
   const id = await benimKimligim();
   if (!id) throw new Error("Giriş gerekiyor.");
@@ -1117,7 +1188,10 @@ export async function listeOlustur(
   let liste: { id: string } | null = null;
   for (let d = 0; d < 5 && !liste; d++) {
     const { data, error } = await db.from("lists")
-      .insert({ owner_id: id, slug, title: baslik.trim(), intro: not.trim() || null })
+      .insert({
+        owner_id: id, slug, title: baslik.trim(), intro: not.trim() || null,
+        cover_url: kapak?.url ?? null, cover_pos: kadraj(kapak?.konum),
+      })
       .select("id").single();
     if (!error) { liste = data; break; }
     if (error.code !== "23505") throw error;
@@ -1136,8 +1210,96 @@ export async function listeOlustur(
 }
 
 export async function listeSil(listeId: string) {
+  /* Kapak dosyası satırla birlikte gitmiyor — storage'ı kimse temizlemiyor.
+     Önce dosyayı düşür, sonra satırı sil; ters sırada satır gidince yolu
+     bulamayız ve kova sessizce şişer. */
+  const { data } = await db.from("lists").select("cover_url").eq("id", listeId).maybeSingle();
   const { error } = await db.from("lists").delete().eq("id", listeId);
   if (error) throw error;
+  await kapakDosyasiniSil((data as { cover_url: string | null } | null)?.cover_url ?? null);
+}
+
+/** cover_pos şemada 0–100 check'li; arayüz hatası kısıtı patlatmasın. */
+const kadraj = (n: number | undefined) =>
+  Math.max(0, Math.min(100, Math.round(n ?? 50)));
+
+const KAPAK_KOVA = "list-covers";
+
+/**
+ * Liste kapağını günceller — başlık, not ve kadraj da buradan geçiyor.
+ *
+ * Eski kapak dosyası burada siliniyor: her kapak değişikliği kovaya yeni bir
+ * dosya bırakıyor (zaman damgalı ad, CDN önbelleği yüzünden zorunlu) ve
+ * temizlenmezse kullanıcının her denemesi kalıcı çöp üretirdi.
+ */
+export async function listeGuncelle(
+  listeId: string,
+  alanlar: { baslik?: string; not?: string; kapakUrl?: string | null; kapakKonum?: number },
+) {
+  const kimlik = await benimKimligim();
+  if (!kimlik) throw new Error("Giriş gerekiyor.");
+
+  const yama: Record<string, unknown> = {};
+  if (alanlar.baslik !== undefined) {
+    if (alanlar.baslik.trim().length < 2) throw new Error("Listeye bir başlık yaz.");
+    yama.title = alanlar.baslik.trim();
+  }
+  if (alanlar.not !== undefined) yama.intro = alanlar.not.trim() || null;
+  if (alanlar.kapakUrl !== undefined) yama.cover_url = alanlar.kapakUrl;
+  if (alanlar.kapakKonum !== undefined) yama.cover_pos = kadraj(alanlar.kapakKonum);
+  if (!Object.keys(yama).length) return;
+
+  /* Eski kapağı yamadan ÖNCE öğren: update'ten sonra sorarsak yeni değeri
+     okur ve silinecek dosyayı kaybederiz. */
+  const eskiKapak = alanlar.kapakUrl !== undefined
+    ? ((await db.from("lists").select("cover_url").eq("id", listeId).maybeSingle())
+        .data as { cover_url: string | null } | null)?.cover_url ?? null
+    : null;
+
+  const { error } = await db.from("lists").update(yama).eq("id", listeId);
+  if (error) throw error;
+
+  if (eskiKapak && eskiKapak !== alanlar.kapakUrl) await kapakDosyasiniSil(eskiKapak);
+}
+
+/**
+ * Kapak fotoğrafını kovaya yükler ve genel URL'sini döner.
+ *
+ * Listeyle bağlanmıyor: liste HENÜZ YOKKEN de çağrılabilsin diye (oluşturma
+ * ekranında kapak başlıktan önce seçilebiliyor). Bağlama işi listeOlustur /
+ * listeGuncelle'de.
+ *
+ * Dosya adında zaman damgası var — avatarYukle'deki sebeple aynı: aynı ada
+ * yazsak CDN eski görseli servis eder, kullanıcı değiştirdiğini göremezdi.
+ */
+export async function listeKapakYukle(dosya: Blob, uzanti = "jpg"): Promise<string> {
+  const id = await benimKimligim();
+  if (!id) throw new Error("Giriş gerekiyor.");
+  /* Yol düzeni <kimlik>/<dosya> — RLS policy'si buna dayanıyor (göç 16). */
+  const yol = `${id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${uzanti}`;
+  const { error } = await db.storage.from(KAPAK_KOVA)
+    .upload(yol, dosya, { contentType: dosya.type || "image/jpeg", upsert: false });
+  if (error) throw new Error(`Kapak yüklenemedi: ${error.message}`);
+  return db.storage.from(KAPAK_KOVA).getPublicUrl(yol).data.publicUrl;
+}
+
+/**
+ * Kapak URL'sinden kova yolunu çıkarıp dosyayı siler.
+ *
+ * Sessiz: temizlik başarısız olursa kullanıcının yaptığı iş (liste silindi,
+ * kapak değişti) zaten bitmiş durumda — yüzüne hata basmanın anlamı yok,
+ * geriye yalnızca artık dosya kalır.
+ */
+async function kapakDosyasiniSil(url: string | null) {
+  if (!url) return;
+  const ayrac = `/storage/v1/object/public/${KAPAK_KOVA}/`;
+  const i = url.indexOf(ayrac);
+  /* Mekan/pin fotoğrafından seçilmiş kapak bu kovada değil — onu silmek
+     başkasının pinini silmek olurdu. */
+  if (i === -1) return;
+  const yol = decodeURIComponent(url.slice(i + ayrac.length).split("?")[0]);
+  try { await db.storage.from(KAPAK_KOVA).remove([yol]); }
+  catch (e) { console.warn("liste kapağı silinemedi:", e); }
 }
 
 /* ---------- profil düzenleme ---------- */

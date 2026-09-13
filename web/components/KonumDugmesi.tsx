@@ -51,7 +51,9 @@ export default function KonumDugmesi({
   return (
     <>
       {(mesajGorunur && mesaj) || kadikoyDisinda ? (
-        <div className="absolute inset-x-4 top-3.5 z-[3] rounded-sm border border-[var(--cizgi)] bg-yuzey p-2.5 text-center text-[12.5px] leading-snug shadow-kagit2">
+        /* top değeri yüzen başlığın ALTI: başlık haritanın üstünde duruyor
+           (page.tsx'teki üst katman ~116px), toast onun üstüne binmemeli. */
+        <div className="absolute inset-x-3 top-[120px] z-[6] rounded-md bg-yuzey p-2.5 text-center text-xs leading-snug shadow-kat-2">
           {kadikoyDisinda
             ? "Kadıköy dışındasın — harita burada kalıyor, uygulama şimdilik yalnızca Kadıköy'ü kapsıyor."
             : mesaj}
@@ -69,7 +71,7 @@ export default function KonumDugmesi({
             : "Konumumu göster"
         }
         /* Filtre şeridi haritanın altında yüzdüğü için düğme onun üstünde duruyor. */
-        className={`absolute bottom-[74px] right-3 z-[3] grid size-10 place-items-center rounded-full border border-[var(--cizgi)] shadow-kagit2 ${
+        className={`absolute bottom-[156px] right-3 z-[3] grid size-10 place-items-center rounded-full border-none shadow-kat-3 ${
           acik ? "bg-[#2F6FB8] text-white" : "bg-yuzey text-murekkep"
         } ${durum === "isteniyor" ? "animate-pulse" : ""}`}
       >

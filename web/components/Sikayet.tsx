@@ -40,22 +40,22 @@ export default function Sikayet({
       <div className="w-full rounded-t-[14px] bg-kagit p-4">
         {bitti ? (
           <>
-            <h2 className="mb-2 text-[18px] font-semibold">Şikayetin alındı</h2>
-            <p className="mb-4 text-[13px] leading-relaxed text-murekkep2">
+            <h2 className="mb-2 text-xl font-semibold">Şikayetin alındı</h2>
+            <p className="mb-4 text-sm leading-relaxed text-gri-600">
               İçerik hemen kaldırılmıyor — tek şikayet buna yetmemeli, yoksa
               kötüye kullanılır. Kayıt tutuldu, incelenecek.
             </p>
             <button onClick={onKapat}
-              className="w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white">
+              className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2">
               Tamam
             </button>
           </>
         ) : (
           <>
             <div className="mb-3 flex items-start justify-between gap-3">
-              <h2 className="text-[18px] font-semibold leading-tight">Neyi şikayet ediyorsun?</h2>
+              <h2 className="text-xl font-semibold leading-tight">Neyi şikayet ediyorsun?</h2>
               <button onClick={onKapat} aria-label="Kapat" disabled={gonderiliyor}
-                className="size-[28px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[14px] leading-none disabled:opacity-40">
+                className="size-[28px] shrink-0 rounded-lg bg-yuzey shadow-kat-1 text-base leading-none disabled:opacity-40">
                 ✕
               </button>
             </div>
@@ -63,10 +63,10 @@ export default function Sikayet({
             <div className="mb-3 flex flex-col gap-1.5">
               {SIKAYET_SEBEPLERI.map((s) => (
                 <button key={s} onClick={() => setSebep(s)} aria-pressed={sebep === s}
-                  className={`rounded-sm px-3 py-2.5 text-left text-[13.5px] ${
+                  className={`rounded-md px-3 py-2.5 text-left text-base ${
                     sebep === s
-                      ? "border-none bg-jeton text-white"
-                      : "border border-[var(--cizgi)] bg-yuzey text-murekkep"
+                      ? "border-none bg-gri-900 text-white"
+                      : "bg-yuzey shadow-kat-1 text-murekkep"
                   }`}>
                   {s}
                 </button>
@@ -74,13 +74,13 @@ export default function Sikayet({
             </div>
 
             {hata && (
-              <p className="mb-3 rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px]">
+              <p className="mb-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
                 {hata}
               </p>
             )}
 
             <button onClick={gonder} disabled={!sebep || gonderiliyor}
-              className="w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white disabled:opacity-40">
+              className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
               {gonderiliyor ? "…" : "Şikayet et"}
             </button>
           </>

@@ -86,6 +86,29 @@ export const TUR_AD: Record<string, string> = {
   "diger": "Diğer"
 };
 
+/**
+ * Kategori emojisi.
+ *
+ * Skill §6: emoji süs değil ARAYÜZ ELEMANI. Kategori rengi UI'dan
+ * çekildiği için (doygun çip yok) kategoriyi bir bakışta taşıyan şey
+ * artık bu. SIMGE'nin (SVG) yerini almıyor, onunla birlikte çalışıyor:
+ * emoji metnin yanında, SVG fotoğrafsız zeminin ortasında.
+ */
+export const EMOJI: Record<string, string> = {
+  "kahve":  "☕",
+  "yemek":  "🍽️",
+  "bar":    "🍸",
+  "tatli":  "🍰",
+  "kultur": "🎭",
+  "park":   "🌳",
+  "otel":   "🛎️",
+  "magaza": "🛍️",
+  "diger":  "📍",
+};
+
+/** Kategori emojisi — tanınmayan tür "📍"ye düşer. */
+export const emoji = (tur: string) => EMOJI[tur] ?? EMOJI.diger;
+
 export const SIMGE: Record<string, string> = {
   "kahve": "<path d=\"M6.5 8.5h9.5v4.8a4.75 4.75 0 0 1-9.5 0z\"/><path d=\"M16 9.8h1.7a2.4 2.4 0 0 1 0 4.8H16\"/><path d=\"M5.5 20.2h11.5\"/>",
   "yemek": "<path d=\"M7.6 3.8v5.1a2.1 2.1 0 0 0 4.2 0V3.8\"/><path d=\"M9.7 11v9.2\"/><path d=\"M16.6 3.8c1.9 1.9 1.9 5.7 0 7.6v8.8\"/>",

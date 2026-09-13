@@ -1,11 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Oswald, Karla, JetBrains_Mono, Kalam } from "next/font/google";
+import { Inter, Karla, JetBrains_Mono, Kalam } from "next/font/google";
 import "./globals.css";
 
 /* BRIEF → Tasarım dili: Oswald (tabela/etiket), Karla (metin),
    JetBrains Mono (sayı), Kalam (el yazısı — post-it notları).
    latin-ext alt kümesi Türkçe karakterler için şart. */
-const oswald = Oswald({ subsets: ["latin-ext"], weight: ["400", "600"], variable: "--font-tabela" });
+/* Inter Kademe A/B/C'yi birden taşıyor: 800 ağırlık ve negatif harf
+   aralığı olmadan "özel isim bağırır" kademesi kurulamıyor. Oswald
+   (sıkıştırılmış tabela yazısı) bu dilde karşılığı olmadığı için
+   düştü. 700 artık GERÇEKTEN yüklü — sahte kalınlaştırma bitti. */
+/* weight VERİLMİYOR: Inter değişken bir font, ağırlık dizisi vermek
+   statik dosya isteyip Turbopack'in font çözümleyicisini kırıyordu
+   ("Can't resolve @vercel/turbopack-next/internal/font/google/font").
+   Değişken hâlinde 100–900 arası her ağırlık zaten geliyor — 800 de
+   dahil, yani sahte kalınlaştırma sorunu yine çözülmüş oluyor. */
+const inter = Inter({ subsets: ["latin-ext"], variable: "--font-tabela" });
 const karla = Karla({ subsets: ["latin-ext"], weight: ["400", "600"], style: ["normal", "italic"], variable: "--font-metin" });
 const mono = JetBrains_Mono({ subsets: ["latin-ext"], weight: ["400", "700"], variable: "--font-sayi" });
 const kalam = Kalam({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-el" });
@@ -42,7 +51,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
-      <body className={`${oswald.variable} ${karla.variable} ${mono.variable} ${kalam.variable}`}>
+      <body className={`${inter.variable} ${karla.variable} ${mono.variable} ${kalam.variable}`}>
         {children}
       </body>
     </html>

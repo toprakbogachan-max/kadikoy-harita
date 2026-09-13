@@ -1,20 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { igneStil, egim, fotoZemin, simgeSvg } from "@/lib/gorsel";
+import { fotoZemin, simgeSvg, zeminSimgeRengi, zaman } from "@/lib/gorsel";
+import { emoji } from "@/lib/paleti";
 import { useVeri } from "@/lib/kanca";
-import { akisGetir, medyaUrl, type AkisSekmesi } from "@/lib/veri";
+import { akisGetir, davetGorseli, kucukUrl, medyaUrl, type AkisSekmesi } from "@/lib/veri";
 import KartGorsel from "./KartGorsel";
 import { useKisiler } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
 import Avatar from "./Avatar";
+import BosDurum from "./BosDurum";
 
 /* Üç sekmenin sıralaması kasıtlı olarak farklı — aynı olursa biri
    diğerinin kopyası olur (BRIEF → Üç yüzey). */
 const SEKMELER = [
-  { id: "kesfet", ad: "Keşfet", kag: "#FBF3D9", pin: "#DE9B2E", isik: "#F5C87C", koyu: "#8E5C11" },
-  { id: "populer", ad: "Popüler", kag: "#FCE8B4", pin: "#E0A33E", isik: "#FFE9A8", koyu: "#C07A16" },
-  { id: "takip", ad: "Takip", kag: "#E3DDF8", pin: "#7360C4", isik: "#B4A8F2", koyu: "#412F86" },
+  { id: "kesfet", ad: "keşfet" },
+  { id: "populer", ad: "popüler" },
+  { id: "takip", ad: "takip" },
 ] as const;
 
 export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste: string[]) => void }) {
@@ -31,11 +33,22 @@ export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste:
 
   const idler = sirali.map((p) => p.id);
 
+  /* Boş durum kartının zemini: gerçek bir mekan fotoğrafı. Sorgu YALNIZCA
+     liste boşken atılıyor — `bos` false'ken getir hemen null dönüyor, yani
+     dolu akışta fazladan istek yok. (veri.ts → davetGorseli) */
+  const bos = !yukleniyor && !hata && sirali.length === 0;
+  const { veri: davetFoto } = useVeri<string | null>(
+    () => (bos ? davetGorseli() : Promise.resolve(null)),
+    [bos],
+    null,
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* sekmeler de post-it */}
-      <div className="pano-doku flex shrink-0 gap-3 overflow-x-auto border-b border-[var(--cizgi)] px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {SEKMELER.map((s, i) => {
+      {/* Sekmeler: aktif olan koyu dolu hap, pasifler düz. Post-it kağıdı ve
+          eğiklik kalktı — akışın rengi artık fotoğraflardan gelsin. */}
+      <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pb-3 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {SEKMELER.map((s) => {
           const aktif = sekme === s.id;
           return (
             <button
@@ -43,91 +56,134 @@ export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste:
               onClick={() => setSekme(s.id)}
               aria-selected={aktif}
               role="tab"
-              style={{
-                background: s.kag,
-                ["--pin" as string]: s.pin,
-                ["--pin-isik" as string]: s.isik,
-                ["--pin-koyu" as string]: s.koyu,
-                transform: `rotate(${aktif ? 0 : egim(i)}deg) translateY(${aktif ? -1 : 0}px)`,
-                outline: aktif ? "2px solid var(--color-jeton)" : undefined,
-                outlineOffset: aktif ? 1 : undefined,
-              }}
-              className="relative shrink-0 whitespace-nowrap rounded-sm border-none px-3.5 pb-1.5 pt-2.5 font-tabela text-[11.5px] uppercase tracking-[0.06em] text-murekkep shadow-kagit"
+              className={`shrink-0 whitespace-nowrap rounded-full border-none px-4 py-2 text-sm font-semibold lowercase tracking-ui transition-colors ${
+                aktif ? "bg-gri-900 text-white shadow-kat-2" : "bg-yuzey text-gri-700 shadow-kat-1"
+              }`}
             >
-              <span className="absolute -top-[5px] left-1/2 size-2.5 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
               {s.ad}
             </button>
           );
         })}
       </div>
 
-      {/* Instagram Explore tarzı ızgara: yan yana küçük post-it'ler */}
-      <div className="pano-doku min-h-0 flex-1 overflow-y-auto px-0 pb-2.5 pt-1">
+      {/* pb: yüzen alt menünün altında kalan kart olmasın */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[92px] pt-1">
         {sirali.length ? (
-          <div className="grid grid-cols-3 gap-x-[11px] gap-y-3.5 px-[15px] pb-5 pt-2.5">
-            {sirali.map((p, i) => {
+          <div className="flex flex-col gap-3">
+            {sirali.map((p) => {
               const medya = p.medyalar;
-              const video = medya[0].tur === "video";
+              const video = medya[0]?.tur === "video";
               const coklu = medya.length > 1;
               /* ızgarada video oynatmıyoruz; kapak yalnızca fotoğraftan */
-              const kapak = video ? null : medyaUrl(medya[0].yol);
+              /* 104 pikselik kutuya 1600 pikselik dosya inmesin: küçük kopya
+                 (veri.ts → kucukUrl) 2x için 224 piksel istiyor. */
+              const kapak = video ? null : kucukUrl(medyaUrl(medya[0]?.yol ?? ""), 224);
+              const kisiAdi = kisiler[p.kisi]?.ad ?? "";
+              /* Uygulamanın kendi cümlesi: kullanıcının yazdığı not değil,
+                 yapılandırılmış alanlardan kuruluyor. Aşağıda italik
+                 veriliyor — bkz. kart içindeki yorum. */
+              const turetilen = [p.senaryo, p.kelimeler.slice(0, 3).join(" · ")]
+                .filter(Boolean)
+                .join(" — ");
+
               return (
                 <button
                   key={p.id}
                   onClick={() => onGonderiAc(p.id, idler)}
-                  style={{ ...igneStil(p.yerTuru), transform: `rotate(${egim(i)}deg)` }}
-                  className="relative aspect-[0.8] rounded-sm border-none bg-[var(--kag)] p-[3px] shadow-kagit"
+                  className="w-full rounded-lg border-none bg-yuzey p-3 text-left shadow-kat-1"
                 >
-                  <span className="absolute -top-[5px] left-1/2 z-[2] size-2.5 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
-                  <div
-                    className="relative grid size-full place-items-center overflow-hidden rounded-sm"
-                    style={{ background: fotoZemin(p.yerTuru) }}
-                  >
-                    {kapak ? (
-                      <KartGorsel url={kapak} />
-                    ) : (
-                      <span dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 32) }} />
-                    )}
-                  </div>
-                  {/* beğeni sol üstte */}
-                  <span className="absolute left-2 top-2 z-[1] flex items-center gap-[3px] rounded-sm bg-[rgba(20,15,8,.5)] px-[5px] py-[2px] font-sayi text-[9px] text-white">
-                    ♥ {p.begeni}
-                  </span>
-                  {(video || coklu) && (
-                    <span className="absolute right-1.5 top-1.5 z-[2] flex gap-1">
-                      {video && (
-                        <span className="grid size-[19px] place-items-center rounded-full bg-[rgba(20,15,8,.62)] text-[8px] text-white">▶</span>
+                  <div className="flex gap-3">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex items-center gap-1.5 text-xs text-gri-600">
+                        <Avatar kisi={p.kisi} boyut={22} sekil="daire" />
+                        {/* Kademe A: kişi adı özel isim. */}
+                        <span className="truncate font-bold tracking-siki text-gri-900">{kisiAdi}</span>
+                        <span className="shrink-0 lowercase">pinledi</span>
+                        <span className="shrink-0 text-gri-400">· {zaman(p.saat)}</span>
+                      </div>
+
+                      {/* Kademe A: mekan adı BÜYÜK + 800 + sıkı. Kategoriyi
+                          emoji taşıyor — çipteki kuralla aynı, renk arayüze
+                          girmiyor. */}
+                      <h3 className="mt-1.5 truncate text-lg font-extrabold uppercase leading-tight tracking-siki">
+                        <span aria-hidden className="mr-1.5 font-normal tracking-normal">{emoji(p.yerTuru)}</span>
+                        {p.yerAdi}
+                      </h3>
+                      <div className="mt-0.5 truncate text-xs lowercase text-gri-600">{p.yerSemt}</div>
+
+                      {/* İnsanın yazdığı cümle: DÜZ yazı ve Karla (font-metin).
+                          Arayüzün sesi Inter; yazı tipi farkı "bunu bir insan
+                          yazdı" ayrımını italik/düze ek olarak taşıyor. */}
+                      {p.metin && (
+                        <p className="mt-2 line-clamp-3 font-metin text-sm leading-snug text-gri-800">{p.metin}</p>
                       )}
-                      {coklu && (
-                        <span className="grid size-[19px] place-items-center rounded bg-[rgba(20,15,8,.62)] text-[9px] text-white">▤</span>
-                      )}
-                    </span>
-                  )}
-                  {/* alt perde: mekan + kişi + puan */}
-                  <div className="absolute inset-x-[3px] bottom-[3px] bg-gradient-to-t from-[rgba(0,0,0,.7)] to-transparent px-1.5 pb-1.5 pt-4 text-left text-white">
-                    <div className="mb-[3px] truncate text-[10px] font-semibold leading-tight">{p.yerAdi}</div>
-                    <div className="flex items-center gap-1 overflow-hidden text-[9px] text-white/85">
-                      <Avatar kisi={p.kisi} boyut={15} />
-                      <span className="truncate">{kisiler[p.kisi]?.ad ?? ""}</span>
-                      {p.puan != null && (
-                        <span className="ml-auto shrink-0 font-sayi text-[11px] font-bold">{p.puan}</span>
+
+                      {/* Uygulamanın kurduğu cümle: İTALİK ve soluk.
+                          Corner'ın "from corner — …" satırıyla aynı iş: tek
+                          bakışta "bunu bir insan mı yazdı yoksa uygulama mı
+                          derledi" sorusunu yazı stili cevaplıyor. Aynı ayrım
+                          MekanSayfasi'ndaki özet cümlelerinde de geçerli. */}
+                      {turetilen && (
+                        <p className="mt-1.5 line-clamp-2 text-xs italic leading-snug text-gri-500">
+                          {turetilen}
+                        </p>
                       )}
                     </div>
+
+                    <div className="relative size-[104px] shrink-0 overflow-hidden rounded-md">
+                      <div
+                        className="grid size-full place-items-center"
+                        style={{ background: fotoZemin(p.yerTuru) }}
+                      >
+                        {kapak ? (
+                          <KartGorsel url={kapak} />
+                        ) : (
+                          <span
+                            className="opacity-60"
+                            dangerouslySetInnerHTML={{ __html: simgeSvg(p.yerTuru, 30, zeminSimgeRengi(p.yerTuru)) }}
+                          />
+                        )}
+                      </div>
+                      {(video || coklu) && (
+                        <span className="absolute right-1.5 top-1.5 flex gap-1">
+                          {video && (
+                            <span className="grid size-[19px] place-items-center rounded-full bg-[rgba(20,15,8,.62)] text-[8px] text-white">▶</span>
+                          )}
+                          {coklu && (
+                            <span className="grid size-[19px] place-items-center rounded bg-[rgba(20,15,8,.62)] text-2xs text-white">▤</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Alt satır: uyum skoru solda (uygulamanın ayırt edici
+                      ölçüsü), etkileşim sayıları sağda. */}
+                  <div className="mt-2.5 flex items-center gap-3 text-xs text-gri-500">
+                    {p.puan != null && (
+                      <span className="font-sayi text-sm font-bold text-gri-900">{p.puan}<span className="text-xs font-normal text-gri-500">/10</span></span>
+                    )}
+                    <span className="ml-auto flex items-center gap-1">♥ {p.begeni}</span>
+                    <span className="flex items-center gap-1">💬 {p.yorumSayisi}</span>
                   </div>
                 </button>
               );
             })}
           </div>
-        ) : (
-          <p className="px-5 py-6 text-[13px] leading-relaxed text-murekkep2">
-            {hata
-              ? `Akış yüklenemedi: ${hata}`
-              : yukleniyor
-                ? "Akış yükleniyor…"
-                : sekme === "takip"
-                  ? "Takip ettiğin kimsenin yeni pini yok. Keşfet sekmesinden birilerini bul."
-                  : "Bu hafta pin atılmamış."}
+        ) : hata || yukleniyor ? (
+          <p className="px-1 py-6 text-sm leading-relaxed text-gri-600">
+            {hata ? `Akış yüklenemedi: ${hata}` : "Akış yükleniyor…"}
           </p>
+        ) : (
+          /* Boş durum bir hata değil, uygulamanın en güçlü davet anı
+             (skill §6). Boş beyaz alan yerine çağrı kartı. */
+          <BosDurum
+            foto={kucukUrl(davetFoto, 800)}
+            baslik={sekme === "takip" ? "kimse pin atmamış" : "bu hafta sessiz"}
+            alt={sekme === "takip"
+              ? "keşfet sekmesinden birilerini bul, akışın dolsun."
+              : "ilk pini sen at, burası seninle başlasın."}
+          />
         )}
       </div>
     </div>

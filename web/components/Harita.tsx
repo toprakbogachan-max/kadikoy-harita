@@ -13,7 +13,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 import type { Yer } from "@/lib/model";
 import type { Konum } from "@/lib/konum";
-import { jetonSVG, noktaSVG } from "@/lib/gorsel";
+import { jetonSVG, noktaSVG, fotoMarkerHTML } from "@/lib/gorsel";
+import { kucukUrl } from "@/lib/veri";
+import { altligiSessizlestir } from "@/lib/harita-stili";
 
 const HARITA_STILI =
   process.env.NEXT_PUBLIC_MAP_STYLE ?? "https://tiles.openfreemap.org/styles/liberty";
@@ -192,6 +194,9 @@ export default function Harita({
 
     m.on("load", () => {
       setHaritaHazir(true);
+      /* Altlık rengi burada kısılıyor — pinler ve fotoğraflar renge sahip
+         olsun, harita değil. (lib/harita-stili.ts) */
+      altligiSessizlestir(m);
       yerAdKatmanlari.current = ((m.getStyle().layers ?? []) as LayerSpecification[])
         .filter((l) => "source-layer" in l && l["source-layer"] === "place")
         .map((l) => l.id);
@@ -418,11 +423,28 @@ export default function Harita({
       const el = mk.getElement();
       el.classList.toggle("nokta", !pinli && !seciliMi);
       const ic = el.querySelector(".jeton-ic");
-      /* Pinsiz mekan jeton değil nokta: hiyerarşi buradan geliyor. Seçiliyken
-         jetona dönüyor, yoksa dokunduğun şey görünmez kalırdı. */
-      if (ic) ic.innerHTML = (pinli || seciliMi)
-        ? jetonSVG(y, acik, populer, seciliMi)
-        : noktaSVG(y, acik);
+
+      /* Pinlenmiş ve fotoğrafı olan mekan artık kategori renginde bir jeton
+         değil, KENDİ FOTOĞRAFI. Referans uygulamada haritayı okunur yapan
+         şey bu: dokuz doygun renk yerine gerçek görüntüler.
+
+         Küçük kopya şart — depodaki dosya 1600px/~280 KB, burada 44 piksel
+         gösteriliyor. kucukUrl 128 pikselde ~3 KB'a indiriyor (lib/veri.ts).
+         Fotoğrafı olmayan ya da yüklenemeyen mekan jetona düşüyor; pinsiz
+         mekan hâlâ sessiz nokta — hiyerarşi korunuyor. */
+      const kucuk = (pinli || seciliMi) ? kucukUrl(y.kapak, 128) : null;
+      const icerik = kucuk
+        ? fotoMarkerHTML(kucuk, y, acik, populer)
+        : (pinli || seciliMi) ? jetonSVG(y, acik, populer, seciliMi) : noktaSVG(y, acik);
+
+      /* innerHTML'i yalnızca gerçekten değiştiğinde yazıyoruz: her efekt
+         koşusunda yeniden yazmak <img>'i sıfırlayıp yeniden indiriyor ve
+         işaretler gözle görülür biçimde titriyordu. */
+      if (ic && el.dataset.icerik !== icerik) {
+        el.dataset.icerik = icerik;
+        ic.innerHTML = icerik;
+      }
+      el.classList.toggle("fotolu", !!kucuk);
       el.setAttribute(
         "aria-label",
         `${y.ad}, ${y.tur}, ${y.acik === null ? "saat bilgisi yok" : acik ? "açık" : "kapalı"}, ${y.pinSayisi ?? 0} pin`,

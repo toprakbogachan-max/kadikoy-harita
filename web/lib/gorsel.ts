@@ -19,10 +19,33 @@ export function igneStil(tur: string): React.CSSProperties {
 /** post-it'lerin hafif eğikliği — hep aynı sırayla, rastgele değil */
 export const egim = (i: number) => [-0.8, 0.6, -0.4, 0.9, -0.6][i % 5];
 
+/**
+ * Fotoğrafı olmayan kartların zemini.
+ *
+ * Eskiden kategori renginin DOLU hâliydi (`ana` → `golge`). Izgarada yan yana
+ * dokuz kategori olunca akış doygun renkten bir duvara dönüyordu; kartın
+ * kendisi değil rengi bağırıyordu. Artık aynı kategori ipucu pastel bir
+ * gradyan olarak duruyor: hangi tür olduğu hâlâ okunuyor ama kart
+ * fotoğraflı komşusunun önüne geçmiyor.
+ *
+ * Bu, "doygunluk alanla ters orantılı" kuralının ızgaraya uygulanması —
+ * fotoZeminGenis() aynı şeyi tam ekran için geceye karıştırarak yapıyor.
+ */
 export const fotoZemin = (tur: string) => {
   const r = RENK[tur] ?? RENK.kahve;
-  return `linear-gradient(135deg, ${r.ana} 0%, ${r.golge} 100%)`;
+  return `linear-gradient(150deg,
+    color-mix(in oklab, ${r.isik} 40%, #FFFFFF) 0%,
+    color-mix(in oklab, ${r.ana} 24%, #F1EDE6) 100%)`;
 };
+
+/**
+ * fotoZemin() üstünde duran simgenin rengi.
+ *
+ * Zemin artık açık olduğu için simge beyaz çizilemez — görünmez olur.
+ * Kategorinin koyu tonu hem okunuyor hem de kategori ipucunu ikinci kez
+ * veriyor (Corner'ın kategoriyi renkten ikona taşıma kuralı).
+ */
+export const zeminSimgeRengi = (tur: string) => (RENK[tur] ?? RENK.kahve).golge;
 
 /**
  * Tam ekran zemin — ızgara kartındakinin kısılmış hâli.
@@ -37,7 +60,9 @@ export const fotoZemin = (tur: string) => {
  * Kategori ipucu korunuyor ama mürekkebe karıştırılıyor: kırmızı yerine
  * "kırmızıya çalan gece".
  */
-const GECE = "#1B1510";
+/* Palet nötre döndüğü için gece de nötr: ılık kahve (#1B1510) yeni
+   kırık beyaz zeminin yanında sepya bir leke gibi duruyordu. */
+const GECE = "#141416";
 export const fotoZeminGenis = (tur: string) => {
   const r = RENK[tur] ?? RENK.kahve;
   return `linear-gradient(160deg,
@@ -106,6 +131,44 @@ export function noktaSVG(y: Pick<Yer, "tur">, acik: boolean | null): string {
             fill-opacity="0.78"
             stroke="#fff" stroke-width="1.6" stroke-opacity=".9"/>
   </svg>`;
+}
+
+/** Metni HTML özniteliğine güvenle koymak için. */
+const kacir = (m: string) =>
+  m.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/**
+ * Fotoğraflı marker — mekanın kendi görüntüsü haritanın üstünde küçük kart.
+ *
+ * Neden jetonun yerine: dokuz kategori dokuz doygun renk demekti ve altlık
+ * sessizleştirilse bile harita bir renk tablosu gibi okunuyordu. Fotoğraf
+ * hem daha çok bilgi taşıyor (buranın nasıl bir yer olduğunu söylüyor) hem
+ * de altlıkla yarışmıyor. Kategori bilgisi kaybolmuyor: sağ alttaki nokta
+ * onu taşıyor — çiplerdeki noktayla aynı dil.
+ *
+ * URL'i ÇAĞIRAN küçültüyor (veri.ts'teki kucukUrl); burada boyut seçimi yok,
+ * yoksa her marker 280 KB'lık dosyayı indirirdi.
+ *
+ * Yüklenemezse (ağ, silinmiş dosya) onerror jetona düşürüyor: boş beyaz
+ * kare bırakmak mekanı haritadan silmek olurdu. loading="lazy" YOK — marker
+ * haritanın içinde dönüştürülmüş bir katmanda durduğu için tarayıcı onu
+ * görünürde saymıyordu ve ekrandaki işaretler boş beyaz kare kalıyordu;
+ * dosyalar zaten ~3 KB. Yükleme bitene kadar kategori degradesi duruyor.
+ */
+export function fotoMarkerHTML(
+  url: string,
+  y: Pick<Yer, "tur">,
+  acik: boolean | null,
+  populer: boolean,
+): string {
+  const r = RENK[acik === false ? "kapali" : y.tur] ?? RENK.kapali;
+  const yedek = jetonSVG(y, acik, populer, false).replace(/\s+/g, " ");
+  return `<span class="foto-marker${populer ? " populer" : ""}${acik === false ? " kapali" : ""}">
+    <span class="foto-marker-kutu" style="background:${fotoZemin(y.tur)}"><img src="${kacir(url)}" alt="" decoding="async"
+      onerror="this.closest('.foto-marker').outerHTML=this.dataset.yedek"
+      data-yedek="${kacir(yedek)}"></span>
+    <span class="foto-marker-nokta" style="background:${r.ana}"></span>
+  </span>`;
 }
 
 /**

@@ -266,9 +266,19 @@ create table if not exists lists (
   title     text not null,
   intro     text,
   is_public boolean not null default true,
+  -- Kapağı liste SAHİBİ seçiyor (göç 16). Mekan kapağının tersi: orada kapak
+  -- en çok beğenilen pinden kendiliğinden geliyor (göç 07), burada seçki
+  -- kişisel olduğu için kapak da kişisel bir karar.
+  -- cover_pos: kare kartta fotoğrafın hangi dikey bandı görünecek (0–100).
+  cover_url text,
+  cover_pos smallint not null default 50 check (cover_pos between 0 and 100),
   created_at timestamptz not null default now(),
   unique (owner_id, slug)
 );
+-- Var olan kurulumlar için (göç 16 ile aynı iş)
+alter table lists add column if not exists cover_url text;
+alter table lists add column if not exists cover_pos smallint not null default 50;
+
 create table if not exists list_items (
   list_id  uuid not null references lists(id) on delete cascade,
   place_id uuid not null references places(id) on delete cascade,

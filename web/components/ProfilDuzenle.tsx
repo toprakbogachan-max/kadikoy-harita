@@ -59,18 +59,18 @@ export default function ProfilDuzenle({ onKapat }: { onKapat: () => void }) {
     } finally { setKaydediliyor(false); }
   };
 
-  const girdi = "w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2 text-[14px] outline-none placeholder:text-murekkep2 focus:border-jeton";
+  const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base outline-none placeholder:text-gri-600 focus:border-jeton";
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Profili düzenle"
          className="absolute inset-0 z-40 flex flex-col bg-kagit">
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div className="flex items-center gap-2.5">
           <button onClick={onKapat} aria-label="Geri" disabled={kaydediliyor}
-            className="shrink-0 border-none bg-transparent p-0 text-[18px] leading-none text-murekkep2 disabled:opacity-40">
+            className="shrink-0 border-none bg-transparent p-0 text-xl leading-none text-gri-600 disabled:opacity-40">
             ‹
           </button>
-          <h2 className="text-[20px] font-semibold leading-tight">Profili düzenle</h2>
+          <h2 className="text-xl font-semibold leading-tight">Profili düzenle</h2>
         </div>
       </div>
 
@@ -80,7 +80,7 @@ export default function ProfilDuzenle({ onKapat }: { onKapat: () => void }) {
             /* eslint-disable-next-line @next/next/no-img-element */
             <img src={foto} alt="" className="size-[72px] shrink-0 rounded-full object-cover" />
           ) : (
-            <div className="grid size-[72px] shrink-0 place-items-center rounded-full font-tabela text-[30px] text-white"
+            <div className="grid size-[72px] shrink-0 place-items-center rounded-full font-tabela text-3xl text-white"
                  style={{ background: kisiRengi(ben?.k ?? "?") }}>
               {(ben?.ad ?? "?")[0]}
             </div>
@@ -88,52 +88,52 @@ export default function ProfilDuzenle({ onKapat }: { onKapat: () => void }) {
           <div>
             <input ref={dosyaGirdi} type="file" accept="image/*" onChange={fotoSec} className="hidden" />
             <button onClick={() => dosyaGirdi.current?.click()} disabled={kaydediliyor}
-              className="rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-2 text-[13px] disabled:opacity-50">
+              className="rounded-lg bg-yuzey shadow-kat-1 px-3 py-2 text-sm disabled:opacity-50">
               Fotoğraf seç
             </button>
-            <p className="mt-1.5 text-[11.5px] text-murekkep2">
+            <p className="mt-1.5 text-xs text-gri-600">
               Kare kırpılıp {AVATAR_PX}px’e küçültülür.
             </p>
           </div>
         </div>
 
         <label className="mb-3 block">
-          <span className="mb-1.5 block font-tabela text-[11px] uppercase tracking-[0.12em] text-murekkep2">
+          <span className="mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600">
             Görünen ad
           </span>
           <input value={ad} onChange={(e) => setAd(e.target.value)} maxLength={40} className={girdi} />
         </label>
 
         <label className="block">
-          <span className="mb-1.5 block font-tabela text-[11px] uppercase tracking-[0.12em] text-murekkep2">
+          <span className="mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600">
             Bio
           </span>
           <textarea value={bio} onChange={(e) => setBio(e.target.value)}
             maxLength={200} rows={3}
             placeholder="Kendini bir iki cümleyle anlat"
             className={girdi + " resize-none leading-snug"} />
-          <span className="mt-1 block text-right font-sayi text-[11px] text-murekkep2">
+          <span className="mt-1 block text-right font-sayi text-xs text-gri-600">
             {bio.length}/200
           </span>
         </label>
 
-        <p className="mt-1 text-[11.5px] text-murekkep2">
+        <p className="mt-1 text-xs text-gri-600">
           Kullanıcı adın <b className="font-sayi">@{ben?.k}</b> — şimdilik değiştirilemiyor.
         </p>
 
         {hata && (
-          <p className="mt-3 rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px]">
+          <p className="mt-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}
         {bilgi && (
-          <p className="mt-3 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2.5 text-[13px]">{bilgi}</p>
+          <p className="mt-3 rounded-lg bg-yuzey shadow-kat-1 p-2.5 text-sm">{bilgi}</p>
         )}
       </div>
 
-      <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
+      <div className="shrink-0 bg-yuzey p-3">
         <button onClick={kaydet} disabled={kaydediliyor || !ad.trim()}
-          className="w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white disabled:opacity-40">
+          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
           {kaydediliyor ? "…" : "Kaydet"}
         </button>
       </div>

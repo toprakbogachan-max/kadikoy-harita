@@ -201,11 +201,11 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
       {/* üst perde */}
       <div className={`absolute inset-x-0 top-0 z-[6] flex items-start justify-between gap-3 bg-gradient-to-b from-[rgba(12,9,5,.62)] to-transparent px-4 pb-8 pt-3.5 transition-opacity duration-200 ${perdeStil}`}>
         <div>
-          <h2 className="text-[20px] font-semibold leading-tight text-white">
+          <h2 className="text-xl font-semibold leading-tight text-white">
             {kisi.ad}
             {kisi.ben ? " · sen" : ""}
           </h2>
-          <div className="mt-1.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-white/75">
+          <div className="mt-1.5 font-tabela text-xs uppercase tracking-[0.13em] text-white/75">
             @{kisi.k} · {zaman(p.saat)}
           </div>
         </div>
@@ -221,18 +221,18 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
                 onClick={() => pinGec(-1)}
                 disabled={pinIndex === 0}
                 aria-label="Önceki pin"
-                className="grid size-[26px] place-items-center rounded-sm border-none bg-white/15 text-[13px] leading-none text-white disabled:opacity-30"
+                className="grid size-[26px] place-items-center rounded-md border-none bg-white/15 text-sm leading-none text-white disabled:opacity-30"
               >
                 ∧
               </button>
-              <span className="font-sayi text-[11.5px] text-white/80">
+              <span className="font-sayi text-xs text-white/80">
                 {pinIndex + 1}/{liste.length}
               </span>
               <button
                 onClick={() => pinGec(1)}
                 disabled={pinIndex === liste.length - 1}
                 aria-label="Sonraki pin"
-                className="grid size-[26px] place-items-center rounded-sm border-none bg-white/15 text-[13px] leading-none text-white disabled:opacity-30"
+                className="grid size-[26px] place-items-center rounded-md border-none bg-white/15 text-sm leading-none text-white disabled:opacity-30"
               >
                 ∨
               </button>
@@ -241,7 +241,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           <button
             onClick={onKapat}
             aria-label="Kapat"
-            className="size-[30px] shrink-0 rounded-sm border-none bg-white/15 text-[15px] leading-none text-white"
+            className="size-[30px] shrink-0 rounded-md border-none bg-white/15 text-base leading-none text-white"
           >
             ✕
           </button>
@@ -279,7 +279,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           })()}
           {m.tur === "video" && !medyaUrl(m.yol) && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
-              <span className="grid size-[52px] place-items-center rounded-full bg-[rgba(20,15,8,.5)] text-[22px] text-white">▶</span>
+              <span className="grid size-[52px] place-items-center rounded-full bg-[rgba(20,15,8,.5)] text-2xl text-white">▶</span>
             </div>
           )}
         </div>
@@ -288,7 +288,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           /* Konumlandırılmamış sarmalayıcı: içindeki `absolute` öğeler hâlâ
              gövdeye göre yerleşiyor, sadece hep birlikte soluyorlar. */
           <div className={`transition-opacity duration-200 ${perdeStil}`}>
-            <span className="absolute right-3.5 top-[74px] z-[7] rounded-full bg-[rgba(20,15,8,.55)] px-1.5 py-0.5 font-sayi text-[10px] text-white">
+            <span className="absolute right-3.5 top-[74px] z-[7] rounded-full bg-[rgba(20,15,8,.55)] px-1.5 py-0.5 font-sayi text-2xs text-white">
               {medyaIndex + 1}/{medya.length}
             </span>
             <div className="absolute inset-x-0 top-[78px] z-[7] flex justify-center gap-1.5">
@@ -338,34 +338,34 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
             >
               <Avatar kisi={p.kisi} boyut={34} />
               <span className="flex-1">
-                <span className="block text-[13.5px] font-semibold leading-tight text-white">
+                <span className="block text-base font-semibold leading-tight text-white">
                   {kisi.ad}
                   {kisi.ben ? " · sen" : ""}
                 </span>
-                <span className="mt-0.5 block font-sayi text-[10.5px] text-white/65">
+                <span className="mt-0.5 block font-sayi text-2xs text-white/65">
                   @{kisi.k} · {zaman(p.saat)}
                 </span>
               </span>
             </button>
             {p.puan != null && (
-              <span className="font-sayi text-[14px] font-bold text-[#F2C879]">
+              <span className="font-sayi text-base font-bold text-[#F2C879]">
                 {p.puan}
-                <span className="text-[10px] font-normal text-white/50">/10</span>
+                <span className="text-2xs font-normal text-white/50">/10</span>
               </span>
             )}
           </div>
 
-          <div className="mb-2.5 inline-flex items-center gap-1.5 border-b border-[rgba(242,200,121,.4)] pb-0.5 font-tabela text-[11.5px] uppercase tracking-[0.06em] text-[#F2C879]">
+          <div className="mb-2.5 inline-flex items-center gap-1.5 border-b border-[rgba(242,200,121,.4)] pb-0.5 font-tabela text-xs uppercase tracking-[0.06em] text-[#F2C879]">
             {p.yerAdi} · {p.yerSemt}
           </div>
 
           {/* aktif medyanın kendi notu */}
-          {m.not && <p className="mb-2 font-el text-[15px] leading-snug text-white/90">{m.not}</p>}
+          {m.not && <p className="mb-2 font-el text-base leading-snug text-white/90">{m.not}</p>}
 
           {p.kelimeler.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {p.kelimeler.map((k) => (
-                <span key={k} className="rounded-sm border border-white/45 px-2 py-1 font-el text-[13px] font-bold leading-none">
+                <span key={k} className="rounded-md border border-white/45 px-2 py-1 font-el text-sm font-bold leading-none">
                   {k}
                 </span>
               ))}
@@ -374,13 +374,13 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
 
           {/* Not artık zorunlu değil; boşken boş bir satır bırakmıyoruz. */}
           {p.metin.trim() && (
-            <p className="line-clamp-4 font-el text-[16px] leading-snug">{p.metin}</p>
+            <p className="line-clamp-4 font-el text-lg leading-snug">{p.metin}</p>
           )}
 
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {p.senaryo && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">{p.senaryo}</span>}
-            {p.fiyat && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">kişi başı {p.fiyat}₺</span>}
-            {p.siklik && <span className="rounded-sm bg-white/15 px-2 py-1 text-[11px] text-white/90">{p.siklik}</span>}
+            {p.senaryo && <span className="rounded-md bg-white/15 px-2 py-1 text-xs text-white/90">{p.senaryo}</span>}
+            {p.fiyat && <span className="rounded-md bg-white/15 px-2 py-1 text-xs text-white/90">kişi başı {p.fiyat}₺</span>}
+            {p.siklik && <span className="rounded-md bg-white/15 px-2 py-1 text-xs text-white/90">{p.siklik}</span>}
           </div>
 
           {/* eylem çubuğu — beğeni ve kaydetme yazma işlemi, kimlik bekliyor */}
@@ -424,18 +424,18 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
             {ben && ben.id === p.kisi && (
               <button
                 onClick={() => setDuzenleAcik(true)}
-                className="ml-auto border-none bg-transparent p-0 text-[11.5px] text-white/70 underline"
+                className="ml-auto border-none bg-transparent p-0 text-xs text-white/70 underline"
               >
                 düzenle
               </button>
             )}
             {ben && ben.id !== p.kisi && (
               sikayetEttim ? (
-                <span className="ml-auto text-[11.5px] text-white/40">şikayet ettin</span>
+                <span className="ml-auto text-xs text-white/40">şikayet ettin</span>
               ) : (
                 <button
                   onClick={() => setSikayetAcik(true)}
-                  className="ml-auto border-none bg-transparent p-0 text-[11.5px] text-white/55 underline"
+                  className="ml-auto border-none bg-transparent p-0 text-xs text-white/55 underline"
                 >
                   şikayet et
                 </button>
@@ -471,7 +471,7 @@ function Eylem({
       onClick={onTikla}
       aria-label={aria}
       aria-pressed={dolu}
-      className={`flex items-center gap-1.5 border-none bg-transparent p-0 text-[12.5px] ${
+      className={`flex items-center gap-1.5 border-none bg-transparent p-0 text-sm ${
         dolu ? "text-[#F2C879]" : "text-white/90"
       }`}
     >

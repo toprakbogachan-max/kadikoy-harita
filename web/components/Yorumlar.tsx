@@ -55,17 +55,17 @@ export default function Yorumlar({
       aria-label="Yorumlar"
       className="absolute inset-0 z-30 flex flex-col bg-kagit"
     >
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div>
-          <h2 className="text-[20px] font-semibold leading-tight">Yorumlar</h2>
-          <div className="mt-1.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+          <h2 className="text-xl font-semibold leading-tight">Yorumlar</h2>
+          <div className="mt-1.5 text-2xs font-bold uppercase tracking-etiket text-gri-700">
             {yukleniyor ? "yükleniyor…" : liste.length ? `${liste.length} yorum` : "ilk yorumu sen yaz"}
           </div>
         </div>
         <button
           onClick={onKapat}
           aria-label="Kapat"
-          className="size-[30px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[15px] leading-none"
+          className="size-[30px] shrink-0 rounded-lg bg-yuzey shadow-kat-1 text-base leading-none"
         >
           ✕
         </button>
@@ -81,12 +81,12 @@ export default function Yorumlar({
                   <Avatar kisi={y.kisi} boyut={32} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-[13px] font-semibold">
+                      <span className="text-sm font-semibold">
                         {k?.ad ?? "…"}{k?.ben ? " · sen" : ""}
                       </span>
-                      <span className="font-sayi text-[10.5px] text-murekkep2">{zaman(y.saat)}</span>
+                      <span className="font-sayi text-2xs text-gri-600">{zaman(y.saat)}</span>
                     </div>
-                    <p className="mt-0.5 text-[13.5px] leading-snug">{y.metin}</p>
+                    <p className="mt-0.5 text-base leading-snug">{y.metin}</p>
                   </div>
                   {ben?.id === y.kisi && (
                     <button
@@ -95,7 +95,7 @@ export default function Yorumlar({
                         catch (err) { setHata(err instanceof Error ? err.message : String(err)); }
                       }}
                       aria-label="Yorumu sil"
-                      className="shrink-0 border-none bg-transparent p-0 text-[13px] text-murekkep2"
+                      className="shrink-0 border-none bg-transparent p-0 text-sm text-gri-600"
                     >
                       ✕
                     </button>
@@ -105,41 +105,41 @@ export default function Yorumlar({
             })}
           </ul>
         ) : (
-          <p className="px-1 py-5 text-[13px] leading-relaxed text-murekkep2">
+          <p className="px-1 py-5 text-sm leading-relaxed text-gri-600">
             {yukleniyor ? "Yükleniyor…" : "Henüz yorum yok."}
           </p>
         )}
       </div>
 
       {hata && (
-        <p className="shrink-0 border-t border-[var(--cizgi)] bg-[rgba(224,39,28,.07)] px-3 py-2 text-[12.5px]">
+        <p className="shrink-0 bg-[rgba(224,39,28,.07)] px-3 py-2 text-sm">
           {hata}
         </p>
       )}
 
       {ben ? (
-        <form onSubmit={gonder} className="flex shrink-0 gap-2 border-t border-[var(--cizgi)] bg-yuzey p-3">
+        <form onSubmit={gonder} className="flex shrink-0 gap-2 bg-yuzey p-3">
           <input
             value={metin}
             onChange={(e) => setMetin(e.target.value)}
             maxLength={500}
             placeholder="Yorum yaz…"
             aria-label="Yorum yaz"
-            className="min-w-0 flex-1 rounded-sm border border-[var(--cizgi)] bg-kagit px-2.5 py-2 text-[13.5px] text-murekkep outline-none placeholder:text-murekkep2 focus:border-jeton"
+            className="min-w-0 flex-1 rounded-lg bg-gomuk px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton"
           />
           <button
             type="submit"
             disabled={gonderiliyor || !metin.trim()}
-            className="shrink-0 rounded-sm border-none bg-jeton px-3.5 py-2 font-tabela text-[12px] uppercase tracking-[0.11em] text-white disabled:opacity-40"
+            className="shrink-0 rounded-full border-none bg-gri-900 px-3.5 py-2 font-tabela text-sm uppercase tracking-[0.11em] text-white disabled:opacity-40"
           >
             {gonderiliyor ? "…" : "Gönder"}
           </button>
         </form>
       ) : (
-        <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
+        <div className="shrink-0 bg-yuzey p-3">
           <button
             onClick={onGirisIste}
-            className="w-full rounded-sm border border-[var(--cizgi)] bg-kagit px-3 py-2.5 text-[13px] text-murekkep2"
+            className="w-full rounded-lg bg-gomuk px-3 py-2.5 text-sm text-gri-600"
           >
             Yorum yazmak için giriş yap
           </button>

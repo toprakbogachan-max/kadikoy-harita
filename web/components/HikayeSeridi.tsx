@@ -1,6 +1,5 @@
 "use client";
 
-import { egim, kisiRengi } from "@/lib/gorsel";
 import { useVeri } from "@/lib/kanca";
 import { hikayeSeridi, type HikayeKisi } from "@/lib/veri";
 import Avatar from "./Avatar";
@@ -8,16 +7,21 @@ import Avatar from "./Avatar";
 interface Props {
   secili: string | null;
   onSec: (k: string, etiket: string) => void;
-  /** false ise şerit ince bir çubuğa iniyor; haritaya yer açmak için */
+  /** false ise şerit tek bir baloncuğa iniyor; haritayı daha az örtmek için */
   acik?: boolean;
   onAc?: () => void;
 }
 
 /**
- * Instagram story mantığında yuvarlak post-it'ler: takip ettiklerinin pinleri.
- * Dokununca harita o kişinin pinlediği yerlere filtrelenir.
+ * Takip ettiklerinin pinleri — dokununca harita o kişiye filtrelenir.
  *
- * Takip listesi artık sabit değil — follows tablosundan geliyor.
+ * Artık mantar panoya iğnelenmiş yuvarlak post-it'ler DEĞİL: şerit haritanın
+ * ÜSTÜNDE yüzüyor, altında mantar dokusu olamaz. Her kişi avatar + ad taşıyan
+ * beyaz bir hap; yani hemen altındaki filtre çipleriyle aynı dil. Kazanç
+ * yalnızca uyum değil: 92px'lik post-it sırası 44px'lik hap sırasına indi.
+ *
+ * Ad hapın İÇİNDE, altında değil — haritanın üstünde serbest duran yazı
+ * denizin ya da koyu bir parkın üstüne gelince okunmuyor.
  */
 export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props) {
   const { veri: kisiler, yukleniyor } = useVeri<HikayeKisi[]>(hikayeSeridi, [], []);
@@ -28,8 +32,8 @@ export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props
        çiziliyordu, yani uygulamayı ilk açan birinin ekranının tepesinde
        92px'lik boş gri blok duruyordu. */
     if (!yukleniyor) return null;
-    /* Yüklenirken yer kaplasın, yoksa harita yukarı zıplıyor. */
-    return <div className={`pano-doku shrink-0 border-b border-[var(--cizgi)] ${acik ? "h-[92px]" : "h-[26px]"}`} />;
+    /* Yüklenirken yer kaplasın, yoksa altındaki durum kutusu zıplıyor. */
+    return <div className={acik ? "h-[44px]" : "h-[38px]"} />;
   }
 
   /* Şerit kapalıyken de haber vermesi gerekiyor: kullanıcı haritaya dokunup
@@ -38,44 +42,43 @@ export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props
      kendi attığını zaten biliyorsun. */
   const yeniPinliler = kisiler.filter((p) => !p.ben && p.sonPinSaat < 24);
 
-  /* Kapalı hal: 92px yerine 26px. Harita ekranın %54'ünden ~%70'ine çıkıyor —
-     "kompakt" isteğinin en doğrudan karşılığı bu. Avatarlar küçük halkalar
-     olarak kalıyor ki şeridin var olduğu unutulmasın. */
+  /* Kapalı hal: sıranın tamamı yerine tek bir hap, içinde üst üste binen
+     avatarlar. Haritaya dokununca buraya iniyor; şeridin var olduğunu
+     unutturmadan görüşü açıyor. */
   if (!acik) {
     return (
-      <button
-        onClick={onAc}
-        aria-label={yeniPinliler.length ? `${yeniPinliler.length} kişi yeni pin attı, göster` : "Takip ettiklerini göster"}
-        aria-expanded={false}
-        className="pano-doku flex h-[26px] w-full shrink-0 items-center justify-center gap-1.5 border-none border-b border-[var(--cizgi)] px-4"
-      >
-        {kisiler.slice(0, 6).map((p) => {
-          const yeni = !p.ben && p.sonPinSaat < 24;
-          return (
-            <span
-              key={p.id}
-              className="size-2.5 rounded-full border border-[rgba(74,58,30,.35)]"
-              style={{
-                background: kisiRengi(p.id),
-                /* Yeni pin atanın noktası altın halkayla işaretleniyor —
-                   açık haldeki halkanın küçültülmüş hâli. */
-                boxShadow: yeni ? "0 0 0 2px var(--color-jeton)" : undefined,
-              }}
-            />
-          );
-        })}
-        <span className={`ml-1 font-tabela text-[9.5px] uppercase tracking-[0.12em] ${
-          yeniPinliler.length ? "text-jeton" : "text-murekkep2"
-        }`}>
-          {yeniPinliler.length ? `${yeniPinliler.length} yeni pin` : "takip ettiklerin"}
-        </span>
-      </button>
+      <div className="flex px-3 pt-2">
+        <button
+          onClick={onAc}
+          aria-label={yeniPinliler.length ? `${yeniPinliler.length} kişi yeni pin attı, göster` : "Takip ettiklerini göster"}
+          aria-expanded={false}
+          className="pointer-events-auto flex items-center gap-2 rounded-full border-none bg-yuzey py-1 pl-1 pr-3 shadow-kat-2"
+        >
+          <span className="flex">
+            {kisiler.slice(0, 4).map((p, i) => (
+              <span
+                key={p.id}
+                className="rounded-full ring-2 ring-white"
+                style={{ marginLeft: i ? -8 : 0, zIndex: 4 - i }}
+              >
+                <Avatar kisi={p.id} boyut={22} sekil="daire" />
+              </span>
+            ))}
+          </span>
+          <span className={`text-2xs font-semibold ${yeniPinliler.length ? "text-jeton" : "text-gri-600"}`}>
+            {yeniPinliler.length ? `${yeniPinliler.length} yeni pin` : "takip ettiklerin"}
+          </span>
+        </button>
+      </div>
     );
   }
 
+  /* Maske sağ uçta: kaydırma çubuğu gizli olduğu için şeridin devam ettiğini
+     başka bir şey söylemiyor. Perde yerine hapların KENDİSİ siliniyor —
+     altında harita var, üstüne krem bir örtü çekmek haritayı lekeler. */
   return (
-    <div className="pano-doku flex shrink-0 gap-3.5 overflow-x-auto border-b border-[var(--cizgi)] px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {kisiler.map((p, i) => {
+    <div className="flex gap-2 overflow-x-auto px-3 pb-0.5 pt-2 [mask-image:linear-gradient(to_right,#000_calc(100%-1.75rem),transparent)] [scrollbar-width:none] [-webkit-mask-image:linear-gradient(to_right,#000_calc(100%-1.75rem),transparent)] [&::-webkit-scrollbar]:hidden">
+      {kisiler.map((p) => {
         const yeni = p.sonPinSaat < 24; /* son 24 saatte yeni pin */
         const aktif = secili === p.id;
         return (
@@ -83,28 +86,20 @@ export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props
             key={p.id}
             onClick={() => onSec(p.id, p.ben ? "Senin pinlerin" : `${p.ad}’in pinleri`)}
             aria-pressed={aktif}
-            className="flex w-[58px] shrink-0 flex-col items-center gap-1.5 border-none bg-transparent p-0"
+            className={`pointer-events-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none py-1 pl-1 pr-3 text-xs font-semibold shadow-kat-2 transition-colors ${
+              aktif ? "bg-gri-900 text-white" : "bg-yuzey text-gri-800"
+            }`}
           >
-            <div
-              className="relative grid size-[58px] place-items-center rounded-full bg-[#FBF3D9] shadow-kagit transition-transform"
-              style={{
-                transform: `rotate(${aktif ? 0 : egim(i)}deg)`,
-                boxShadow: yeni
-                  ? `var(--shadow-kagit), 0 0 0 2.5px ${kisiRengi(p.k)}`
-                  : "var(--shadow-kagit)",
-                outline: aktif ? "2px solid var(--color-jeton)" : undefined,
-                outlineOffset: aktif ? 2 : undefined,
-              }}
-            >
-              {/* toplu iğne */}
-              <span className="absolute -top-[5px] left-1/2 size-[11px] -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,#F5C87C_16%,#DE9B2E_55%,#8E5C11_100%)]" />
-              <Avatar kisi={p.id} boyut={42} />
-            </div>
+            {/* Yeni pin altın halkayla işaretleniyor — eski post-it'teki
+                renkli çerçevenin işini görüyor, rengi kategoriden değil
+                "yenilik"ten alıyor. */}
             <span
-              className={`max-w-[58px] truncate font-tabela text-[10px] uppercase tracking-[0.05em] ${aktif ? "text-murekkep" : "text-murekkep2"}`}
+              className="rounded-full"
+              style={{ boxShadow: yeni ? "0 0 0 2px var(--color-jeton)" : undefined }}
             >
-              {p.ben ? "Sen" : p.ad}
+              <Avatar kisi={p.id} boyut={24} sekil="daire" />
             </span>
+            {p.ben ? "Sen" : p.ad}
           </button>
         );
       })}

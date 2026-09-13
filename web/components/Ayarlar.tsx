@@ -85,15 +85,15 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
   return (
     <div role="dialog" aria-modal="true" aria-label="Ayarlar"
          className="absolute inset-0 z-40 flex flex-col bg-kagit">
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div>
-          <h2 className="text-[20px] font-semibold leading-tight">Ayarlar</h2>
-          <div className="mt-1.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+          <h2 className="text-xl font-semibold leading-tight">Ayarlar</h2>
+          <div className="mt-1.5 text-2xs font-bold uppercase tracking-etiket text-gri-700">
             Arşiv ve tercihler
           </div>
         </div>
         <button onClick={onKapat} aria-label="Kapat"
-          className="size-[30px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[15px] leading-none">
+          className="size-[30px] shrink-0 rounded-lg bg-yuzey shadow-kat-1 text-base leading-none">
           ✕
         </button>
       </div>
@@ -121,7 +121,7 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
                  acik={herkeseAcik} onDegis={gizlilikDegistir} />
 
         {hata && (
-          <p className="mx-4 mt-3 rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px]">
+          <p className="mx-4 mt-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}
@@ -134,8 +134,8 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
                onTikla={() => setYasal("gizlilik")}
                ikon={<><rect x="5" y="10" width="14" height="10" rx="1.6" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>} />
         <div className="border-b border-[var(--cizgi)] px-4 py-3">
-          <div className="text-[13.5px]">Veri kaynakları</div>
-          <div className="mt-0.5 text-[11.5px] leading-snug text-murekkep2">
+          <div className="text-base">Veri kaynakları</div>
+          <div className="mt-0.5 text-xs leading-snug text-gri-600">
             Mekan verisi © OpenStreetMap katkıcıları (ODbL).
             Kapak görselleri Wikimedia Commons’tan, lisansları görsellerin altında.
           </div>
@@ -146,7 +146,7 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
               ekranda kalıyordu, arşiv sayıları 0'a düşüp çıkış düğmesi
               kayboluyordu — kullanıcıya "düğme çalışmadı" gibi görünüyordu. */}
           <button onClick={async () => { await cikisYap(); onKapat(); }}
-            className="w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-murekkep">
+            className="w-full rounded-lg bg-yuzey shadow-kat-1 px-3 py-2.5 font-tabela text-sm uppercase tracking-[0.11em] text-murekkep">
             Çıkış yap
           </button>
         </div>
@@ -156,7 +156,7 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
 }
 
 const Baslik = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-4 pb-2 pt-4 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+  <div className="px-4 pb-2 pt-4 text-2xs font-bold uppercase tracking-etiket text-gri-700">
     {children}
   </div>
 );
@@ -166,19 +166,19 @@ function Satir({ ad, aciklama, sayi, ikon, onTikla }: {
 }) {
   return (
     <button onClick={onTikla}
-      className="flex w-full items-center gap-2.5 border-none border-b border-[var(--cizgi)] bg-transparent px-4 py-3 text-left">
+      className="flex w-full items-center gap-2.5 border-none bg-transparent px-4 py-3 text-left">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
-           className="shrink-0 text-murekkep2">{ikon}</svg>
+           className="shrink-0 text-gri-600">{ikon}</svg>
       <span className="min-w-0 flex-1">
-        <span className="block text-[13.5px]">{ad}</span>
-        {aciklama && <span className="mt-0.5 block text-[11.5px] text-murekkep2">{aciklama}</span>}
+        <span className="block text-base">{ad}</span>
+        {aciklama && <span className="mt-0.5 block text-xs text-gri-600">{aciklama}</span>}
       </span>
       {sayi !== undefined && (
-        <span className="shrink-0 font-sayi text-[13px] text-murekkep2">{sayi}</span>
+        <span className="shrink-0 font-sayi text-sm text-gri-600">{sayi}</span>
       )}
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           strokeWidth="2" strokeLinecap="round" className="shrink-0 text-murekkep2">
+           strokeWidth="2" strokeLinecap="round" className="shrink-0 text-gri-600">
         <path d="M9 5l7 7-7 7" />
       </svg>
     </button>
@@ -189,15 +189,15 @@ function Anahtar({ ad, aciklama, acik, onDegis }: {
   ad: string; aciklama: string; acik: boolean; onDegis: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 border-b border-[var(--cizgi)] px-4 py-3">
+    <div className="flex items-center gap-3 px-4 py-3">
       <span className="min-w-0 flex-1">
-        <span className="block text-[13.5px]">{ad}</span>
-        <span className="mt-0.5 block text-[11.5px] leading-snug text-murekkep2">{aciklama}</span>
+        <span className="block text-base">{ad}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-gri-600">{aciklama}</span>
       </span>
       <button role="switch" aria-checked={acik} aria-label={ad}
         onClick={() => onDegis(!acik)}
         className={`relative h-[22px] w-[38px] shrink-0 rounded-full border-none transition-colors ${
-          acik ? "bg-jeton" : "bg-[rgba(35,52,60,.22)]"
+          acik ? "bg-gri-900" : "bg-gri-300"
         }`}>
         <span className={`absolute top-[3px] size-4 rounded-full bg-white transition-[left] ${
           acik ? "left-[19px]" : "left-[3px]"

@@ -5,6 +5,7 @@ import { useVeri } from "@/lib/kanca";
 import { mekanAra, listeOlustur, kaydettigimYerler, pinlediklerim } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
+import ListeKapakSecici from "./ListeKapakSecici";
 
 /**
  * Liste oluşturma — "kendi küratörlüğün".
@@ -22,6 +23,12 @@ export default function ListeOlustur({
   const [q, setQ] = useState("");
   const [gecikmeli, setGecikmeli] = useState("");
   const [secilenler, setSecilenler] = useState<Yer[]>([]);
+  /* Kapak liste HENÜZ YOKKEN seçiliyor: fotoğraf kovaya baştan yükleniyor,
+     satır oluşurken yalnızca URL'si bağlanıyor (veri.ts → listeKapakYukle).
+     Tersi olsaydı "önce listeyi kaydet, sonra kapak koy" gibi iki adımlı bir
+     akış çıkardı ve kapak isteğe bağlı bir ek gibi görünürdü — oysa listenin
+     adı kadar onun parçası. */
+  const [kapak, setKapak] = useState<{ url: string | null; konum: number }>({ url: null, konum: 50 });
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
@@ -54,28 +61,28 @@ export default function ListeOlustur({
   const gonder = async () => {
     setGonderiliyor(true); setHata(null);
     try {
-      await listeOlustur(baslik, not, secilenler.map((y) => y.id));
+      await listeOlustur(baslik, not, secilenler.map((y) => y.id), kapak);
       onOlusturuldu();
     } catch (e) {
       setHata(e instanceof Error ? e.message : String(e));
     } finally { setGonderiliyor(false); }
   };
 
-  const girdi = "w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2 text-[14px] outline-none placeholder:text-murekkep2 focus:border-jeton";
-  const etiket = "mb-1.5 block font-tabela text-[11px] uppercase tracking-[0.12em] text-murekkep2";
+  const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base outline-none placeholder:text-gri-600 focus:border-jeton";
+  const etiket = "mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Yeni liste"
          className="absolute inset-0 z-40 flex flex-col bg-kagit">
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div>
-          <h2 className="text-[20px] font-semibold leading-tight">Yeni liste</h2>
-          <div className="mt-1.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+          <h2 className="text-xl font-semibold leading-tight">Yeni liste</h2>
+          <div className="mt-1.5 text-2xs font-bold uppercase tracking-etiket text-gri-700">
             Kendi küratörlüğün
           </div>
         </div>
         <button onClick={onKapat} disabled={gonderiliyor} aria-label="Kapat"
-          className="size-[30px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[15px] leading-none disabled:opacity-40">
+          className="size-[30px] shrink-0 rounded-lg bg-yuzey shadow-kat-1 text-base leading-none disabled:opacity-40">
           ✕
         </button>
       </div>
@@ -93,6 +100,19 @@ export default function ListeOlustur({
             maxLength={120} placeholder="Bu liste ne işe yarıyor?" className={girdi} />
         </label>
 
+        {/* Kapak zorunlu değil ama forma başlıkla aynı ağırlıkta giriyor:
+            profil ızgarasında listeyi tanıtan şey adı kadar kapağı.
+            Kapaksız kalırsa seçilen mekanların renk kolajına düşüyor —
+            boş gri kutu hiçbir durumda görünmüyor. */}
+        <div className={etiket}>Kapak</div>
+        <div className="mb-5">
+          <ListeKapakSecici
+            liste={{ kapak: kapak.url, kapakKonum: kapak.konum, yerler: secilenler }}
+            onDegisti={setKapak}
+            devreDisi={gonderiliyor}
+          />
+        </div>
+
         <div className={etiket}>
           Mekanlar <span className="text-[#E0271C]">*</span>
           {secilenler.length > 0 && (
@@ -104,7 +124,7 @@ export default function ListeOlustur({
           <div className="mb-2.5 flex flex-wrap gap-1.5">
             {secilenler.map((y) => (
               <button key={y.id} onClick={() => degistir(y)}
-                className="flex items-center gap-1.5 rounded-sm border-none bg-jeton px-2 py-1.5 text-[12px] text-white">
+                className="flex items-center gap-1.5 rounded-full border-none bg-gri-900 px-2 py-1.5 text-sm text-white">
                 {y.ad} <span aria-hidden>✕</span>
               </button>
             ))}
@@ -115,7 +135,7 @@ export default function ListeOlustur({
           placeholder="Mekan ara" aria-label="Mekan ara" className={girdi + " mb-2"} />
 
         {gecikmeli.length >= 2 ? (
-          <div className="mb-1.5 text-[11.5px] text-murekkep2">Arama sonuçları</div>
+          <div className="mb-1.5 text-xs text-gri-600">Arama sonuçları</div>
         ) : (
           <div className="mb-1.5 flex gap-1.5">
             {([["kayit", "Kaydettiklerin", kayitlar.length], ["pin", "Pinlediklerin", pinlerim.length]] as const).map(
@@ -124,10 +144,10 @@ export default function ListeOlustur({
                   key={id}
                   onClick={() => setKaynak(id)}
                   aria-pressed={kaynak === id}
-                  className={`rounded-sm px-2.5 py-1 font-tabela text-[11px] uppercase tracking-[0.1em] ${
+                  className={`rounded-md px-2.5 py-1 font-tabela text-xs uppercase tracking-[0.1em] ${
                     kaynak === id
-                      ? "border-none bg-jeton text-white"
-                      : "border border-[var(--cizgi)] bg-yuzey text-murekkep2"
+                      ? "border-none bg-gri-900 text-white"
+                      : "bg-yuzey shadow-kat-1 text-gri-600"
                   }`}
                 >
                   {ad}{sayi > 0 && <span className="ml-1 font-sayi normal-case tracking-normal">{sayi}</span>}
@@ -138,19 +158,19 @@ export default function ListeOlustur({
         )}
 
         {aday.length ? (
-          <ul className="m-0 list-none rounded-sm border border-[var(--cizgi)] bg-yuzey p-0">
+          <ul className="m-0 list-none rounded-lg bg-yuzey shadow-kat-1 p-0">
             {aday.map((y) => (
               <li key={y.id}>
                 <button onClick={() => degistir(y)} aria-pressed={secili(y)}
-                  className="flex w-full items-center gap-2.5 border-none border-b border-[var(--cizgi)] bg-transparent px-2.5 py-2 text-left last:border-0">
+                  className="flex w-full items-center gap-2.5 border-none bg-transparent px-2.5 py-2 text-left last:border-0">
                   <span style={igneStil(y.tur)} className="shrink-0"
                     dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 17, "var(--pin)") }} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] font-semibold">{y.ad}</span>
-                    <span className="block font-sayi text-[10.5px] text-murekkep2">{y.semt}</span>
+                    <span className="block truncate text-sm font-semibold">{y.ad}</span>
+                    <span className="block font-sayi text-2xs text-gri-600">{y.semt}</span>
                   </span>
-                  <span className={`grid size-[18px] shrink-0 place-items-center rounded-sm text-[11px] ${
-                    secili(y) ? "bg-jeton text-white" : "border border-[var(--cizgi)]"
+                  <span className={`grid size-[18px] shrink-0 place-items-center rounded-md text-xs ${
+                    secili(y) ? "bg-gri-900 text-white" : "border border-[var(--cizgi)]"
                   }`}>
                     {secili(y) ? "✓" : ""}
                   </span>
@@ -159,7 +179,7 @@ export default function ListeOlustur({
             ))}
           </ul>
         ) : (
-          <p className="py-4 text-[13px] leading-relaxed text-murekkep2">
+          <p className="py-4 text-sm leading-relaxed text-gri-600">
             {gecikmeli.length >= 2
               ? "Eşleşen mekan yok."
               : kaynak === "kayit"
@@ -169,15 +189,15 @@ export default function ListeOlustur({
         )}
 
         {hata && (
-          <p className="mt-3 rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px]">
+          <p className="mt-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}
       </div>
 
-      <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
+      <div className="shrink-0 bg-yuzey p-3">
         <button onClick={gonder} disabled={!gecerli || gonderiliyor}
-          className="w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white disabled:opacity-40">
+          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
           {gonderiliyor ? "…" : "Listeyi oluştur"}
         </button>
       </div>

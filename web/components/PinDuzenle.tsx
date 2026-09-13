@@ -142,22 +142,22 @@ export default function PinDuzenle({
     } finally { setSiliniyor(false); }
   };
 
-  const alan = "px-4 py-3.5 border-b border-[var(--cizgi)]";
-  const etiket = "mb-2 block font-tabela text-[11px] uppercase tracking-[0.12em] text-murekkep2";
-  const girdi = "w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2 text-[14px] text-murekkep outline-none placeholder:text-murekkep2 focus:border-jeton";
+  const alan = "px-4 py-3.5";
+  const etiket = "mb-2 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
+  const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton";
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Pini düzenle"
          className="absolute inset-0 z-[46] flex flex-col bg-kagit">
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div className="min-w-0">
-          <h2 className="text-[20px] font-semibold leading-tight">Pini düzenle</h2>
-          <div className="mt-1.5 truncate font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+          <h2 className="text-xl font-semibold leading-tight">Pini düzenle</h2>
+          <div className="mt-1.5 truncate text-2xs font-bold uppercase tracking-etiket text-gri-700">
             {pin.yerAdi}
           </div>
         </div>
         <button onClick={onKapat} disabled={gonderiliyor} aria-label="Kapat"
-          className="size-[30px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[15px] leading-none disabled:opacity-40">
+          className="size-[30px] shrink-0 rounded-lg bg-yuzey shadow-kat-1 text-base leading-none disabled:opacity-40">
           ✕
         </button>
       </div>
@@ -181,16 +181,16 @@ export default function PinDuzenle({
                  onClick={() => setBuyuk({ i })}
                  data-sira={i}
                  style={siraStili(tasinan, i, medyalar.length)}
-                 className="mb-2 flex cursor-pointer touch-manipulation select-none gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
+                 className="mb-2 flex cursor-pointer touch-manipulation select-none gap-2.5 rounded-lg bg-yuzey shadow-kat-1 p-2">
               <div className="relative shrink-0">
                 {m.tur === "kalan" ? (
                   /* Demo tohumunun medyası demo:// yolunda ve medyaUrl null
                      dönüyor — boş <img> yerine yer tutucu. */
                   medyaUrl(m.yol) ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={medyaUrl(m.yol)!} alt="" className="size-[52px] rounded-sm object-cover" />
+                    <img src={medyaUrl(m.yol)!} alt="" className="size-[52px] rounded-md object-cover" />
                   ) : (
-                    <span className="grid size-[52px] place-items-center rounded-sm bg-[rgba(35,52,60,.07)] font-sayi text-[9px] text-murekkep2">
+                    <span className="grid size-[52px] place-items-center rounded-md bg-[rgba(35,52,60,.07)] font-sayi text-2xs text-gri-600">
                       görsel
                     </span>
                   )
@@ -200,13 +200,13 @@ export default function PinDuzenle({
                 {/* Sıranın neye yaradığını söylemeden ok koymak anlamsız
                     olurdu: ilk sıradaki kapak. */}
                 {i === 0 && (
-                  <span className="absolute inset-x-0 bottom-0 bg-[rgba(20,15,8,.6)] py-[1px] text-center font-tabela text-[7.5px] uppercase tracking-[0.08em] text-white">
+                  <span className="absolute inset-x-0 bottom-0 bg-[rgba(16,16,20,.62)] py-[1px] text-center text-[8px] font-bold uppercase tracking-etiket text-white">
                     Kapak
                   </span>
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="mb-1 truncate font-sayi text-[10.5px] text-murekkep2">
+                <div className="mb-1 truncate font-sayi text-2xs text-gri-600">
                   {m.tur === "kalan" ? "yüklenmiş" : m.dosya.name}
                 </div>
                 {/* Düzenlenebilir alan DEĞİL, özet. Dokununca büyük ekran
@@ -215,8 +215,8 @@ export default function PinDuzenle({
                 <div
                   data-suruklenmez
                   onClick={(e) => { e.stopPropagation(); setBuyuk({ i, nota: true }); }}
-                  className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
-                    m.not ? "text-murekkep" : "text-murekkep2"
+                  className={`w-full truncate rounded-lg bg-gomuk px-2 py-1.5 text-sm ${
+                    m.not ? "text-murekkep" : "text-gri-600"
                   }`}
                 >
                   {m.not || "Bu görselin notu (isteğe bağlı)"}
@@ -228,14 +228,14 @@ export default function PinDuzenle({
                   disabled={medyaSayisi <= 1}
                   aria-label="Kaldır"
                   title={medyaSayisi <= 1 ? "En az bir görsel kalmalı" : "Kaldır"}
-                  className="border-none bg-transparent p-0 text-[14px] leading-none text-murekkep2 disabled:opacity-25"
+                  className="border-none bg-transparent p-0 text-base leading-none text-gri-600 disabled:opacity-25"
                 >
                   ✕
                 </button>
                 {/* Tutamak sürüklemeyi GÖRÜNÜR kılıyor; sürüklemek için buna
                     basmak şart değil, satırın boş alanı da tutuyor. */}
                 {medyalar.length > 1 && (
-                  <span aria-hidden className="text-[12px] leading-none text-murekkep2">⠿</span>
+                  <span aria-hidden className="text-sm leading-none text-gri-600">⠿</span>
                 )}
               </div>
             </div>
@@ -249,11 +249,11 @@ export default function PinDuzenle({
           {/* Küçültme büyük bir fotoğrafta bir saniye sürebiliyor; sessiz
               kalırsa dokunuş işlememiş gibi duruyor. */}
           <button onClick={() => dosyaGirdi.current?.click()} disabled={hazirlaniyor}
-            className="w-full rounded-sm border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-[13px] text-murekkep2 disabled:opacity-50">
+            className="w-full rounded-md border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-sm text-gri-600 disabled:opacity-50">
             {hazirlaniyor ? "Fotoğraf hazırlanıyor…" : "+ Fotoğraf / video ekle"}
           </button>
           {medyalar.length > 1 && (
-            <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
+            <p className="mt-1.5 text-xs leading-snug text-gri-600">
               Sürükleyerek sıralayabilirsin — ilk sıradaki kapak olur.
             </p>
           )}
@@ -329,7 +329,7 @@ export default function PinDuzenle({
         </div>
 
         {hata && (
-          <p className="mx-4 mt-3 rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px]">
+          <p className="mx-4 mt-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}
@@ -338,7 +338,7 @@ export default function PinDuzenle({
             durmamalı, yanlışlıkla basılır. */}
         <div className="px-4 py-5">
           <button onClick={sil} disabled={siliniyor || gonderiliyor}
-            className="w-full border-none bg-transparent p-0 text-[12.5px] text-[#921008] underline disabled:opacity-40">
+            className="w-full border-none bg-transparent p-0 text-sm text-[#921008] underline disabled:opacity-40">
             {siliniyor ? "Siliniyor…" : "Bu pini sil"}
           </button>
         </div>
@@ -369,9 +369,9 @@ export default function PinDuzenle({
         );
       })()}
 
-      <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
+      <div className="shrink-0 bg-yuzey p-3">
         <button onClick={gonder} disabled={!gecerli || gonderiliyor}
-          className="w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white disabled:opacity-40">
+          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
           {gonderiliyor ? "…" : "Kaydet"}
         </button>
       </div>

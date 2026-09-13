@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Tasarım dili — prototip.html'den taşındı.
-   Metafor: mantar pano. Harita pano, mekanlar toplu iğne,
-   yorumlar iğnelenmiş post-it'ler. (BRIEF.md → Tasarım dili)
-   ============================================================ */
-@theme {
-  --color-kagit:     #F6F1E4;   /* uygulama zemini — kağıt */
-  --color-pano:      #E9DFC9;   /* mantar pano */
-  --color-yuzey:     #FFFDF6;   /* kabartılmış yüzey */
-  --color-murekkep:  #23343C;   /* ana metin */
-  /* Soluk metin ve pirinç, WCAG AA'nın (4.5:1) altında kalıyordu: soluk metin
-     kağıt üstünde 3.39, pirinç butonun beyaz yazısı 3.42. İkisi de metin
-     taşıdığı için koyulaştırıldı — şimdi 4.57 ve 5.64. Pin jetonlarının
-     pirinci DEĞİŞMEDİ; onlar kategori renklerinden ve satır içi #B8801A
-     literallerinden türüyor, grafik olarak 3:1 eşiğine tabi. */
-  --color-murekkep2: #5F7078;   /* soluk metin */
-  --color-jeton:     #8A5F0F;   /* pirinç — vurgu ve buton zemini */
-  --color-mercan:    #B8452F;   /* uyarı */
-  --color-su:        #D2DFE2;
+   TASARIM TOKENLARI — Corner dili
 
-  /* kategori renkleri: pin jetonları ve post-it kağıtları buradan türer */
+   Kaynak: .claude/skills/corner-tasarim. Tek cümlelik özeti
+   "düzenli iskelet, eğlenceli içerik": arayüz beyaz, sessiz,
+   yuvarlak ve geri çekilmiş; ENERJİNİN TAMAMI fotoğraflardan,
+   emojilerden ve kullanıcı içeriğinden gelir.
+
+   Buradaki en sık bozulan kural: UI elemanını renklendirmek.
+   Kategori rengi, marka rengi, doygun buton — hiçbiri iskelette
+   yaşamaz. Renk içeriğe ve ROZETE aittir.
+
+   Mantar pano metaforu bitti. Zemin artık ılık krem değil, kırık
+   beyaz + iridesan yıkama (aşağıda :root). Bir önceki turda
+   seçilen "ılık nötr" rampa da nötre çevrildi — skill saf gri
+   istiyor, kontrast eşikleri korunarak hue çekildi.
+
+   KURAL: yeni ekran yazarken buradaki tokenları kullan, keyfi
+   text-[12.5px] / shadow-[0_2px...] yazma.
+   ============================================================ */
+@theme static {
+  /* ---------- nötr rampa ----------
+     Metin eşiği (#FAFAF8 zemin ve #FFF yüzey, ikisinin düşüğü):
+       gri-600 ve koyusu → her boyutta metin (AA 5.07:1+)
+       gri-500           → SADECE ikon ve 18px+ kalın yazı (3.47:1)
+       gri-400 ve açığı  → SADECE dekor: dolgu, ayraç, devre dışı
+     Ölçüldü, göz kararı değiştirme. */
+  --color-kagit:     #FAFAF8;   /* kırık beyaz — saf beyaz DEĞİL */
+  --color-yuzey:     #FFFFFF;   /* kart yüzeyi; zeminden GÖLGEYLE ayrışır */
+  --color-gomuk:     #F4F4F2;   /* içe gömülü alan: girdi zemini */
+  --color-gri-50:    #F4F4F3;
+  --color-gri-100:   #EAEAE9;
+  --color-gri-200:   #DCDCDB;
+  --color-gri-300:   #C3C3C4;
+  --color-gri-400:   #A8A8AB;
+  --color-gri-500:   #86868A;
+  --color-gri-600:   #6B6B70;   /* AA'yı geçen en açık ton */
+  --color-gri-700:   #4E4E53;
+  --color-gri-800:   #3A3A3D;   /* gövde metni */
+  --color-gri-900:   #0B0B0C;   /* başlık + TEK siyah çapa */
+
+  /* eski adlar — rampaya bağlı, bileşenler tek tek geçene kadar duruyor */
+  --color-murekkep:  var(--color-gri-900);
+  --color-murekkep2: var(--color-gri-600);
+
+  /* ---------- pastel rozetler ----------
+     Skill §3 katman 3: SADECE küçük rozet/etiket/çıkartmada.
+     Asla buton, kart ya da geniş yüzey rengi olmaz.
+     Metin/zemin çiftlerinin hepsi AA geçiyor (5.40–7.69:1). */
+  --color-rozet-pembe:     #F9D6EC;  --color-rozet-pembe-ink: #7A2E60;
+  --color-rozet-lila:      #E4DCFB;  --color-rozet-lila-ink:  #45318C;
+  --color-rozet-nane:      #D3F2E0;  --color-rozet-nane-ink:  #1F6B45;
+
+  /* ---------- durum ----------
+     YALNIZCA metin rengi olarak kullanılır, dolu zemin olarak değil. */
+  --color-acik:      #1E7A3C;
+  --color-kapali:    #B3261E;
+  --color-jeton:     #8A5F0F;   /* eski pirinç — yalnızca rozet/metin */
+  --color-mercan:    #B8452F;   /* uyarı metni */
+  --color-su:        #EAEAE9;
+
+  /* kategori renkleri: yalnızca fotoğrafsız kart degradelerinde ve
+     jeton yedek marker'ında. Arayüz çipinde/kartında DEĞİL — orada
+     kategoriyi emoji taşıyor (skill §6 "Emoji birinci sınıf vatandaş"). */
   --color-yemek:  #E0271C;
   --color-kahve:  #DE9B2E;
   --color-bar:    #7360C4;
@@ -28,36 +71,157 @@
   --color-kultur: #329179;
   --color-park:   #569E4C;
 
-  --font-tabela: Oswald, "Arial Narrow", sans-serif;   /* tabela / etiket */
-  --font-metin:  Karla, "Segoe UI", sans-serif;        /* metin */
-  --font-sayi:   "JetBrains Mono", ui-monospace, monospace;
-  --font-el:     Kalam, "Segoe Print", cursive;        /* el yazısı — post-it notları */
+  /* ---------- tipografi: İKİ KADEMELİ SİSTEM ----------
+     Skill §4, bu dilin en ayırt edici özelliği.
 
-  --shadow-kagit:  0 2px 6px rgba(74, 58, 30, 0.10);
-  --shadow-kagit2: 0 6px 18px rgba(74, 58, 30, 0.16);
+       Kademe A — ÖZEL İSİMLER (mekan/kişi adı, ekran başlığı):
+         BÜYÜK HARF · 800 · NEGATİF harf aralığı (tracking-siki).
+         İçeriğin sahibi olan isim BAĞIRIR.
+       Kademe B — ARAYÜZ (buton, sekme, etiket, istatistik adı):
+         küçük harf · 600 · hafif negatif. Arayüz FISILDAR.
+       Kademe C — BÖLÜM ETİKETİ:
+         BÜYÜK HARF ama küçük punto · 700 · POZİTİF aralık (ferah).
+
+     İkisini karıştırma: her şey küçük harf olursa otorite gider,
+     her şey düzgün büyük harf olursa samimiyet gider.
+
+     Ağırlık merdiveni artık 400/500/600/700/800 (layout.tsx) —
+     font-bold sahte kalınlaştırma sorunu bitti. */
+  --text-2xs:  10px;    --text-2xs--line-height:  1.35;
+  --text-xs:   11.5px;  --text-xs--line-height:   1.4;
+  --text-sm:   13px;    --text-sm--line-height:   1.45;
+  --text-base: 15px;    --text-base--line-height: 1.5;
+  --text-lg:   17px;    --text-lg--line-height:   1.4;
+  --text-xl:   20px;    --text-xl--line-height:   1.25;
+  --text-2xl:  26px;    --text-2xl--line-height:  1.12;
+  --text-3xl:  30px;    --text-3xl--line-height:  1.08;
+
+  /* Kademe A ve B ağır, sıkı, geometrik bir grotesk ister → Inter.
+     Karla İNSANIN yazdığı metinde kalıyor: pin notları, yorumlar.
+     Böylece "uygulama mı yazdı insan mı" ayrımı italik/düze ek
+     olarak yazı tipiyle de kuruluyor. */
+  --font-tabela: Inter, "Segoe UI", system-ui, sans-serif;   /* Kademe A/B/C */
+  --font-metin:  Karla, "Segoe UI", sans-serif;              /* insan metni */
+  --font-sayi:   "JetBrains Mono", ui-monospace, monospace;
+  --font-el:     Kalam, "Segoe Print", cursive;
+
+  --tracking-isim:   -0.035em;  /* Kademe A — kişi adı, iri başlık */
+  --tracking-siki:   -0.03em;   /* Kademe A — mekan adı, ekran başlığı */
+  --tracking-ui:     -0.01em;   /* Kademe B — buton, sekme */
+  --tracking-etiket:  0.06em;   /* Kademe C — bölüm etiketi */
+  --tracking-tabela:  0.06em;   /* eski ad → Kademe C'ye bağlandı */
+  --tracking-genis:   0.09em;   /* Kademe C, ekstra ferah */
+
+  /* ---------- şekil ----------
+     Üç şekil, net kuralları var (skill §5):
+       pill (rounded-full) — yatay, metin içeren her şey
+       squircle            — avatar, küçük resim, ikon butonu, kart
+       daire               — SADECE harita marker'ı ve satır içi avatar
+     Not: profil avatarı squircle, harita marker'ı daire. Tutarsızlık
+     değil, bilinçli ayrım — squircle kimlik, daire haritadaki nokta. */
+  --radius:     12px;
+  --radius-xs:   8px;   /* rozet, sayaç */
+  --radius-sm:  12px;   /* küçük fotoğraf (thumb) */
+  --radius-md:  16px;   /* ikon butonu, fotoğraf küçük resmi (squircle) */
+  --radius-lg:  20px;   /* kart, panel */
+  --radius-xl:  22px;   /* profil avatarı (squircle) */
+  --radius-2xl: 28px;   /* çekilebilir alt panel üst köşeleri */
+
+  /* ---------- gölge ----------
+     Derinliğin TEK kaynağı; ayraç çizgisi ve kalın kenarlık yok.
+     Skill üç kademe istiyor; kat-1/2/3 onların birebir karşılığı,
+     kat-4/5 mevcut çekmece ve modal için kat-3'ün uzantısı.
+     Renk nötr siyah — zemin artık krem değil, ılık gölge kirletiyordu.
+
+       kat-1  duran içerik: kart, liste satırı
+       kat-2  yüzen chrome: harita üstü buton, filtre çipi
+       kat-3  en üst: alt nav kapsülü, FAB, modal
+       kat-4  çekilebilir alt panel, açılır menü
+       kat-5  tam ekran katman */
+  --shadow-kat-1: 0 1px 2px rgba(16, 16, 20, .04), 0 1px 1px rgba(16, 16, 20, .03);
+  --shadow-kat-2: 0 2px 8px rgba(16, 16, 20, .08), 0 1px 2px rgba(16, 16, 20, .04);
+  --shadow-kat-3: 0 6px 20px rgba(16, 16, 20, .13), 0 2px 6px rgba(16, 16, 20, .06);
+  --shadow-kat-4: 0 10px 30px rgba(16, 16, 20, .16), 0 3px 8px rgba(16, 16, 20, .07);
+  --shadow-kat-5: 0 20px 56px rgba(16, 16, 20, .22), 0 6px 16px rgba(16, 16, 20, .10);
+
+  /* eski adlar */
+  --shadow-kagit:  var(--shadow-kat-1);
+  --shadow-kagit2: var(--shadow-kat-3);
 }
 
 :root {
-  --cizgi:   rgba(35, 52, 60, 0.13);
-  --cizgi-2: rgba(35, 52, 60, 0.07);
+  /* Saç teli. AYIRMAK için değil, gölgeyi DESTEKLEMEK için. */
+  --cizgi:   rgba(0, 0, 0, 0.07);
+  --cizgi-2: rgba(0, 0, 0, 0.04);
+
+  /* İridesan yıkama — zemine bindirilen çok soluk gradyanlar.
+     Fark edilirse fazla güçlü demektir, opaklığı düşür. */
+  --yikama-nane:  rgba(178, 233, 205, 0.28);
+  --yikama-lila:  rgba(206, 195, 245, 0.26);
+  --yikama-seftali: rgba(250, 214, 214, 0.22);
+
+  /* Fotoğraf zeminli kartta beyaz metnin okunması için ZORUNLU örtü.
+     Dekorasyon değil. Fotoğrafın tamamını karartmıyor. */
+  --ortu: linear-gradient(to top,
+          rgba(0,0,0,.72) 0%, rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 72%);
+
+  --cam-bulanik: 24px;
+  --cam-zemin: rgba(255, 255, 255, 0.72);
 }
 
 * { box-sizing: border-box; }
 
 body {
   background: var(--color-kagit);
-  color: var(--color-murekkep);
-  font-family: var(--font-metin);
+  color: var(--color-gri-900);
+  /* Arayüzün varsayılan sesi Kademe B: Inter. Karla'ya yalnızca
+     insanın yazdığı metin geçiyor (font-metin sınıfıyla). */
+  font-family: var(--font-tabela);
+  letter-spacing: var(--tracking-ui);
   margin: 0;
   -webkit-font-smoothing: antialiased;
 }
 
-/* mantar pano dokusu — ince noktalı */
-.pano-doku {
-  background-color: var(--color-pano);
-  background-image: radial-gradient(rgba(120, 96, 52, 0.13) 1px, transparent 1px);
-  background-size: 7px 7px;
+/* ---------- iridesan zemin ----------
+   Skill §2: zemin saf beyaz DEĞİL. Kırık beyazın üstünde üç çok geniş,
+   çok soluk radial gradyan — köşelerde nane, lavanta ve şeftali belli
+   belirsiz beliriyor (sabun köpüğü / holografik sticker hissi).
+   Fark edilirse fazla güçlü demektir.
+
+   Uygulama çerçevesine de ayrıca veriliyor (.iridesan): çerçeve
+   overflow-clip'li kendi kutusu, body'nin gradyanı içine girmiyor. */
+.iridesan {
+  background-color: var(--color-kagit);
+  /* Ölçüler YÜZDE, vw/vh değil: uygulama 392 pikselik bir çerçevenin
+     içinde yaşıyor, 60vw masaüstünde 900 piksel ederek yıkamayı
+     çerçevenin tamamen dışına atıyordu. */
+  background-image:
+    radial-gradient(78% 42% at 92%  2%, var(--yikama-nane),    transparent 72%),
+    radial-gradient(88% 46% at  2% 98%, var(--yikama-lila),    transparent 72%),
+    radial-gradient(66% 36% at 98% 86%, var(--yikama-seftali), transparent 72%);
 }
+
+/* Fotoğraf zeminli kart örtüsü — beyaz kart kuralının tek istisnası.
+   Okunurluk için zorunlu (skill §6), dekorasyon değil. */
+.ortulu { position: relative; }
+.ortulu::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--ortu); pointer-events: none;
+}
+
+/* Cam panel — form/kayıt ekranında uygulamanın kendi içeriği arkada
+   bulanık durur. Hem derinlik verir hem girdiye odaklar. */
+.cam {
+  background: var(--cam-zemin);
+  backdrop-filter: blur(var(--cam-bulanik));
+  -webkit-backdrop-filter: blur(var(--cam-bulanik));
+}
+
+
+/* Mantar pano dokusu kalktı (metafor bitti) ama sınıf adı hâlâ birkaç
+   ekranda geçiyor; iridesan zemine bağlandı ki tek tek geçene kadar
+   ortada kahverengi delik kalmasın. */
+.pano-doku { background-color: var(--color-kagit); }
 
 /* jeton pin marker'ları — konumlandırma MapLibre'nin, ölçek efekti iç katmanın.
    Aynı elemanda transform çakışırsa pinler zoom sırasında kayıyor. */
@@ -67,6 +231,54 @@ body {
 .jeton-marker:hover .jeton-ic { transform: scale(1.12); }
 .jeton-marker.secili .jeton-ic { transform: scale(1.22); }
 .halka { transition: opacity .15s; }
+
+/* ---------- fotoğraflı marker ----------
+   Pinlenmiş ve fotoğrafı olan mekan jeton yerine kendi görüntüsüyle
+   duruyor (lib/gorsel.ts → fotoMarkerHTML). Beyaz kenar zorunlu: fotoğraf
+   doğrudan haritanın üstüne otursa koyu bir binanın ya da parkın üstünde
+   kenarı kaybolurdu. */
+.foto-marker {
+  position: relative;
+  display: block;
+  width: 44px; height: 44px;
+}
+/* DAİRE, squircle değil. Skill §5'in bilinçli ayrımı: squircle = kimlik
+   (profil, kart), daire = haritadaki nokta. Avatar bileşeni de aynı
+   kuralı taşıyor (sekil="daire"). */
+.foto-marker-kutu {
+  display: block;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  background: var(--color-gri-100);
+  box-shadow: var(--shadow-kat-3);
+}
+.foto-marker img {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+/* Popüler mekan büyük ve altın kenarlı — jetondaki altın halkanın karşılığı. */
+.foto-marker.populer { width: 54px; height: 54px; }
+.foto-marker.populer .foto-marker-kutu {
+  border-color: var(--color-jeton);
+}
+/* BİLİNEN kapalı: fotoğraf soluyor. Saati bilinmeyen mekan soldurulmuyor —
+   jetondaki üç durumlu kural burada da geçerli. */
+/* opacity DEĞİL filtre: saydamlık altındaki degradeyi geçirip fotoğrafı
+   düz bir bej kareye çeviriyordu. */
+.foto-marker.kapali img { filter: grayscale(.7) brightness(.95); }
+/* Kategori noktası: renk jetondan çıkıp buraya indi, filtre çiplerindeki
+   noktayla aynı dil. */
+.foto-marker-nokta {
+  position: absolute;
+  right: -2px; bottom: -2px;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: var(--shadow-kat-1);
+}
 
 /* ---------- kullanıcının kendi konumu ----------
    Jeton dilinden ayrı bilerek: bu bir mekan değil, sen. Mavi/çelik tonu
@@ -96,12 +308,51 @@ body {
 }
 
 /* MapLibre'nin atıf kontrolü (Harita.tsx'teki attributionControl) varsayılan
-   olarak sağ alt köşede duruyor — ama FiltreCipleri şeridi haritanın tam
-   genişliğinde, en altına bindiriliyor (page.tsx: "absolute inset-x-0
-   bottom-0 z-[4]") ve atfı tamamen örtüyor. Mekan verileri OpenStreetMap'ten
-   geldiği için bu atıf ODbL gereği zorunlu, kaybolmamalı. Çip şeridinin
-   yüksekliği (bkz. FiltreCipleri.tsx yorumu: "64px'lik satır") + üstündeki
-   dikey boşluk payı kadar yukarı taşıyoruz. */
+   olarak sağ alt köşede duruyor — ama haritanın altında iki şey yüzüyor ve
+   ikisi de tam genişlikte: yüzen alt menü (AltMenu, ~72px) ve onun üstündeki
+   filtre çipi şeridi (page.tsx: "absolute inset-x-0 bottom-[68px]", ~40px).
+   Mekan verileri OpenStreetMap'ten geldiği için bu atıf ODbL gereği zorunlu,
+   kaybolmamalı — bu YASAL bir zorunluluk, estetik tercih değil.
+
+   Değer ikisinin toplamının biraz üstü. Alt menünün yüksekliğini ya da çip
+   şeridinin konumunu değiştirirsen BURAYI DA güncelle ve atfın gerçekten
+   göründüğünü ekranda doğrula. */
 .maplibregl-ctrl-bottom-right {
-  bottom: 84px !important;
+  bottom: 112px !important;
+}
+
+/* Yakınlaştırma düğmeleri (NavigationControl) varsayılan olarak sağ ÜSTTE.
+   Harita tam ekrana çıkıp başlık oraya yüzünce pin düğmesinin altında kalıp
+   tıklanamaz oldular. Sağ alta, konum düğmesinin hemen üstüne taşınıyorlar —
+   iki harita kontrolü yan yana, Google/Apple Maps'teki yerleşim.
+
+   204px = alt menü (68) + çip şeridi + konum düğmesi (bottom-156 + 40px).
+   KonumDugmesi'ndeki bottom değeri değişirse burası da değişir. */
+.maplibregl-ctrl-top-right {
+  top: auto !important;
+  bottom: 204px !important;
+}
+/* !important: maplibre-gl.css bileşen içinden import edildiği için
+   globals.css'ten SONRA geliyor ve aynı özgüllükteki kuralı eziyor. */
+.maplibregl-ctrl-top-right .maplibregl-ctrl-group {
+  margin: 0 12px 0 0 !important;
+}
+
+/* Kontrol kutusu da baloncuk diline giriyor: kenarlık yerine yumuşak gölge,
+   tam yuvarlak köşe. Aynı gölge konum düğmesinde ve filtre çiplerinde. */
+.maplibregl-ctrl-group {
+  border-radius: var(--radius-lg) !important;
+  background: var(--color-yuzey);
+  box-shadow: var(--shadow-kat-3);
+}
+/* Köşeleri kutunun kendisi değil ilk/son düğme çiziyor; kutuya yarıçap
+   vermek yetmiyor, düğmeler dışarı taşıyor. */
+.maplibregl-ctrl-group button:first-child {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+.maplibregl-ctrl-group button:last-child {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--cizgi-2);
 }

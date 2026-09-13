@@ -205,7 +205,7 @@ function Uygulama() {
        Güvenli alan dolgusu çentikli ekranlar için — viewportFit: "cover"
        içeriği çentiğin altına kadar uzatıyor. */
     <main
-      className="flex min-h-dvh items-center justify-center bg-[#241E14] p-4"
+      className="flex min-h-dvh items-center justify-center bg-[#111113] p-4"
       style={{
         paddingTop: "max(1rem, env(safe-area-inset-top))",
         paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
@@ -218,76 +218,100 @@ function Uygulama() {
       {/* Yükseklik dvh üzerinden: telefonda çerçeve ekranı doldursun, masaüstünde
           820px'de dursun. overflow-clip (hidden değil) — hidden kaydırma
           kapsayıcısı oluşturup çekmeceler açılınca çerçeveyi kaydırıyordu. */}
-      <div className="relative flex h-[min(96dvh,820px)] w-full max-w-[392px] flex-col overflow-clip rounded-[26px] bg-kagit shadow-[0_30px_80px_rgba(0,0,0,.55)]">
+      <div className="iridesan relative flex h-[min(96dvh,820px)] w-full max-w-[392px] flex-col overflow-clip rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,.55)]">
         {ekran === "harita" && (
-          <>
-            <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
-              <div className="flex items-baseline justify-between gap-3">
-                <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">{bolge}</h1>
-                <span className="font-sayi text-[13px] text-murekkep2">
-                  {new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
-              <div className="mt-2 flex items-center gap-2 text-[12.5px] text-murekkep2">
-                <span className="size-[9px] shrink-0 rounded-full bg-jeton shadow-[0_0_0_3px_rgba(184,128,26,.16)]" />
-                <span>
-                  <b className="font-sayi text-[13px] font-bold text-jeton">{sayilar.acikYer}</b> yer şu an açık ·{" "}
-                  {sayilar.pinSayisi} pin
-                </span>
-              </div>
-            </header>
-
-            <HikayeSeridi
-              secili={kisiFiltre?.id ?? null}
-              onSec={kisiSec}
-              acik={seritAcik}
-              onAc={() => setSeritAcik(true)}
+          /* Harita ekranı artık tek bir kutu: harita çerçevenin TAMAMINI
+             kaplıyor, başlık ve şerit onun üstünde yüzüyor. */
+          <div className="relative min-h-0 flex-1 overflow-hidden bg-su">
+            <Harita
+              gorunenler={gorunenler}
+              secili={secili}
+              onYerSec={setSecili}
+              onBolgeDegisti={setBolge}
+              onAlanDegisti={alaniGuncelle}
+              onEtkilesim={() => setSeritAcik(false)}
+              /* Kişi filtresi gibi takip/kaydettiklerim de haritanın
+                 tamamına dağılıyor; hangi filtreye geçildiyse kadraj
+                 yenilensin diye anahtar filtrenin kendisini taşıyor.
+                 Kategori ve "şu an açık" dışarıda: onlar görünen alanın
+                 sorgusu, haritayı oynatmaları istenmiyor. */
+              sigdir={
+                listeFiltre ? `liste:${listeFiltre.id}`
+                : kisiFiltre ? `kisi:${kisiFiltre.id}`
+                : filtre === "takip" || filtre === "kaydettiklerim" ? `filtre:${filtre}`
+                : null
+              }
+              konum={konum}
+              konumaGit={konumaGit}
             />
+            {/* ---- Yüzen üst katman ----
 
-            <div className="relative min-h-0 flex-1 overflow-hidden bg-su">
-              <Harita
-                gorunenler={gorunenler}
-                secili={secili}
-                onYerSec={setSecili}
-                onBolgeDegisti={setBolge}
-                onAlanDegisti={alaniGuncelle}
-                onEtkilesim={() => setSeritAcik(false)}
-                /* Kişi filtresi gibi takip/kaydettiklerim de haritanın
-                   tamamına dağılıyor; hangi filtreye geçildiyse kadraj
-                   yenilensin diye anahtar filtrenin kendisini taşıyor.
-                   Kategori ve "şu an açık" dışarıda: onlar görünen alanın
-                   sorgusu, haritayı oynatmaları istenmiyor. */
-                sigdir={
-                  listeFiltre ? `liste:${listeFiltre.id}`
-                  : kisiFiltre ? `kisi:${kisiFiltre.id}`
-                  : filtre === "takip" || filtre === "kaydettiklerim" ? `filtre:${filtre}`
-                  : null
-                }
-                konum={konum}
-                konumaGit={konumaGit}
-              />
-              {/* Sol üstte pin ekleme. Artı, konum iğnesinin İÇİNDE: sağ üstteki
-                  yakınlaştırma +'sıyla karışmasın diye (prototipte de böyleydi). */}
-              <button
-                onClick={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))}
-                aria-label="Pin at"
-                className="absolute left-2.5 top-2.5 z-[3] grid size-[38px] place-items-center rounded-sm border border-[var(--cizgi)] bg-jeton text-white shadow-kagit2"
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 21.5s7-6.3 7-11.2a7 7 0 1 0-14 0c0 4.9 7 11.2 7 11.2z" strokeWidth="1.9" />
-                  <path d="M12 7.1v6.2M8.9 10.2h6.2" strokeWidth="2.2" />
-                </svg>
-              </button>
+                Başlık ve hikâye şeridi artık yerleşimde SATIR DEĞİL, haritanın
+                üstünde yüzen baloncuklar. Kazanç doğrudan: ikisi 92+64px yer
+                kaplıyordu, harita çerçevenin ~%66'sındayken şimdi tamamı.
 
-              <KonumDugmesi
-                durum={konumDurumu}
-                konum={konum}
-                kadikoyDisinda={!!konum && !kadikoydeMi(konum)}
-                onIste={() => { konumBaslat(); setKonumaGit((n) => n + 1); }}
-                onGit={() => setKonumaGit((n) => n + 1)}
-                onKapat={konumKapat}
+                Hepsi tek bir akış içinde duruyor (absolute olan yalnızca bu
+                kapsayıcı): böylece başlık, şerit ve durum kutusu birbirinin
+                üstüne binmiyor, şerit kapanınca aşağıdakiler kendiliğinden
+                yukarı kayıyor.
+
+                pointer-events-none kapsayıcıda, auto tek tek çocuklarda:
+                aradaki boşluklardan haritayı sürüklemek mümkün kalsın. */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-[5]">
+              {/* Perde ŞART, süs değil. Şeffaf bir başlık denizin ya da koyu
+                  bir parkın üstüne gelince yazı okunmaz oluyor — Snapchat
+                  Map'te de aynı sebeple karartma var. Burada tema açık
+                  olduğu için karartma değil kağıt tonu: yukarıda neredeyse
+                  opak, 150px'te tamamen siliniyor. */}
+              <div
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-[150px] bg-[linear-gradient(to_bottom,rgba(250,247,242,.92)_0%,rgba(250,247,242,.58)_42%,rgba(250,247,242,0)_100%)]"
               />
+
+              <div className="relative flex items-start justify-between gap-2 px-3 pt-3">
+                {/* Konum baloncuğu: bölge adı, saat ve tek satır özet.
+                    Üç ayrı yüzen parça yerine tek kart — haritayı en az
+                    örten hâli bu. */}
+                <div className="pointer-events-auto inline-flex flex-col rounded-lg bg-yuzey px-3.5 py-2.5 shadow-kat-2">
+                  {/* Kademe A: bölge adı özel isim — BÜYÜK, 800, sıkı aralık. */}
+                  <div className="flex items-baseline gap-2.5">
+                    <h1 className="text-xl font-extrabold uppercase leading-none tracking-siki">{bolge}</h1>
+                    <span className="font-sayi text-xs leading-none text-gri-500">
+                      {new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  {/* Kademe B: arayüz fısıldar — küçük harf. Altın nokta
+                      kalktı; "açık" bilgisini dolu zemin değil DURUM RENGİ
+                      taşıyor (skill §3: durum rengi yalnızca metinde). */}
+                  <div className="mt-1 text-2xs lowercase text-gri-600">
+                    <b className="font-sayi text-xs font-semibold text-acik">{sayilar.acikYer}</b> yer açık ·{" "}
+                    <span className="font-sayi">{sayilar.pinSayisi}</span> pin
+                  </div>
+                </div>
+
+                {/* Pin atma: eskiden sol üstte altın bir kareydi, artık
+                    başlığın karşısında beyaz daire. Renk çipler ve pinlerde
+                    yaşıyor, arayüz kabuğunda değil. */}
+                <button
+                  onClick={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))}
+                  aria-label="Pin at"
+                  className="pointer-events-auto grid size-10 shrink-0 place-items-center rounded-md border-none bg-yuzey text-gri-900 shadow-kat-2"
+                >
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 21.5s7-6.3 7-11.2a7 7 0 1 0-14 0c0 4.9 7 11.2 7 11.2z" strokeWidth="1.9" />
+                    <path d="M12 7.1v6.2M8.9 10.2h6.2" strokeWidth="2.2" />
+                  </svg>
+                </button>
+              </div>
+
+              <HikayeSeridi
+                secili={kisiFiltre?.id ?? null}
+                onSec={kisiSec}
+                acik={seritAcik}
+                onAc={() => setSeritAcik(true)}
+              />
+
               <Durum
                 yukleniyor={yukleniyor}
                 hata={hata}
@@ -304,45 +328,55 @@ function Uygulama() {
                         : "Bu kategoride yer yok."
                 }
               />
-
-              {/* Filtreler haritanın ÜZERİNDE yüzüyor, altında ayrı bir satır
-                  değil: 64px'lik satır yerleşimden çıkınca harita %49'dan
-                  ~%66'ya çıkıyor. Konum düğmesi de çakışmasın diye yukarı
-                  kaydırıldı (KonumDugmesi içindeki bottom değeri). */}
-              <div className="absolute inset-x-0 bottom-0 z-[4]">
-                {/* Kişi filtresi açıkken kimin haritasına baktığın yazıyor ve
-                    kapatılabiliyor: şerit yalnızca takip ettiklerini gösterdiği
-                    için yabancı biri seçiliyken hiçbir işaret kalmıyordu. */}
-                {(kisiFiltre || listeFiltre) && (
-                  <div className="flex justify-center pb-1.5">
-                    <button
-                      onClick={odagiBirak}
-                      className="flex items-center gap-1.5 rounded-full border border-[var(--cizgi)] bg-yuzey px-3 py-1.5 font-tabela text-[10.5px] uppercase tracking-[0.1em] text-murekkep shadow-kagit"
-                    >
-                      {(listeFiltre ?? kisiFiltre)!.etiket}
-                      <span aria-hidden className="text-[12px] leading-none text-murekkep2">✕</span>
-                      <span className="sr-only">— filtreyi kaldır</span>
-                    </button>
-                  </div>
-                )}
-                {/* Çipe dokunmak odağı bırakıyor: kişi/liste odağı sorguyu
-                    tamamen devraldığı için, odak açıkken çipler görünürde
-                    hiçbir şey yapmıyordu. */}
-                <FiltreCipleri secili={filtre} onSec={(f) => { odagiBirak(); setFiltre(f); }} />
-              </div>
             </div>
-          </>
+
+            <KonumDugmesi
+              durum={konumDurumu}
+              konum={konum}
+              kadikoyDisinda={!!konum && !kadikoydeMi(konum)}
+              onIste={() => { konumBaslat(); setKonumaGit((n) => n + 1); }}
+              onGit={() => setKonumaGit((n) => n + 1)}
+              onKapat={konumKapat}
+            />
+            {/* Alt katman: çipler yüzen menünün (68px) hemen üstünde.
+                Yerleşimden çıktıkları için harita altlarına kadar uzuyor.
+                Konum düğmesi çakışmasın diye yukarıda (KonumDugmesi'ndeki
+                bottom değeri), OSM atfı da öyle (globals.css). */}
+            <div className="absolute inset-x-0 bottom-[68px] z-[4]">
+              {/* Kişi filtresi açıkken kimin haritasına baktığın yazıyor ve
+                  kapatılabiliyor: şerit yalnızca takip ettiklerini gösterdiği
+                  için yabancı biri seçiliyken hiçbir işaret kalmıyordu. */}
+              {(kisiFiltre || listeFiltre) && (
+                <div className="flex justify-center pb-1.5">
+                  <button
+                    onClick={odagiBirak}
+                    className="flex items-center gap-1.5 rounded-full border-none bg-gri-900 px-3.5 py-1.5 text-2xs font-semibold lowercase text-white shadow-kat-2"
+                  >
+                    {(listeFiltre ?? kisiFiltre)!.etiket}
+                    <span aria-hidden className="text-sm leading-none opacity-70">✕</span>
+                    <span className="sr-only">— filtreyi kaldır</span>
+                  </button>
+                </div>
+              )}
+              {/* Çipe dokunmak odağı bırakıyor: kişi/liste odağı sorguyu
+                  tamamen devraldığı için, odak açıkken çipler görünürde
+                  hiçbir şey yapmıyordu. */}
+              <FiltreCipleri secili={filtre} onSec={(f) => { odagiBirak(); setFiltre(f); }} />
+            </div>
+          </div>
         )}
 
         {ekran === "akis" && (
           <>
-            <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
-              <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">AKIŞ</h1>
+            {/* Başlıklardan alt çizgi kalktı: ayrım artık çizgiyle değil
+                boşlukla ve kartların kendi gölgesiyle kuruluyor. */}
+            <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-2 pt-4">
+              <h1 className="text-2xl font-extrabold uppercase leading-none tracking-siki">AKIŞ</h1>
               {ben && (
                 <button
                   onClick={() => setBildirimAcik(true)}
                   aria-label={okunmamis ? `Bildirimler, ${okunmamis} okunmamış` : "Bildirimler"}
-                  className="relative shrink-0 border-none bg-transparent p-1 text-murekkep2"
+                  className="relative grid size-9 shrink-0 place-items-center rounded-md border-none bg-yuzey text-gri-800 shadow-kat-2"
                 >
                   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                        strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -350,7 +384,7 @@ function Uygulama() {
                     <path d="M10.3 20a2 2 0 0 0 3.4 0" />
                   </svg>
                   {okunmamis > 0 && (
-                    <span className="absolute right-0 top-0 grid min-w-[15px] place-items-center rounded-full bg-jeton px-1 font-sayi text-[9.5px] leading-[15px] text-white">
+                    <span className="absolute -right-0.5 -top-0.5 grid min-w-[15px] place-items-center rounded-full bg-rozet-pembe px-1 font-sayi text-2xs font-bold leading-[15px] text-rozet-pembe-ink ring-2 ring-white">
                       {okunmamis > 9 ? "9+" : okunmamis}
                     </span>
                   )}
@@ -363,18 +397,18 @@ function Uygulama() {
 
         {ekran === "profil" && (
           <>
-            <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
+            <header className="shrink-0 px-4 pb-2 pt-4">
               <div className="flex items-center gap-2.5">
                 {profilKisi !== undefined && (
                   <button
                     onClick={() => setProfilKisi(undefined)}
                     aria-label="Kendi profiline dön"
-                    className="shrink-0 border-none bg-transparent p-0 text-[18px] leading-none text-murekkep2"
+                    className="grid size-8 shrink-0 place-items-center rounded-md border-none bg-yuzey text-lg leading-none text-gri-800 shadow-kat-2"
                   >
                     ‹
                   </button>
                 )}
-                <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">
+                <h1 className="text-2xl font-extrabold uppercase leading-none tracking-siki">
                   {profilKisi === undefined ? "PROFİL" : "@" + profilKisi}
                 </h1>
               </div>
@@ -394,8 +428,8 @@ function Uygulama() {
 
         {ekran === "ara" && (
           <>
-            <header className="shrink-0 border-b border-[var(--cizgi)] bg-kagit px-4 pb-2 pt-4">
-              <h1 className="font-tabela text-[25px] font-semibold leading-none tracking-[0.14em]">ARA</h1>
+            <header className="shrink-0 px-4 pb-2 pt-4">
+              <h1 className="text-2xl font-extrabold uppercase leading-none tracking-siki">ARA</h1>
             </header>
             <AraEkrani
               onYerAc={haritadaAc}
@@ -493,7 +527,9 @@ function Durum({
 }: { yukleniyor: boolean; hata: string | null; bos: boolean; mesaj: string }) {
   if (!yukleniyor && !hata && !bos) return null;
   return (
-    <div className="absolute inset-x-4 top-3.5 z-[2] rounded-sm border border-[var(--cizgi)] bg-yuzey p-3 text-center text-[13px] leading-snug shadow-kagit2">
+    /* Yüzen üst katmanın AKIŞINDA duruyor (mutlak değil): başlığın ve
+       hikâye şeridinin altına kendiliğinden diziliyor, üstlerine binmiyor. */
+    <div className="pointer-events-auto mx-3 mt-2 rounded-lg bg-yuzey p-3 text-center text-sm leading-snug text-gri-800 shadow-kat-2">
       {hata
         ? `Mekanlar yüklenemedi: ${hata}`
         : yukleniyor

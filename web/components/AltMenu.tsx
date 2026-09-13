@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useOturum } from "@/lib/oturum";
+import Avatar from "./Avatar";
 
 export type Ekran = "harita" | "akis" | "ara" | "profil";
 
@@ -28,6 +30,22 @@ const IKON: Record<Ekran, React.ReactNode> = {
 
 const AD: Record<Ekran, string> = { harita: "Harita", akis: "Akış", ara: "Ara", profil: "Profil" };
 
+/**
+ * Kenardan kenara bar değil, ortada yüzen kapsül + ayrı "+" düğmesi.
+ *
+ * Ayrım kasıtlı: kapsüldeki dört sekme GEZİNME (keşfet), yanındaki daire
+ * ÜRETME (ekle). İkisi aynı çubukta dururken "+" beşinci bir sekme gibi
+ * okunuyordu. Ayırınca ekleme eylemi sekmelerin dışına çıkıyor.
+ *
+ * Etiket yazıları kalktı: ikon + aktif renk yeterli, ve yazısız kapsül
+ * haritanın üstünde çok daha az yer örtüyor. Ad'lar aria-label'da duruyor,
+ * ekran okuyucu için bilgi kaybı yok.
+ *
+ * Yerleşim: page.tsx'te çerçevenin en altına MUTLAK konumlanıyor, akışta yer
+ * kaplamıyor — bu yüzden harita kapsülün altına kadar uzuyor. Kapladığı
+ * dikey alan ~72px; filtre şeridi ve MapLibre atfı buna göre yukarı
+ * kaydırıldı (page.tsx ve globals.css).
+ */
 export default function AltMenu({
   ekran,
   onGec,
@@ -43,27 +61,55 @@ export default function AltMenu({
      ya da profilin içinde kalıyordu; "bir şey ekle" niyetiyle artıya basan
      kullanıcı listeye ulaşamıyordu. Artık iki seçenek sunuyor. */
   const [acik, setAcik] = useState(false);
+  /* Profil sekmesi ikon değil KULLANICININ KENDİ AVATARI (skill §6).
+     Dört soyut ikonun arasında tek kişisel eleman: "burası sensin".
+     Giriş yapılmamışsa ikona düşüyor — boş bir avatar anlamsız. */
+  const { ben } = useOturum();
   const dugme = (e: Ekran) => (
     <button
       key={e}
       onClick={() => onGec(e)}
       aria-current={ekran === e ? "page" : undefined}
-      className={`flex flex-1 flex-col items-center gap-[3px] border-none bg-transparent py-1.5 font-tabela text-[9.5px] uppercase tracking-[0.11em] ${
-        ekran === e ? "text-jeton" : "text-[rgba(35,52,60,.45)]"
+      aria-label={AD[e]}
+      className={`grid size-11 place-items-center rounded-full border-none bg-transparent transition-colors ${
+        ekran === e ? "text-gri-900" : "text-gri-400"
       }`}
     >
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        {IKON[e]}
-      </svg>
-      {AD[e]}
+      {e === "profil" && ben ? (
+        <span
+          className="grid place-items-center rounded-full transition-shadow"
+          style={{ boxShadow: ekran === e ? "0 0 0 2px var(--color-gri-900)" : "none" }}
+        >
+          <Avatar kisi={ben.id} boyut={24} sekil="daire" />
+        </span>
+      ) : (
+        <svg
+          width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          /* Aktif sekme yalnızca renkle değil çizgi kalınlığıyla da ayrılıyor —
+             renk körlüğünde tek başına ton farkı zayıf kalıyor. */
+          strokeWidth={ekran === e ? 2.2 : 1.7}
+          strokeLinecap="round" strokeLinejoin="round"
+        >
+          {IKON[e]}
+        </svg>
+      )}
     </button>
   );
 
+  /* z-10: haritanın ve filtre çiplerinin (z-[4]) ÜSTÜNDE ama tam ekran
+     katmanların ALTINDA. Giriş, Ayarlar, Bildirimler, Arşiv gibi ekranlar
+     z-40 ve `inset-0` ile çerçeveyi kaplıyor; menü onlardan yüksek olursa
+     giriş formunun üstünde yüzen bir gezinme çubuğu kalırdı. */
   return (
-    <nav className="flex shrink-0 items-center border-t border-[var(--cizgi)] bg-yuzey px-1.5 py-1.5">
-      {dugme("harita")}
-      {dugme("akis")}
-      <div className="relative mx-1.5 shrink-0">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-2.5 px-4 pb-3">
+      <nav className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-yuzey px-2 py-1.5 shadow-kat-3">
+        {dugme("harita")}
+        {dugme("akis")}
+        {dugme("ara")}
+        {dugme("profil")}
+      </nav>
+
+      <div className="pointer-events-auto relative shrink-0">
         {acik && (
           <>
             {/* Perde: dışarı dokununca kapansın. Menünün altında ama sayfanın
@@ -75,14 +121,15 @@ export default function AltMenu({
             />
             <div
               role="menu"
-              className="absolute bottom-[54px] left-1/2 z-[46] w-[168px] -translate-x-1/2 overflow-hidden rounded-sm border border-[var(--cizgi)] bg-yuzey shadow-kagit2"
+              className="absolute bottom-[60px] right-0 z-[46] w-[176px] overflow-hidden rounded-lg bg-yuzey shadow-kat-4"
             >
-              {([["Pin at", onPinAt], ["Liste oluştur", onListeOlustur]] as const).map(([ad, islem]) => (
+              {/* Kademe B: arayüz küçük harf. */}
+              {([["pin at", onPinAt], ["liste oluştur", onListeOlustur]] as const).map(([ad, islem]) => (
                 <button
                   key={ad}
                   role="menuitem"
                   onClick={() => { setAcik(false); islem(); }}
-                  className="block w-full border-none border-b border-[var(--cizgi)] bg-transparent px-3 py-2.5 text-left text-[13.5px] text-murekkep last:border-0"
+                  className="block w-full border-none border-b border-[var(--cizgi-2)] bg-transparent px-4 py-3 text-left text-sm font-semibold lowercase text-gri-900 last:border-0"
                 >
                   {ad}
                 </button>
@@ -95,16 +142,14 @@ export default function AltMenu({
           aria-label="Ekle"
           aria-expanded={acik}
           aria-haspopup="menu"
-          className="grid size-11 place-items-center rounded-full border-none bg-jeton shadow-[0_4px_14px_rgba(184,128,26,.35)] transition-transform"
+          className="grid size-[52px] place-items-center rounded-full border-none bg-yuzey shadow-kat-3 transition-transform"
           style={{ transform: acik ? "rotate(45deg)" : undefined }}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" className="text-gri-900">
             <path d="M12 5v14M5 12h14" />
           </svg>
         </button>
       </div>
-      {dugme("ara")}
-      {dugme("profil")}
-    </nav>
+    </div>
   );
 }

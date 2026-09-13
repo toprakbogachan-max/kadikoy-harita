@@ -71,11 +71,11 @@ export default function BuyukGorsel({
             görselden dikkat çalıyordu. */
          className="absolute inset-0 z-[48] flex flex-col bg-[#0C0905]">
       <div className="flex shrink-0 items-center justify-between p-3">
-        <span className="font-tabela text-[10.5px] uppercase tracking-[0.12em] text-white/45">
+        <span className="font-tabela text-2xs uppercase tracking-[0.12em] text-white/45">
           {kirpilabilir ? "sürükle · büyüt küçült" : ""}
         </span>
         <button onClick={onKapat} aria-label="Kapat"
-          className="size-[34px] rounded-sm border-none bg-white/15 text-[17px] leading-none text-white">
+          className="size-[34px] rounded-md border-none bg-white/15 text-lg leading-none text-white">
           ✕
         </button>
       </div>
@@ -88,9 +88,9 @@ export default function BuyukGorsel({
         <>
           <div className="grid min-h-0 flex-1 place-items-center px-4">
             {yolUrl || foto ? (
-              <DosyaGorsel dosya={foto} url={yolUrl} className="max-h-full max-w-full rounded-sm object-contain" />
+              <DosyaGorsel dosya={foto} url={yolUrl} className="max-h-full max-w-full rounded-md object-contain" />
             ) : (
-              <span className="font-tabela text-[12px] uppercase tracking-[0.12em] text-white/50">
+              <span className="font-tabela text-sm uppercase tracking-[0.12em] text-white/50">
                 {video ? "video — önizleme yok" : "görsel yok"}
               </span>
             )}
@@ -104,7 +104,7 @@ export default function BuyukGorsel({
                 "vazgeç" gibi okunuyordu; bitirdiğini söyleyen bir düğme gerekti. */}
             <button
               onClick={onKapat}
-              className="mt-3 w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white"
+              className="mt-3 w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2"
             >
               Tamam
             </button>
@@ -149,7 +149,7 @@ function NotAlani({
 }: { not: string; onNot: (v: string) => void; alan: React.RefObject<HTMLTextAreaElement | null> }) {
   return (
     <>
-      <label className="mb-1.5 block font-tabela text-[11px] uppercase tracking-[0.12em] text-white/60">
+      <label className="mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-white/60">
         Bu görselin notu
       </label>
       <textarea
@@ -159,9 +159,9 @@ function NotAlani({
         maxLength={120}
         rows={2}
         placeholder="İsteğe bağlı"
-        className="w-full resize-none rounded-sm border border-white/20 bg-white/10 px-3 py-2.5 text-[14px] leading-snug text-white outline-none placeholder:text-white/40 focus:border-[#F2C879]"
+        className="w-full resize-none rounded-md border border-white/20 bg-white/10 px-3 py-2.5 text-base leading-snug text-white outline-none placeholder:text-white/40 focus:border-[#F2C879]"
       />
-      <div className="mt-1 text-right font-sayi text-[10.5px] text-white/45">{not.length}/120</div>
+      <div className="mt-1 text-right font-sayi text-2xs text-white/45">{not.length}/120</div>
     </>
   );
 }
@@ -317,7 +317,7 @@ function Kirpici({
           style={{ aspectRatio: String(ORAN) }}
           /* touch-none: dokunmatikte tarayıcı kaydırması sürüklemeyi çalıyordu.
              mx-auto + max-h-full: uzun ekranda büyüsün, kısa ekranda taşmasın. */
-          className="relative mx-auto max-h-full overflow-hidden rounded-sm bg-black/40 touch-none"
+          className="relative mx-auto max-h-full overflow-hidden rounded-md bg-black/40 touch-none"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -354,7 +354,7 @@ function Kirpici({
 
       <div className="shrink-0 px-4">
         <div className="flex items-center gap-2.5">
-          <span className="font-tabela text-[13px] leading-none text-white/50">−</span>
+          <span className="font-tabela text-sm leading-none text-white/50">−</span>
           <input
             type="range"
             aria-label="Yakınlaştır"
@@ -365,7 +365,7 @@ function Kirpici({
             onChange={(e) => yakinDegis(Number(e.target.value))}
             className="h-1 flex-1 appearance-none rounded-full bg-white/25 accent-[#F2C879]"
           />
-          <span className="font-tabela text-[15px] leading-none text-white/50">+</span>
+          <span className="font-tabela text-base leading-none text-white/50">+</span>
         </div>
       </div>
 
@@ -376,7 +376,7 @@ function Kirpici({
         <button
           onClick={uygula}
           disabled={!dogal || calisiyor}
-          className="mt-3 w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white disabled:opacity-40"
+          className="mt-3 w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40"
         >
           {calisiyor ? "Kırpılıyor…" : "Tamam"}
         </button>

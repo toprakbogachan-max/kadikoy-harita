@@ -23,18 +23,18 @@ export default function YasalMetin({ tur, onKapat }: { tur: Tur; onKapat: () => 
   return (
     <div role="dialog" aria-modal="true" aria-label={baslik}
          className="absolute inset-0 z-[45] flex flex-col bg-kagit">
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div className="flex items-center gap-2.5">
           <button onClick={onKapat} aria-label="Geri"
-            className="shrink-0 border-none bg-transparent p-0 text-[18px] leading-none text-murekkep2">
+            className="shrink-0 border-none bg-transparent p-0 text-xl leading-none text-gri-600">
             ‹
           </button>
-          <h2 className="text-[20px] font-semibold leading-tight">{baslik}</h2>
+          <h2 className="text-xl font-semibold leading-tight">{baslik}</h2>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-[13.5px] leading-relaxed">
-        <div className="mb-4 rounded-sm border border-[rgba(184,128,26,.4)] bg-[rgba(184,128,26,.08)] p-3 text-[12.5px] leading-snug">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-base leading-relaxed">
+        <div className="mb-4 rounded-md border border-[rgba(184,128,26,.4)] bg-[rgba(184,128,26,.08)] p-3 text-sm leading-snug">
           <b>Bu bir demo.</b> Kadıköy Harita henüz yayında değil, geliştirme
           aşamasında. Aşağıdaki metin hukukçu tarafından hazırlanmadı; gerçek
           kullanıcıya açılmadan önce bir avukata danışılması gerekiyor.
@@ -47,7 +47,7 @@ export default function YasalMetin({ tur, onKapat }: { tur: Tur; onKapat: () => 
 }
 
 const B = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="mb-1.5 mt-4 font-tabela text-[11.5px] uppercase tracking-[0.12em] text-murekkep2">
+  <h3 className="mb-1.5 mt-4 font-tabela text-xs uppercase tracking-[0.12em] text-gri-600">
     {children}
   </h3>
 );

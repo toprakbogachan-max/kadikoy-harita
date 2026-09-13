@@ -91,5 +91,14 @@ export interface Liste {
   slug: string;
   baslik: string;
   not: string | null;
+  /**
+   * Kapak — listenin SAHİBİ seçer (şema: lists.cover_url).
+   * Mekan kapağının tersi: orada kapak en çok beğenilen pinden kendiliğinden
+   * gelir, burada seçki kişisel olduğu için kapak da kişisel bir karardır.
+   * null = kapak yok, kart mekanların kategori degradesine düşer.
+   */
+  kapak: string | null;
+  /** Kare kartta fotoğrafın hangi dikey bandı görünecek, 0–100 (varsayılan 50). */
+  kapakKonum: number;
   yerler: Yer[];
 }

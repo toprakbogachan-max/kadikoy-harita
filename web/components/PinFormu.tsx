@@ -149,22 +149,22 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
     }
   };
 
-  const alan = "px-4 py-3.5 border-b border-[var(--cizgi)]";
-  const etiket = "mb-2 block font-tabela text-[11px] uppercase tracking-[0.12em] text-murekkep2";
-  const girdi = "w-full rounded-sm border border-[var(--cizgi)] bg-yuzey px-2.5 py-2 text-[14px] text-murekkep outline-none placeholder:text-murekkep2 focus:border-jeton";
+  const alan = "px-4 py-3.5";
+  const etiket = "mb-2 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
+  const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton";
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Pin at"
          className="absolute inset-0 z-40 flex flex-col bg-kagit">
-      <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--cizgi)] px-4 py-[15px]">
+      <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div>
-          <h2 className="text-[20px] font-semibold leading-tight">Pin at</h2>
-          <div className="mt-1.5 font-tabela text-[11px] uppercase tracking-[0.13em] text-murekkep2">
+          <h2 className="text-xl font-semibold leading-tight">Pin at</h2>
+          <div className="mt-1.5 text-2xs font-bold uppercase tracking-etiket text-gri-700">
             Deneyimini bırak
           </div>
         </div>
         <button onClick={onKapat} disabled={gonderiliyor} aria-label="Kapat"
-          className="size-[30px] shrink-0 rounded-sm border border-[var(--cizgi)] bg-yuzey text-[15px] leading-none disabled:opacity-40">
+          className="size-[30px] shrink-0 rounded-lg bg-yuzey shadow-kat-1 text-base leading-none disabled:opacity-40">
           ✕
         </button>
       </div>
@@ -200,8 +200,8 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           )}
 
           {yeniYer && (
-            <div className="mt-2 rounded-sm border border-[var(--cizgi)] bg-yuzey p-3">
-              <div className="mb-2 font-tabela text-[11px] uppercase tracking-[0.11em] text-jeton">
+            <div className="mt-2 rounded-lg bg-yuzey shadow-kat-1 p-3">
+              <div className="mb-2 font-tabela text-xs uppercase tracking-[0.11em] text-jeton">
                 Yeni mekan
               </div>
               {/* ENGEL değil uyarı: sınır çokgeni 201 noktaya sadeleştirilmiş,
@@ -209,7 +209,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                   İskelesi Kütüphanesi iskelenin üstünde ve bu testte "dışarıda"
                   görünüyor). Karar kullanıcının. */}
               {!karadaMi(yeniYer.lat, yeniYer.lng) && (
-                <p className="mb-2 rounded-sm border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2 text-[12px] leading-snug">
+                <p className="mb-2 rounded-md border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2 text-sm leading-snug">
                   Bu nokta <b>Kadıköy’ün karası dışında</b> görünüyor — deniz ya da
                   başka bir ilçe olabilir. İğneyi haritada sürükleyerek düzeltebilirsin.
                   İskele gibi gerçekten suyun üstündeki bir yer için olduğu gibi bırak.
@@ -224,17 +224,17 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                   </Cip>
                 ))}
               </div>
-              <p className="mt-2 text-[11.5px] leading-snug text-murekkep2">
+              <p className="mt-2 text-xs leading-snug text-gri-600">
                 Çalışma saatini bilmiyoruz — uygulamada “saat bilgisi yok” diye görünecek,
                 “kapalı” demeyeceğiz.
               </p>
               {yeniSemt && (
-                <p className="mt-2 font-sayi text-[11.5px] text-murekkep2">
+                <p className="mt-2 font-sayi text-xs text-gri-600">
                   Haritadan: {yeniSemt}
                 </p>
               )}
               <button onClick={() => { setYeniYer(null); setYeniAd(""); setYeniSemt(null); }}
-                className="mt-2 border-none bg-transparent p-0 text-[12.5px] text-murekkep2 underline">
+                className="mt-2 border-none bg-transparent p-0 text-sm text-gri-600 underline">
                 Vazgeç
               </button>
             </div>
@@ -262,24 +262,24 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                  onClick={() => setBuyuk({ i })}
                  data-sira={i}
                  style={siraStili(tasinan, i, medyalar.length)}
-                 className="mb-2 flex cursor-pointer touch-manipulation select-none gap-2.5 rounded-sm border border-[var(--cizgi)] bg-yuzey p-2">
+                 className="mb-2 flex cursor-pointer touch-manipulation select-none gap-2.5 rounded-lg bg-yuzey shadow-kat-1 p-2">
               <div className="relative shrink-0">
                 <Onizleme dosya={m.dosya} />
                 {/* Sıranın neye yaradığını söylemeden ok koymak anlamsız
                     olurdu: ilk sıradaki kapak. */}
                 {i === 0 && (
-                  <span className="absolute inset-x-0 bottom-0 bg-[rgba(20,15,8,.6)] py-[1px] text-center font-tabela text-[7.5px] uppercase tracking-[0.08em] text-white">
+                  <span className="absolute inset-x-0 bottom-0 bg-[rgba(16,16,20,.62)] py-[1px] text-center text-[8px] font-bold uppercase tracking-etiket text-white">
                     Kapak
                   </span>
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="mb-1 truncate text-[12px] text-murekkep2">{m.dosya.name}</div>
+                <div className="mb-1 truncate text-sm text-gri-600">{m.dosya.name}</div>
                 <div
                   data-suruklenmez
                   onClick={(e) => { e.stopPropagation(); setBuyuk({ i, nota: true }); }}
-                  className={`w-full truncate rounded-sm border border-[var(--cizgi)] bg-kagit px-2 py-1.5 text-[12.5px] ${
-                    m.not ? "text-murekkep" : "text-murekkep2"
+                  className={`w-full truncate rounded-lg bg-gomuk px-2 py-1.5 text-sm ${
+                    m.not ? "text-murekkep" : "text-gri-600"
                   }`}
                 >
                   {m.not || "Bu görselin notu (isteğe bağlı)"}
@@ -289,13 +289,13 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                 <button data-suruklenmez
                   onClick={(e) => { e.stopPropagation(); setMedyalar((l) => l.filter((_, j) => j !== i)); }}
                   aria-label="Kaldır"
-                  className="border-none bg-transparent p-0 text-[14px] leading-none text-murekkep2">
+                  className="border-none bg-transparent p-0 text-base leading-none text-gri-600">
                   ✕
                 </button>
                 {/* Tutamak sürüklemeyi GÖRÜNÜR kılıyor; sürüklemek için buna
                     basmak şart değil, satırın boş alanı da tutuyor. */}
                 {medyalar.length > 1 && (
-                  <span aria-hidden className="text-[12px] leading-none text-murekkep2">⠿</span>
+                  <span aria-hidden className="text-sm leading-none text-gri-600">⠿</span>
                 )}
               </div>
             </div>
@@ -308,10 +308,10 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           {/* Küçültme büyük bir fotoğrafta bir saniye sürebiliyor; sessiz
               kalırsa dokunuş işlememiş gibi duruyor. */}
           <button onClick={() => dosyaGirdi.current?.click()} disabled={hazirlaniyor}
-            className="w-full rounded-sm border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-[13px] text-murekkep2 disabled:opacity-50">
+            className="w-full rounded-md border border-dashed border-[var(--cizgi)] bg-transparent py-2.5 text-sm text-gri-600 disabled:opacity-50">
             {hazirlaniyor ? "Fotoğraf hazırlanıyor…" : "+ Fotoğraf / video ekle"}
           </button>
-          <p className="mt-1.5 text-[11.5px] leading-snug text-murekkep2">
+          <p className="mt-1.5 text-xs leading-snug text-gri-600">
             Birden fazla ekleyebilirsin; her birine ayrı not yazabilirsin.
             {medyalar.length > 1 && " Sürükleyerek sıralayabilirsin — ilk sıradaki kapak olur."}
           </p>
@@ -355,7 +355,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
             <input id="puan" type="range" min={1} max={10} step={0.5} value={puan}
               onChange={(e) => setPuan(Number(e.target.value))}
               className="h-1 flex-1 accent-[var(--color-jeton)]" />
-            <output className="w-10 shrink-0 text-right font-sayi text-[17px] font-bold text-jeton">
+            <output className="w-10 shrink-0 text-right font-sayi text-lg font-bold text-jeton">
               {puan}
             </output>
           </div>
@@ -370,7 +370,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
             className={girdi + " resize-none leading-snug"} />
           {/* Sayaç yalnızca yazmaya başlayınca: boşken "0/1000" görmek, boş
               bırakılamazmış gibi duruyordu. */}
-          <div className="mt-1 text-right font-sayi text-[11px] text-murekkep2">
+          <div className="mt-1 text-right font-sayi text-xs text-gri-600">
             {metin.trim().length
               ? `${metin.trim().length}/${METIN_MAX}`
               : "İstersen boş bırak"}
@@ -379,7 +379,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
         {/* ---- isteğe bağlı ---- */}
         <details className={alan}>
-          <summary className="cursor-pointer font-tabela text-[11px] uppercase tracking-[0.12em] text-murekkep2">
+          <summary className="cursor-pointer font-tabela text-xs uppercase tracking-[0.12em] text-gri-600">
             İstersen birkaç şey daha
           </summary>
           <div className="mt-3 space-y-3">
@@ -412,13 +412,13 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
           </div>
         </details>
 
-        <p className="px-4 py-3.5 text-[12px] leading-relaxed text-murekkep2">
+        <p className="px-4 py-3.5 text-sm leading-relaxed text-gri-600">
           Fotoğraf, üç kelime, senaryo, puan ve somut bir not zorunlu.
           “Çok güzeldi” yazan pin kimseye yaramıyor.
         </p>
 
         {hata && (
-          <p className="mx-4 mb-3 rounded-sm border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-[13px] leading-snug">
+          <p className="mx-4 mb-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm leading-snug">
             {hata}
           </p>
         )}
@@ -435,9 +435,9 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
         />
       )}
 
-      <div className="shrink-0 border-t border-[var(--cizgi)] bg-yuzey p-3">
+      <div className="shrink-0 bg-yuzey p-3">
         <button onClick={gonder} disabled={!gecerli || gonderiliyor}
-          className="w-full rounded-sm border-none bg-jeton px-3 py-2.5 font-tabela text-[12.5px] uppercase tracking-[0.11em] text-white disabled:opacity-40">
+          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
           {gonderiliyor ? "Yükleniyor…" : "Paylaş"}
         </button>
       </div>
@@ -450,8 +450,8 @@ const Zorunlu = () => <span className="text-[#E0271C]">*</span>;
 export function Cip({ secili, onTikla, children }: { secili: boolean; onTikla: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onTikla} aria-pressed={secili}
-      className={`rounded-sm px-2.5 py-1.5 text-[12.5px] ${
-        secili ? "border-none bg-jeton text-white" : "border border-[var(--cizgi)] bg-yuzey text-murekkep"
+      className={`rounded-md px-2.5 py-1.5 text-sm ${
+        secili ? "border-none bg-gri-900 text-white" : "bg-yuzey shadow-kat-1 text-murekkep"
       }`}>
       {children}
     </button>
@@ -461,14 +461,14 @@ export function Cip({ secili, onTikla, children }: { secili: boolean; onTikla: (
 function SeciliYer({ yer, onKaldir }: { yer: Yer; onKaldir: () => void }) {
   return (
     <div style={igneStil(yer.tur)}
-         className="flex items-center gap-2.5 rounded-sm border border-[var(--cizgi)] bg-[var(--kag)] p-2.5">
+         className="flex items-center gap-2.5 rounded-lg shadow-kat-1 bg-[var(--kag)] p-2.5">
       <div dangerouslySetInnerHTML={{ __html: simgeSvg(yer.tur, 20, "var(--pin)") }} />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13.5px] font-semibold">{yer.ad}</div>
-        <div className="font-sayi text-[11px] text-murekkep2">{yer.semt}</div>
+        <div className="truncate text-base font-semibold">{yer.ad}</div>
+        <div className="font-sayi text-xs text-gri-600">{yer.semt}</div>
       </div>
       <button onClick={onKaldir} aria-label="Mekanı değiştir"
-        className="shrink-0 border-none bg-transparent p-0 text-[13px] text-murekkep2 underline">
+        className="shrink-0 border-none bg-transparent p-0 text-sm text-gri-600 underline">
         değiştir
       </button>
     </div>
@@ -497,11 +497,11 @@ export function Onizleme({ dosya }: { dosya: File }) {
 
   if (video) {
     return (
-      <div className="grid size-[52px] shrink-0 place-items-center rounded-sm bg-[#3B2C12] text-[18px] text-white">
+      <div className="grid size-[52px] shrink-0 place-items-center rounded-md bg-[#3B2C12] text-xl text-white">
         ▶
       </div>
     );
   }
   /* eslint-disable-next-line @next/next/no-img-element */
-  return <img ref={gorsel} alt="" className="size-[52px] shrink-0 rounded-sm object-cover" />;
+  return <img ref={gorsel} alt="" className="size-[52px] shrink-0 rounded-md object-cover" />;
 }
