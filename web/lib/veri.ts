@@ -360,13 +360,14 @@ export async function pinYorumlari(pinId: string): Promise<Yorum[]> {
 
 /* ---------- kişiler ---------- */
 
-const PROFIL_SECIM = "id, username, display_name, bio, avatar_url, pin_count, follower_count, following_count, is_public";
+const PROFIL_SECIM = "id, username, display_name, bio, avatar_url, pin_count, follower_count, following_count, is_public, twitter, instagram, tiktok";
 
 interface HamProfil {
   id: string; username: string; display_name: string; bio: string | null;
   avatar_url: string | null; pin_count: number;
   follower_count: number; following_count: number;
   is_public?: boolean;
+  twitter?: string | null; instagram?: string | null; tiktok?: string | null;
 }
 
 /* `ben` burada işaretlenmiyor: veri katmanı oturumu bilmiyor. Kim olduğunu
@@ -375,6 +376,7 @@ const profilCevir = (p: HamProfil): Kisi => ({
   id: p.id, ad: p.display_name, k: p.username, bio: p.bio ?? "",
   foto: p.avatar_url, takipci: p.follower_count, takip: p.following_count,
   pinSayisi: p.pin_count, acikMi: p.is_public ?? true,
+  twitter: p.twitter ?? null, instagram: p.instagram ?? null, tiktok: p.tiktok ?? null,
 });
 
 export async function benimProfilim(): Promise<Kisi | null> {
@@ -711,6 +713,21 @@ export async function begendimMi(pinId: string): Promise<boolean> {
   const { data } = await db.from("pin_likes").select("pin_id")
     .eq("pin_id", pinId).eq("user_id", id).maybeSingle();
   return !!data;
+}
+
+/**
+ * Bu pinlerden hangilerini beğenmişim — TEK sorguda.
+ *
+ * Akış kartlarının her birinde beğeni düğmesi var ve her biri için ayrı
+ * `begendimMi()` çağırmak 20 kartlık bir akışta 20 istek demekti. Kart
+ * listesi zaten elde olduğu için tek `in` sorgusu yetiyor.
+ */
+export async function begendiklerimden(pinIdler: string[]): Promise<Set<string>> {
+  const id = await benimKimligim();
+  if (!id || !pinIdler.length) return new Set();
+  const { data } = await db.from("pin_likes")
+    .select("pin_id").eq("user_id", id).in("pin_id", pinIdler);
+  return new Set((data ?? []).map((r) => r.pin_id as string));
 }
 
 export async function kayitDegistir(yerId: string, kayitli: boolean) {
@@ -1136,6 +1153,31 @@ export function kucukUrl(url: string | null | undefined, genislik: number): stri
   return url;
 }
 
+/**
+ * Oranı BOZMAYAN küçük kopya.
+ *
+ * kucukUrl() fotoğrafı KAREYE kırpıyor (width=height + resize=cover) ve bu
+ * pin küçük resimleri için doğru: onlar kare kutularda duruyor, kadrajı da
+ * kimse seçmiyor.
+ *
+ * Liste kapağında ise kadrajı KULLANICI seçiyor (lists.cover_pos, göç 16).
+ * CDN fotoğrafı kareye kırparsa üstü ve altı tarayıcıya hiç gelmiyor;
+ * object-position olmayan pikseli gösteremeyeceği için sürükleme sessizce
+ * hiçbir şey yapmıyordu — değer değişiyor, görüntü değişmiyordu. Burada
+ * fotoğraf tam boyuyla iniyor, kırpmayı CSS yapıyor.
+ *
+ * `resize=contain` ŞART: yalnızca `width` verilince Supabase yüksekliğe
+ * dokunmuyor ve 600×1200'ü 320×1200 diye eziyor (ölçüldü). contain, tek
+ * kenar verildiğinde diğerini oranla hesaplıyor.
+ */
+export function oranliKucukUrl(url: string | null | undefined, genislik: number): string | null {
+  if (!url) return null;
+  if (!url.includes("/storage/v1/object/public/")) return kucukUrl(url, genislik);
+  const t = url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
+  const ayrac = t.includes("?") ? "&" : "?";
+  return `${t}${ayrac}width=${genislik}&resize=contain&quality=65`;
+}
+
 /* ---------- arşiv ---------- */
 
 /** Beğendiğim pinler — arşiv ekranı */
@@ -1286,10 +1328,18 @@ export async function listeKapakYukle(dosya: Blob, uzanti = "jpg"): Promise<stri
 /**
  * Kapak URL'sinden kova yolunu çıkarıp dosyayı siler.
  *
+ * Dışarıya `listeKapagiSil` adıyla açılıyor: kapak listeden ÖNCE
+ * yüklendiği için (form iptal edilebilir) çağıranın öksüz kalan dosyayı
+ * temizlemesi gerekiyor.
+ *
  * Sessiz: temizlik başarısız olursa kullanıcının yaptığı iş (liste silindi,
  * kapak değişti) zaten bitmiş durumda — yüzüne hata basmanın anlamı yok,
  * geriye yalnızca artık dosya kalır.
  */
+export async function listeKapagiSil(url: string | null) {
+  return kapakDosyasiniSil(url);
+}
+
 async function kapakDosyasiniSil(url: string | null) {
   if (!url) return;
   const ayrac = `/storage/v1/object/public/${KAPAK_KOVA}/`;
@@ -1304,8 +1354,31 @@ async function kapakDosyasiniSil(url: string | null) {
 
 /* ---------- profil düzenleme ---------- */
 
+/**
+ * Sosyal hesap girdisini saklanabilir hâle getirir.
+ *
+ * Kullanıcı "@ad", "instagram.com/ad", "https://x.com/ad?igsh=..." — hepsini
+ * yapıştırıyor. Hepsi aynı şeyi kastediyor ve şemadaki kısıt (göç 17) yalnızca
+ * düz kullanıcı adını kabul ediyor; temizlik burada, TEK yerde yapılıyor ki
+ * üç ayrı alan üç ayrı kural öğrenmesin.
+ *
+ * Boş sonuç null dönüyor: boş string kısıta takılırdı ve "alanı boşalttım"
+ * ile "hiç girmedim" aynı şey.
+ */
+export function sosyalTemizle(deger: string): string | null {
+  const g = deger.trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    /* x.com/ad, instagram.com/ad/, tiktok.com/@ad → ad */
+    .replace(/^[^/]*\//, (e) => (e.includes(".") ? "" : e))
+    .split(/[/?#]/)[0]
+    .replace(/^@+/, "");
+  return /^[A-Za-z0-9_.]{1,50}$/.test(g) ? g : null;
+}
+
 export async function profilGuncelle(alanlar: {
   ad?: string; bio?: string; acikMi?: boolean; avatarUrl?: string | null;
+  twitter?: string | null; instagram?: string | null; tiktok?: string | null;
 }) {
   const id = await benimKimligim();
   if (!id) throw new Error("Giriş gerekiyor.");
@@ -1318,6 +1391,13 @@ export async function profilGuncelle(alanlar: {
   if (alanlar.bio !== undefined) yama.bio = alanlar.bio.trim().slice(0, 200) || null;
   if (alanlar.acikMi !== undefined) yama.is_public = alanlar.acikMi;
   if (alanlar.avatarUrl !== undefined) yama.avatar_url = alanlar.avatarUrl;
+  /* Sosyal alanlar sunucuya girmeden temizleniyor: şemadaki kısıt (göç 17)
+     "@" ya da URL kabul etmiyor, temizlenmemiş değer 23514 hatasıyla döner
+     ve kullanıcı neyi yanlış yaptığını anlamazdı. */
+  for (const ad of ["twitter", "instagram", "tiktok"] as const) {
+    const v = alanlar[ad];
+    if (v !== undefined) yama[ad] = v ? sosyalTemizle(v) : null;
+  }
   const { error } = await db.from("profiles").update(yama).eq("id", id);
   if (error) throw error;
 }

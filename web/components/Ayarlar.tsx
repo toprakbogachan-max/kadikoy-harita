@@ -146,7 +146,7 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
               ekranda kalıyordu, arşiv sayıları 0'a düşüp çıkış düğmesi
               kayboluyordu — kullanıcıya "düğme çalışmadı" gibi görünüyordu. */}
           <button onClick={async () => { await cikisYap(); onKapat(); }}
-            className="w-full rounded-lg bg-yuzey shadow-kat-1 px-3 py-2.5 font-tabela text-sm uppercase tracking-[0.11em] text-murekkep">
+            className="w-full rounded-lg bg-yuzey shadow-kat-1 px-3 py-2.5 text-sm font-semibold lowercase tracking-ui text-murekkep">
             Çıkış yap
           </button>
         </div>

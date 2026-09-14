@@ -143,7 +143,7 @@ export default function PinDuzenle({
   };
 
   const alan = "px-4 py-3.5";
-  const etiket = "mb-2 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
+  const etiket = "mb-2 block text-2xs font-bold uppercase tracking-etiket text-gri-600";
   const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton";
 
   return (
@@ -285,7 +285,7 @@ export default function PinDuzenle({
         <div className={alan}>
           <label className={etiket} htmlFor="d-puan">
             Bana hitap puanı
-            <span className="ml-2 font-sayi normal-case tracking-normal text-jeton">{puan}</span>
+            <span className="ml-2 font-sayi normal-case tracking-normal text-gri-900">{puan}</span>
           </label>
           <input id="d-puan" type="range" min={1} max={10} step={0.5} value={puan}
             onChange={(e) => setPuan(Number(e.target.value))} className="w-full" />

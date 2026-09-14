@@ -130,7 +130,7 @@ export default function Yorumlar({
           <button
             type="submit"
             disabled={gonderiliyor || !metin.trim()}
-            className="shrink-0 rounded-full border-none bg-gri-900 px-3.5 py-2 font-tabela text-sm uppercase tracking-[0.11em] text-white disabled:opacity-40"
+            className="shrink-0 rounded-full border-none bg-gri-900 px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-white disabled:opacity-40"
           >
             {gonderiliyor ? "…" : "Gönder"}
           </button>

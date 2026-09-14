@@ -3,9 +3,14 @@
 import { useEffect, useState } from "react";
 import { listeSil } from "@/lib/veri";
 import type { Pin, Yer, Liste } from "@/lib/model";
-import { igneStil, egim, fotoZemin, simgeSvg, zaman, zeminSimgeRengi } from "@/lib/gorsel";
+import { fotoZemin, simgeSvg, zaman, zeminSimgeRengi } from "@/lib/gorsel";
 import Avatar from "./Avatar";
 import ListeSayfasi from "./ListeSayfasi";
+import ListeKapagi from "./ListeKapagi";
+import KayanGecis from "./KayanGecis";
+
+/* Arşiv sekmelerinin soldan sağa sırası — geçiş yönü bundan türüyor. */
+const ARSIV_SIRASI = ["kaydettiklerim", "begendiklerim", "listelerim"] as const;
 
 interface Props {
   tur: "kaydettiklerim" | "begendiklerim" | "listelerim";
@@ -72,7 +77,7 @@ export default function Arsiv({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <KayanGecis anahtar={tur} sira={ARSIV_SIRASI} className="min-h-0 flex-1 overflow-y-auto p-4">
         {hata && (
           <p className="mb-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
             {hata}
@@ -82,24 +87,26 @@ export default function Arsiv({
         {/* ---- kaydedilen mekanlar ---- */}
         {tur === "kaydettiklerim" && (
           yerler.length ? (
-            <div className="grid grid-cols-2 gap-3">
-              {yerler.map((y, i) => (
+            /* Post-it kalktı (kağıt + toplu iğne + eğiklik). Profildeki pin
+               ızgarasıyla BİREBİR aynı dil: kare kapak, ad kapağın altında,
+               kategori rengi yok. İki ekran aynı şeyi gösteriyor, farklı
+               görünmeleri için sebep yok. */
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+              {yerler.map((y) => (
                 <button key={y.id} onClick={() => onYerAc(y.id)}
-                  style={{ ...igneStil(y.tur), transform: `rotate(${egim(i)}deg)` }}
-                  className="relative aspect-[0.86] rounded-md border-none bg-[var(--kag)] p-[3px] shadow-kat-1">
-                  <Igne />
-                  <div className="relative grid size-full place-items-center overflow-hidden rounded-md"
-                       style={{ background: fotoZemin(y.tur) }}>
+                  className="block w-full border-none bg-transparent p-0 text-left">
+                  <div className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-lg shadow-kat-1"
+                       style={{ background: fotoZemin() }}>
                     {y.kapak ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={y.kapak} alt="" className="size-full object-cover" />
                     ) : (
-                      <span className="opacity-55" dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 34, zeminSimgeRengi(y.tur)) }} />
+                      <span className="opacity-55" dangerouslySetInnerHTML={{ __html: simgeSvg(y.tur, 44, zeminSimgeRengi()) }} />
                     )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(0,0,0,.62)] to-transparent px-2 pb-[7px] pt-4 text-left">
-                      <span className="block truncate text-xs font-semibold leading-tight text-white">{y.ad}</span>
-                      <span className="block font-sayi text-2xs text-white/75">{y.semt}</span>
-                    </div>
+                  </div>
+                  <div className="px-0.5 pt-2 text-center">
+                    <div className="line-clamp-2 text-base font-extrabold leading-tight tracking-isim">{y.ad}</div>
+                    <div className="mt-0.5 text-2xs lowercase text-gri-600">{y.semt}</div>
                   </div>
                 </button>
               ))}
@@ -122,7 +129,7 @@ export default function Arsiv({
                       <span className="flex items-center gap-1.5">
                         <Avatar kisi={p.kisi} boyut={16} />
                         <span className="truncate text-sm font-semibold">{p.yerAdi}</span>
-                        <span className="ml-auto shrink-0 font-sayi text-sm font-bold text-jeton">{p.puan}</span>
+                        <span className="ml-auto shrink-0 font-sayi text-sm font-bold text-gri-900">{p.puan}</span>
                       </span>
                       {p.metin.trim() && (
                         <span className="mt-1 line-clamp-2 block text-sm leading-snug text-gri-600">
@@ -147,20 +154,18 @@ export default function Arsiv({
             </button>
             {gorunenListeler.length ? (
               <ul className="m-0 list-none space-y-3 p-0">
-                {gorunenListeler.map((l, i) => (
-                  <li key={l.id}
-                      style={{ ["--pin" as string]: "#B8801A", ["--pin-isik" as string]: "#E0A33E",
-                               ["--pin-koyu" as string]: "#8A5E0E", transform: `rotate(${egim(i)}deg)` }}
-                      className="relative rounded-md bg-[#EFE6CC] p-[3px] shadow-kat-1">
-                    <Igne />
+                {gorunenListeler.map((l) => (
+                  <li key={l.id} className="relative rounded-lg bg-yuzey p-0 shadow-kat-1">
                     {/* Kart gövdesi listeyi açıyor; silme düğmesi DIŞINDA
                         kalıyor, yoksa silmeye dokunmak listeyi de açardı. */}
                     <button onClick={() => setAcikListe(l)}
                             className="block w-full border-none bg-transparent p-0 text-left">
-                      <div className="flex h-[54px] overflow-hidden rounded-md">
-                        {l.yerler.slice(0, 4).map((y) => (
-                          <div key={y.id} className="flex-1" style={{ background: fotoZemin(y.tur) }} />
-                        ))}
+                      {/* Kapak profil ızgarasındakiyle aynı kaynaktan: liste
+                          nerede görünürse görünsün aynı fotoğrafla tanınmalı.
+                          Kapak yoksa ListeKapagi zaten mekanların renk
+                          kolajına düşüyor — eski davranışın ta kendisi. */}
+                      <div className="h-[54px] overflow-hidden rounded-md">
+                        <ListeKapagi liste={l} genislik={320} />
                       </div>
                     </button>
                     <div className="flex items-start gap-2 px-2 pb-2.5 pt-2">
@@ -191,14 +196,10 @@ export default function Arsiv({
             ) : <Bos>Henüz listen yok. Yağmurlu günler, tek başına oturmalar… kendi seçkini yap.</Bos>}
           </>
         )}
-      </div>
+      </KayanGecis>
     </div>
   );
 }
-
-const Igne = () => (
-  <span className="absolute -top-[5px] left-1/2 z-[2] size-2.5 -translate-x-1/2 rounded-full shadow-[0_1.5px_2px_rgba(74,58,30,.4)] [background:radial-gradient(circle_at_34%_30%,#fff_0%,var(--pin-isik)_16%,var(--pin)_55%,var(--pin-koyu)_100%)]" />
-);
 
 const Bos = ({ children }: { children: React.ReactNode }) => (
   <p className="px-1 py-6 text-sm leading-relaxed text-gri-600">{children}</p>

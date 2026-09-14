@@ -1,7 +1,6 @@
 "use client";
 
 import { KADIKOY_YOLU, KADIKOY_KUTU, KADIKOY_ORAN, miniX, miniY } from "@/lib/kadikoy-sekli";
-import { RENK } from "@/lib/paleti";
 import type { Yer } from "@/lib/model";
 
 /**
@@ -38,7 +37,7 @@ export default function MiniHarita({
     >
       <rect width="100%" height="100%" fill="#D2DFE2" />
       {/* kara parçası */}
-      <path d={KADIKOY_YOLU} fill="#F4EEE0" stroke="#E2D7BE" strokeWidth="0.6" />
+      <path d={KADIKOY_YOLU} fill="#F4F4F3" stroke="#DCDCDB" strokeWidth="0.6" />
 
       {cizilecek.map((y) => (
         <circle
@@ -46,7 +45,11 @@ export default function MiniHarita({
           cx={miniX(y.lng)}
           cy={miniY(y.lat)}
           r={noktaBoyutu}
-          fill={RENK[y.tur]?.ana ?? "#B8801A"}
+          /* Kategori rengi YOK: ana haritada da çekildi, burada kalsaydı
+             profil dokuz renkli bir serpme gibi görünürdü. Mini harita
+             "pinlerin nereye dağıldığı" sorusunu cevaplıyor, "ne türler
+             olduğunu" değil. */
+          fill="#3A3A3D"
           stroke="#fff"
           strokeWidth={noktaBoyutu * 0.24}
         />

@@ -71,7 +71,7 @@ export default function BuyukGorsel({
             görselden dikkat çalıyordu. */
          className="absolute inset-0 z-[48] flex flex-col bg-[#0C0905]">
       <div className="flex shrink-0 items-center justify-between p-3">
-        <span className="font-tabela text-2xs uppercase tracking-[0.12em] text-white/45">
+        <span className="text-2xs font-bold uppercase tracking-etiket text-white/45">
           {kirpilabilir ? "sürükle · büyüt küçült" : ""}
         </span>
         <button onClick={onKapat} aria-label="Kapat"
@@ -149,7 +149,7 @@ function NotAlani({
 }: { not: string; onNot: (v: string) => void; alan: React.RefObject<HTMLTextAreaElement | null> }) {
   return (
     <>
-      <label className="mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-white/60">
+      <label className="mb-1.5 block text-2xs font-bold uppercase tracking-etiket text-white/60">
         Bu görselin notu
       </label>
       <textarea
@@ -159,7 +159,7 @@ function NotAlani({
         maxLength={120}
         rows={2}
         placeholder="İsteğe bağlı"
-        className="w-full resize-none rounded-md border border-white/20 bg-white/10 px-3 py-2.5 text-base leading-snug text-white outline-none placeholder:text-white/40 focus:border-[#F2C879]"
+        className="w-full resize-none rounded-md border border-white/20 bg-white/10 px-3 py-2.5 text-base leading-snug text-white outline-none placeholder:text-white/40 focus:border-white/60"
       />
       <div className="mt-1 text-right font-sayi text-2xs text-white/45">{not.length}/120</div>
     </>
@@ -363,7 +363,7 @@ function Kirpici({
             step={0.01}
             value={yakin}
             onChange={(e) => yakinDegis(Number(e.target.value))}
-            className="h-1 flex-1 appearance-none rounded-full bg-white/25 accent-[#F2C879]"
+            className="h-1 flex-1 appearance-none rounded-full bg-white/25 accent-white"
           />
           <span className="font-tabela text-base leading-none text-white/50">+</span>
         </div>

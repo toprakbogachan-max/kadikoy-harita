@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { listeGuncelle, listeSil } from "@/lib/veri";
+import { useEffect, useRef, useState } from "react";
+import { listeGuncelle, listeSil, listeKapagiSil } from "@/lib/veri";
 import type { Liste } from "@/lib/model";
 import ListeKapakSecici from "./ListeKapakSecici";
 
@@ -39,11 +39,27 @@ export default function ListeDuzenle({
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
+  /* Oluşturma ekranındakiyle aynı sızıntı: burada yeni bir kapak yükleyip
+     vazgeçilirse dosya kovada sahipsiz kalır. Kaydedilen kapağı
+     listeGuncelle zaten devralıyor (eskisini o siliyor); burada yalnızca
+     KAYDEDİLMEYENLER temizleniyor. Listenin mevcut kapağı bu listeye hiç
+     girmiyor, yanlışlıkla silinemez. */
+  const yuklenenler = useRef<string[]>([]);
+  const kaydedildi = useRef(false);
+  const sonKapak = useRef<string | null>(liste.kapak);
+
   useEffect(() => {
     const el = (e: KeyboardEvent) => { if (e.key === "Escape" && !kaydediliyor) onKapat(); };
     window.addEventListener("keydown", el);
     return () => window.removeEventListener("keydown", el);
   }, [onKapat, kaydediliyor]);
+
+  useEffect(() => () => {
+    for (const u of yuklenenler.current) {
+      if (kaydedildi.current && u === sonKapak.current) continue;
+      void listeKapagiSil(u);
+    }
+  }, []);
 
   const degisti =
     baslik.trim() !== liste.baslik ||
@@ -61,6 +77,7 @@ export default function ListeDuzenle({
         ...(kapak.url !== liste.kapak ? { kapakUrl: kapak.url } : {}),
         ...(kapak.konum !== liste.kapakKonum ? { kapakKonum: kapak.konum } : {}),
       });
+      kaydedildi.current = true;
       onKaydedildi({
         ...liste,
         baslik: baslik.trim(),
@@ -107,7 +124,11 @@ export default function ListeDuzenle({
         <div className="mb-5">
           <ListeKapakSecici
             liste={{ kapak: kapak.url, kapakKonum: kapak.konum, yerler: liste.yerler }}
-            onDegisti={(k) => setKapak({ url: k.url, konum: k.konum })}
+            onDegisti={(k) => {
+              if (k.url && k.url !== liste.kapak) yuklenenler.current.push(k.url);
+              sonKapak.current = k.url;
+              setKapak({ url: k.url, konum: k.konum });
+            }}
             devreDisi={kaydediliyor}
           />
         </div>

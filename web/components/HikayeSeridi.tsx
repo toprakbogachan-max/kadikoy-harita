@@ -65,7 +65,7 @@ export default function HikayeSeridi({ secili, onSec, acik = true, onAc }: Props
               </span>
             ))}
           </span>
-          <span className={`text-2xs font-semibold ${yeniPinliler.length ? "text-jeton" : "text-gri-600"}`}>
+          <span className={`text-2xs font-semibold ${yeniPinliler.length ? "text-gri-900" : "text-gri-600"}`}>
             {yeniPinliler.length ? `${yeniPinliler.length} yeni pin` : "takip ettiklerin"}
           </span>
         </button>

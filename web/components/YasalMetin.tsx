@@ -34,7 +34,7 @@ export default function YasalMetin({ tur, onKapat }: { tur: Tur; onKapat: () => 
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-base leading-relaxed">
-        <div className="mb-4 rounded-md border border-[rgba(184,128,26,.4)] bg-[rgba(184,128,26,.08)] p-3 text-sm leading-snug">
+        <div className="mb-4 rounded-md border border-[rgba(0,0,0,.12)] bg-[rgba(16,16,20,.05)] p-3 text-sm leading-snug">
           <b>Bu bir demo.</b> Kadıköy Harita henüz yayında değil, geliştirme
           aşamasında. Aşağıdaki metin hukukçu tarafından hazırlanmadı; gerçek
           kullanıcıya açılmadan önce bir avukata danışılması gerekiyor.
@@ -47,7 +47,7 @@ export default function YasalMetin({ tur, onKapat }: { tur: Tur; onKapat: () => 
 }
 
 const B = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="mb-1.5 mt-4 font-tabela text-xs uppercase tracking-[0.12em] text-gri-600">
+  <h3 className="mb-1.5 mt-4 text-2xs font-bold uppercase tracking-etiket text-gri-600">
     {children}
   </h3>
 );

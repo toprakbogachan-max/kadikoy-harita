@@ -2,17 +2,24 @@
  * Görsel yardımcılar — prototipteki jeton pin ve post-it dilinin karşılığı.
  * Tasarım kararları BRIEF.md → "Tasarım dili" bölümünden gelir.
  */
-import { RENK, KAGIT, SIMGE } from "./paleti";
+import { SIMGE, TUR_AD, EMOJI } from "./paleti";
 import type { Yer } from "./model";
 
 /** post-it kağıdı + toplu iğne renkleri, kategoriden türer */
-export function igneStil(tur: string): React.CSSProperties {
-  const r = RENK[tur] ?? RENK.kahve;
+/**
+ * Toplu iğne ve post-it kağıdı değişkenleri.
+ *
+ * Mantar pano metaforu bitti; kategoriye göre renk üretmiyor artık. Hâlâ
+ * duruyor çünkü birkaç ekran bu CSS değişkenlerini okuyor — hepsi nötre
+ * bağlandı, yani iğne başı ve kağıt her kategoride aynı. Çağıranlar tek
+ * tek temizlenince bu fonksiyon da silinecek.
+ */
+export function igneStil(_tur?: string): React.CSSProperties {
   return {
-    ["--pin" as string]: r.ana,
-    ["--pin-isik" as string]: r.isik,
-    ["--pin-koyu" as string]: r.golge,
-    ["--kag" as string]: KAGIT[tur] ?? "#FBF3D9",
+    ["--pin" as string]: "#A8A8AB",
+    ["--pin-isik" as string]: "#DCDCDB",
+    ["--pin-koyu" as string]: "#6B6B70",
+    ["--kag" as string]: "#FFFFFF",
   };
 }
 
@@ -31,21 +38,14 @@ export const egim = (i: number) => [-0.8, 0.6, -0.4, 0.9, -0.6][i % 5];
  * Bu, "doygunluk alanla ters orantılı" kuralının ızgaraya uygulanması —
  * fotoZeminGenis() aynı şeyi tam ekran için geceye karıştırarak yapıyor.
  */
-export const fotoZemin = (tur: string) => {
-  const r = RENK[tur] ?? RENK.kahve;
-  return `linear-gradient(150deg,
-    color-mix(in oklab, ${r.isik} 40%, #FFFFFF) 0%,
-    color-mix(in oklab, ${r.ana} 24%, #F1EDE6) 100%)`;
-};
+export const fotoZemin = (_tur?: string) =>
+  `linear-gradient(150deg, #F7F7F6 0%, #EAEAE9 100%)`;
 
 /**
- * fotoZemin() üstünde duran simgenin rengi.
- *
- * Zemin artık açık olduğu için simge beyaz çizilemez — görünmez olur.
- * Kategorinin koyu tonu hem okunuyor hem de kategori ipucunu ikinci kez
- * veriyor (Corner'ın kategoriyi renkten ikona taşıma kuralı).
+ * fotoZemin() üstünde duran simgenin rengi. Kategoriye göre DEĞİŞMİYOR —
+ * tek nötr gri. Kategoriyi emoji taşıyor.
  */
-export const zeminSimgeRengi = (tur: string) => (RENK[tur] ?? RENK.kahve).golge;
+export const zeminSimgeRengi = (_tur?: string) => "#A8A8AB";
 
 /**
  * Tam ekran zemin — ızgara kartındakinin kısılmış hâli.
@@ -63,12 +63,8 @@ export const zeminSimgeRengi = (tur: string) => (RENK[tur] ?? RENK.kahve).golge;
 /* Palet nötre döndüğü için gece de nötr: ılık kahve (#1B1510) yeni
    kırık beyaz zeminin yanında sepya bir leke gibi duruyordu. */
 const GECE = "#141416";
-export const fotoZeminGenis = (tur: string) => {
-  const r = RENK[tur] ?? RENK.kahve;
-  return `linear-gradient(160deg,
-    color-mix(in oklab, ${r.ana} 16%, ${GECE}) 0%,
-    color-mix(in oklab, ${r.golge} 9%, ${GECE}) 100%)`;
-};
+export const fotoZeminGenis = (_tur?: string) =>
+  `linear-gradient(160deg, #1E1E21 0%, ${GECE} 100%)`;
 
 /**
  * "3 sa", "2 gün" — geçen süre.
@@ -111,8 +107,6 @@ export function acikMi(saatler: number[][] | null | undefined, t: Date): boolean
 export const simgeSvg = (tur: string, boyut: number, renk = "#FFFFFF") =>
   `<svg width="${boyut}" height="${boyut}" viewBox="0 0 24 24" fill="none" stroke="${renk}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${SIMGE[tur] ?? ""}</svg>`;
 
-const ALEV =
-  "M12 1.4c0 0-1.1 3.3-3.3 5.3C6.3 8.8 5.1 10.8 5.1 13.3a6.9 6.9 0 0 0 13.8 0c0-2.2-.9-3.9-2.3-5.3-.6.9-1.3 1.3-2 1.1 1-2.5-.3-5.8-2.6-7.7z";
 
 /**
  * Sessiz nokta — pini olmayan mekanlar için.
@@ -123,14 +117,43 @@ const ALEV =
  * mekan sayfasını açıp oraya ilk pini atabilmek için. Nokta bu ikisini
  * uzlaştırıyor: görünür ama öne çıkmıyor.
  */
-export function noktaSVG(y: Pick<Yer, "tur">, acik: boolean | null): string {
-  const r = RENK[y.tur] ?? RENK.kapali;
+export function noktaSVG(_y: Pick<Yer, "tur">, acik: boolean | null): string {
+  /* Kategori rengi YOK. Dokuz kategori dokuz renk demekti ve yakınlaşınca
+     harita bir renk tablosuna dönüyordu. Pinsiz mekan zaten sessiz bir iz;
+     tek bilgisi "burada bir yer var". Açık/kapalı ayrımı tonla veriliyor. */
   const S = 13, m = S / 2;
   return `<svg viewBox="0 0 ${S} ${S}" width="${S}" height="${S}" style="display:block">
-    <circle cx="${m}" cy="${m}" r="${m - 2.2}" fill="${acik === false ? RENK.kapali.ana : r.ana}"
-            fill-opacity="0.78"
+    <circle cx="${m}" cy="${m}" r="${m - 2.2}" fill="${acik === false ? "#C3C3C4" : "#86868A"}"
+            fill-opacity="0.85"
             stroke="#fff" stroke-width="1.6" stroke-opacity=".9"/>
   </svg>`;
+}
+
+/**
+ * Fotoğrafı OLMAYAN pinli mekanın işareti — emoji marker.
+ *
+ * Eski jetonSVG'nin yerini alıyor. O, kategoriyi dokuz doygun renkle
+ * anlatıyordu; altlık sessizleştirilse bile harita bir renk tablosu gibi
+ * okunuyordu ve fotoğraflı marker'larla aynı dili konuşmuyordu. Artık
+ * fotoğraflı marker'la BİREBİR aynı kabuk (.foto-marker) kullanılıyor,
+ * içindeki tek fark: fotoğraf yerine kategori emojisi.
+ *
+ * Böylece haritada tek bir işaret dili kalıyor — dolu daire — ve içindeki
+ * şey ya mekanın fotoğrafı ya da emojisi oluyor.
+ */
+export function emojiMarkerHTML(
+  y: Pick<Yer, "tur" | "ad">,
+  acik: boolean | null,
+  populer: boolean,
+  secili = false,
+): string {
+  return `<span class="foto-marker${populer ? " populer" : ""}${acik === false ? " kapali" : ""}">
+    <span class="foto-marker-kutu foto-marker-emoji">${EMOJI[y.tur] ?? EMOJI.diger}</span>
+    ${secili ? `<span class="foto-marker-etiket">
+      <b>${kacir(y.ad)}</b>
+      <i>${populer ? "popüler · " : ""}${kacir(TUR_AD[y.tur] ?? y.tur).toLocaleLowerCase("tr")}</i>
+    </span>` : ""}
+  </span>`;
 }
 
 /** Metni HTML özniteliğine güvenle koymak için. */
@@ -149,7 +172,7 @@ const kacir = (m: string) =>
  * URL'i ÇAĞIRAN küçültüyor (veri.ts'teki kucukUrl); burada boyut seçimi yok,
  * yoksa her marker 280 KB'lık dosyayı indirirdi.
  *
- * Yüklenemezse (ağ, silinmiş dosya) onerror jetona düşürüyor: boş beyaz
+ * Yüklenemezse (ağ, silinmiş dosya) onerror EMOJİ marker'ına düşürüyor: boş beyaz
  * kare bırakmak mekanı haritadan silmek olurdu. loading="lazy" YOK — marker
  * haritanın içinde dönüştürülmüş bir katmanda durduğu için tarayıcı onu
  * görünürde saymıyordu ve ekrandaki işaretler boş beyaz kare kalıyordu;
@@ -157,78 +180,27 @@ const kacir = (m: string) =>
  */
 export function fotoMarkerHTML(
   url: string,
-  y: Pick<Yer, "tur">,
+  y: Pick<Yer, "tur" | "ad">,
   acik: boolean | null,
   populer: boolean,
+  /* Seçili marker adını YANINDA taşıyor: yarım açılımda çekmece ekranın
+     yarısını kaplıyor ve hangi pine dokunduğun yalnızca konumdan
+     anlaşılmıyordu. Referansta da seçili işaretin yanında ad + eğik bir
+     alt satır duruyor. */
+  secili = false,
 ): string {
-  const r = RENK[acik === false ? "kapali" : y.tur] ?? RENK.kapali;
-  const yedek = jetonSVG(y, acik, populer, false).replace(/\s+/g, " ");
+  const yedek = emojiMarkerHTML(y, acik, populer, false).replace(/\s+/g, " ");
   return `<span class="foto-marker${populer ? " populer" : ""}${acik === false ? " kapali" : ""}">
-    <span class="foto-marker-kutu" style="background:${fotoZemin(y.tur)}"><img src="${kacir(url)}" alt="" decoding="async"
+    <span class="foto-marker-kutu" style="background:${fotoZemin()}"><img src="${kacir(url)}" alt="" decoding="async"
       onerror="this.closest('.foto-marker').outerHTML=this.dataset.yedek"
       data-yedek="${kacir(yedek)}"></span>
-    <span class="foto-marker-nokta" style="background:${r.ana}"></span>
+    ${secili ? `<span class="foto-marker-etiket">
+      <b>${kacir(y.ad)}</b>
+      <i>${populer ? "popüler · " : ""}${kacir(TUR_AD[y.tur] ?? y.tur).toLocaleLowerCase("tr")}</i>
+    </span>` : ""}
   </span>`;
 }
 
-/**
- * Jeton pin: düz kuşbakışı jeton. Merkez açık, kenar koyu (küreye tepeden
- * bakınca kenarlar kıvrılıp kararır), sol üstte parlama yayı.
- * Açık ve saati bilinmeyen = kategori renginde, BİLİNEN kapalı = gri.
- * Popüler = altın halka + alev rozeti.
- */
-export function jetonSVG(
-  y: Pick<Yer, "tur">,
-  /* Üç durumlu: true açık · false kapalı · null saat bilgisi YOK.
-     Bilinmeyeni "kapalı" çizmek yanlış bilgi olurdu — OSM'den gelen 1052
-     mekanın 933'ünde saat yok, harita neredeyse hep yalan söylerdi.
-     Bilinmeyen: kategori renginde ama soluk, kesik kenarlı. */
-  acik: boolean | null,
-  populer: boolean,
-  secili: boolean,
-): string {
-  const anahtar = acik === false ? "kapali" : y.tur;
-  const r = RENK[anahtar] ?? RENK.kapali;
-  /* Saati BİLİNMEYEN mekan artık açık olanla aynı çiziliyor: eskiden soluk ve
-     kesik kenarlıydı, kullanıcı bunu "eksik/bozuk kayıt" diye okuyordu —
-     oysa jeton saat hakkında hiçbir iddiada bulunmuyor. Bilgi kaybolmuyor:
-     mekan sayfası "saat bilgisi yok" diyor ve "Şu an açık" filtresi bu
-     mekanları hâlâ dışarıda bırakıyor. Yalnızca BİLİNEN kapalı gri kalıyor. */
-  const parlak = acik !== false;
-  const R = 14, S = 24;
-  const rz = populer ? R * 1.1 : R;
-  const k = (rz * 2 * 0.62) / S;
-  const yari = rz + 7, w = yari * 2;
-
-  return `<svg viewBox="0 0 ${w} ${w}" width="${w}" height="${w}" style="display:block;overflow:visible">
-    <g transform="translate(${yari} ${yari})">
-      <circle class="halka" r="${rz + 3.4}" fill="none" stroke="#23343C" stroke-width="1.6" opacity="${secili ? 1 : 0}"/>
-      ${populer ? `<circle r="${rz + 1.7}" fill="none" stroke="#E0A33E" stroke-width="1.4" opacity="${acik ? 1 : 0.5}"/>` : ""}
-      <circle r="${rz}" fill="url(#jeton-${anahtar})"/>
-      <circle r="${rz}" fill="none" stroke="${populer ? "#E0A33E" : r.golge}"
-              stroke-width="${populer ? 1.1 : 0.7}"
-              opacity="${populer ? (parlak ? 0.95 : 0.5) : 0.55}"/>
-      <path d="M ${-rz * 0.72} ${-rz * 0.34} a ${rz * 0.8} ${rz * 0.8} 0 0 1 ${rz * 0.98} ${-rz * 0.5}"
-            fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity="${parlak ? 0.55 : 0.35}"/>
-      <g transform="translate(${(-S * k) / 2} ${(-S * k) / 2}) scale(${k})" fill="none" stroke="#fff"
-         stroke-width="${1.9 / k}" stroke-linecap="round" stroke-linejoin="round" opacity="${parlak ? 0.97 : 0.8}">${SIMGE[y.tur] ?? ""}</g>
-      ${populer ? `<g transform="translate(${rz * 0.66} ${-rz * 0.98})">
-        <circle r="6.6" fill="#3B2C12" opacity="${parlak ? 1 : 0.55}"/>
-        <g transform="translate(-4.3 -4.3) scale(${8.6 / 24})" opacity="${parlak ? 1 : 0.55}"><path d="${ALEV}" fill="#E0A33E"/></g></g>` : ""}
-    </g>
-  </svg>`;
-}
-
-/** Jetonların kullandığı radyal gradyanlar — sayfada bir kez tanımlanır. */
-export const jetonGradyanlari = () =>
-  Object.entries(RENK)
-    .map(
-      ([k, r]) => `<radialGradient id="jeton-${k}" cx="38%" cy="34%" r="72%">
-        <stop offset="0%" stop-color="${r.isik}"/><stop offset="45%" stop-color="${r.ana}"/>
-        <stop offset="88%" stop-color="${r.ana}"/><stop offset="100%" stop-color="${r.golge}"/>
-      </radialGradient>`,
-    )
-    .join("");
 
 /**
  * Kişi rengi — kullanıcı adından türer.

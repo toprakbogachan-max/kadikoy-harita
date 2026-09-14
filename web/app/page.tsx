@@ -5,11 +5,13 @@ import Harita from "@/components/Harita";
 import HikayeSeridi from "@/components/HikayeSeridi";
 import FiltreCipleri from "@/components/FiltreCipleri";
 import AltMenu, { type Ekran } from "@/components/AltMenu";
+import KayanGecis from "@/components/KayanGecis";
 import Akis from "@/components/Akis";
 import GonderiDetay from "@/components/GonderiDetay";
 import Profil from "@/components/Profil";
 import MekanSayfasi from "@/components/MekanSayfasi";
 import AraEkrani from "@/components/AraEkrani";
+import AramaCubugu from "@/components/AramaCubugu";
 import { KisilerSaglayici } from "@/lib/kisiler-baglam";
 import { OturumSaglayici, useOturum } from "@/lib/oturum";
 import Giris from "@/components/Giris";
@@ -23,7 +25,6 @@ import { useVeri } from "@/lib/kanca";
 import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim, okunmamisBildirim, takiptekilerinYerleri } from "@/lib/veri";
 import type { Yer, Liste } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
-import { jetonGradyanlari } from "@/lib/gorsel";
 import { useKonum, kadikoydeMi } from "@/lib/konum";
 
 /* Haritanın açılış merkezi — Kadıköy iskelesi civarı */
@@ -45,6 +46,17 @@ const YENIDEN_SORGU_ESIGI_M = 250;
 const KATEGORILER: PlaceCategory[] = [
   "kahve", "yemek", "bar", "tatli", "kultur", "park", "otel", "magaza", "diger",
 ];
+
+/* Yatay geçiş YÖNÜ bu sıradan türüyor: soldan sağa gidiliyorsa içerik
+   sağdan gelir, tersinde soldan. Bunlar alt menünün SEKMELERİ — yan yana
+   duran yerler. */
+const EKRAN_SIRASI = ["harita", "akis", "profil"] as const;
+
+/* Arama bir sekme değil, üstteki çubuktan açılan bir KATMAN: yandan değil
+   aşağıdan yükseliyor. Yatay "yanındaki yere geçtim", dikey "üstüne bir
+   şey açtım" demek — ikisini karıştırmak nereye gittiğini bulanıklaştırır.
+   Kapanırken de yandan kaymıyor, altındaki ekran olduğu yerde beliriyor. */
+const DIKEY_EKRANLAR = ["ara"] as const;
 
 export default function Sayfa() {
   /* Sıra önemli: KisilerSaglayici "ben kimim"i oturumdan okuyor. */
@@ -211,14 +223,16 @@ function Uygulama() {
         paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
       }}
     >
-      <svg width="0" height="0" className="absolute">
-        <defs dangerouslySetInnerHTML={{ __html: jetonGradyanlari() }} />
-      </svg>
-
       {/* Yükseklik dvh üzerinden: telefonda çerçeve ekranı doldursun, masaüstünde
           820px'de dursun. overflow-clip (hidden değil) — hidden kaydırma
           kapsayıcısı oluşturup çekmeceler açılınca çerçeveyi kaydırıyordu. */}
       <div className="iridesan relative flex h-[min(96dvh,820px)] w-full max-w-[392px] flex-col overflow-clip rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,.55)]">
+        {/* Sekme değişince içerik baloncuğun GİTTİĞİ YÖNE akıyor: alt
+            menüdeki kayan seçim sağa giderken ekran da sağdan geliyor,
+            iki ayrı olay değil tek bir hareket. Sarmalayıcı TEK: her
+            ekranı ayrı sarmak onları her geçişte yeniden kurardı ve
+            harita sıfırdan yüklenirdi. */}
+        <KayanGecis anahtar={ekran} sira={EKRAN_SIRASI} dikeyler={DIKEY_EKRANLAR} mesafe={34} className="flex min-h-0 flex-1 flex-col">
         {ekran === "harita" && (
           /* Harita ekranı artık tek bir kutu: harita çerçevenin TAMAMINI
              kaplıyor, başlık ve şerit onun üstünde yüzüyor. */
@@ -257,7 +271,13 @@ function Uygulama() {
 
                 pointer-events-none kapsayıcıda, auto tek tek çocuklarda:
                 aradaki boşluklardan haritayı sürüklemek mümkün kalsın. */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-[5]">
+            {/* Mekan sayfası açıkken üst katman GİZLİ: o sayfanın kendi
+                yüzen başlığı (geri · ad · pin at) çerçevenin tepesini
+                devralıyor, ikisi üst üste binerdi. */}
+            <div
+              className={`pointer-events-none absolute inset-x-0 top-0 z-[5] transition-opacity ${secili ? "opacity-0" : "opacity-100"}`}
+              aria-hidden={!!secili}
+            >
               {/* Perde ŞART, süs değil. Şeffaf bir başlık denizin ya da koyu
                   bir parkın üstüne gelince yazı okunmaz oluyor — Snapchat
                   Map'te de aynı sebeple karartma var. Burada tema açık
@@ -268,7 +288,18 @@ function Uygulama() {
                 className="absolute inset-x-0 top-0 h-[150px] bg-[linear-gradient(to_bottom,rgba(250,247,242,.92)_0%,rgba(250,247,242,.58)_42%,rgba(250,247,242,0)_100%)]"
               />
 
-              <div className="relative flex items-start justify-between gap-2 px-3 pt-3">
+              {/* Arama en üstte ve KENARDAN KENARA: ekranı açan ilk şey
+                  "burada ne var" sorusu.
+
+                  Yanındaki pin atma düğmesi kalktı — aynı iş alt menüdeki
+                  "+" içinde zaten var (pin at / liste oluştur). İki ayrı
+                  giriş noktası tutmak hem üst satırı daraltıyordu hem de
+                  "ekleme" eylemini ikiye bölüyordu. */}
+              <div className="relative px-3 pt-3">
+                <AramaCubugu onAc={() => setEkran("ara")} className="pointer-events-auto" />
+              </div>
+
+              <div className="relative flex items-start justify-between gap-2 px-3 pt-2">
                 {/* Konum baloncuğu: bölge adı, saat ve tek satır özet.
                     Üç ayrı yüzen parça yerine tek kart — haritayı en az
                     örten hâli bu. */}
@@ -289,20 +320,6 @@ function Uygulama() {
                   </div>
                 </div>
 
-                {/* Pin atma: eskiden sol üstte altın bir kareydi, artık
-                    başlığın karşısında beyaz daire. Renk çipler ve pinlerde
-                    yaşıyor, arayüz kabuğunda değil. */}
-                <button
-                  onClick={() => (ben ? setPinFormu({ acik: true, yer: null }) : setGirisAcik(true))}
-                  aria-label="Pin at"
-                  className="pointer-events-auto grid size-10 shrink-0 place-items-center rounded-md border-none bg-yuzey text-gri-900 shadow-kat-2"
-                >
-                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
-                       stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 21.5s7-6.3 7-11.2a7 7 0 1 0-14 0c0 4.9 7 11.2 7 11.2z" strokeWidth="1.9" />
-                    <path d="M12 7.1v6.2M8.9 10.2h6.2" strokeWidth="2.2" />
-                  </svg>
-                </button>
               </div>
 
               <HikayeSeridi
@@ -370,8 +387,13 @@ function Uygulama() {
           <>
             {/* Başlıklardan alt çizgi kalktı: ayrım artık çizgiyle değil
                 boşlukla ve kartların kendi gölgesiyle kuruluyor. */}
-            <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-2 pt-4">
-              <h1 className="text-2xl font-extrabold uppercase leading-none tracking-siki">AKIŞ</h1>
+            {/* "AKIŞ" başlığı kalktı: alt menüde hangi sekmede olduğun
+                zaten belli ve ekranın kendisi bir akış olduğunu söylüyor.
+                Yeri araması ve zile bırakıldı — böylece ilk kart ekranın
+                çok daha yukarısından başlıyor. */}
+            <header className="shrink-0 px-4 pb-2 pt-4">
+              <div className="flex items-center gap-2">
+              <AramaCubugu onAc={() => setEkran("ara")} />
               {ben && (
                 <button
                   onClick={() => setBildirimAcik(true)}
@@ -390,45 +412,44 @@ function Uygulama() {
                   )}
                 </button>
               )}
+              </div>
             </header>
             <Akis onGonderiAc={(id, liste) => setGonderi({ id, liste })} />
           </>
         )}
 
+        {/* Profilde başlık BARI yok (skill §6): "PROFİL" yazan kenardan
+            kenara şerit kalktı, geri/paylaş/ayarlar Profil'in kendi içinde
+            içeriğin üstünde yüzüyor. Ekranın kim olduğunu zaten avatarla
+            ad söylüyor; başlık onu ikinci kez söyleyip yer kaplıyordu. */}
         {ekran === "profil" && (
-          <>
-            <header className="shrink-0 px-4 pb-2 pt-4">
-              <div className="flex items-center gap-2.5">
-                {profilKisi !== undefined && (
-                  <button
-                    onClick={() => setProfilKisi(undefined)}
-                    aria-label="Kendi profiline dön"
-                    className="grid size-8 shrink-0 place-items-center rounded-md border-none bg-yuzey text-lg leading-none text-gri-800 shadow-kat-2"
-                  >
-                    ‹
-                  </button>
-                )}
-                <h1 className="text-2xl font-extrabold uppercase leading-none tracking-siki">
-                  {profilKisi === undefined ? "PROFİL" : "@" + profilKisi}
-                </h1>
-              </div>
-            </header>
-            <Profil
-              kullaniciAdi={profilKisi}
-              onYerAc={haritadaAc}
-              onHaritada={kisininHaritasi}
-              onListeHaritada={listeyiAc}
-              onGirisIste={() => setGirisAcik(true)}
-              onPaylas={() => setPaylasAcik(true)}
-              onAyarlar={() => setAyarlarAcik(true)}
-              onListeOlustur={() => setListeAcik(true)}
-            />
-          </>
+          <Profil
+            kullaniciAdi={profilKisi}
+            onYerAc={haritadaAc}
+            onHaritada={kisininHaritasi}
+            onListeHaritada={listeyiAc}
+            onGirisIste={() => setGirisAcik(true)}
+            onPaylas={() => setPaylasAcik(true)}
+            onAyarlar={() => setAyarlarAcik(true)}
+            onListeOlustur={() => setListeAcik(true)}
+            {...(profilKisi !== undefined ? { onGeri: () => setProfilKisi(undefined) } : {})}
+            tazele={tazele}
+          />
         )}
-
+        {/* Arama artık bir sekme değil (AltMenu'den çıktı), üstteki
+            çubuktan açılan bir katman. O yüzden kapanma yolu ŞART:
+            sekme olsaydı alt menüden başka bir sekmeye geçilirdi.
+            Sarmalayıcının İÇİNDE: diğer ekranlarla aynı geçişi alsın. */}
         {ekran === "ara" && (
           <>
-            <header className="shrink-0 px-4 pb-2 pt-4">
+            <header className="flex shrink-0 items-center gap-2.5 px-4 pb-2 pt-4">
+              <button
+                onClick={() => setEkran("harita")}
+                aria-label="Aramayı kapat"
+                className="grid size-8 shrink-0 place-items-center rounded-md border-none bg-yuzey text-lg leading-none text-gri-800 shadow-kat-2"
+              >
+                ‹
+              </button>
               <h1 className="text-2xl font-extrabold uppercase leading-none tracking-siki">ARA</h1>
             </header>
             <AraEkrani
@@ -437,6 +458,7 @@ function Uygulama() {
             />
           </>
         )}
+        </KayanGecis>
 
         {/* Mekan sayfası yalnızca haritadayken; akış/profil üstüne binmesin */}
         {secili && ekran === "harita" && !gonderi && (
@@ -454,7 +476,11 @@ function Uygulama() {
 
         {ayarlarAcik && (
           <Ayarlar
-            onKapat={() => setAyarlarAcik(false)}
+            /* Kapanışta tazele: ayarların içinde profil düzenleniyor ama
+               Profil ekranı ayarların ALTINDA açık kalıyor, sökülmüyor.
+               Sorgu anahtarı değişmediği için ad/bio/sosyal eskisi gibi
+               duruyordu — kullanıcı kaydettiğini görmüyordu. */
+            onKapat={() => { setAyarlarAcik(false); setTazele((n) => n + 1); }}
             onYerAc={(id) => { setAyarlarAcik(false); haritadaAc(id); }}
             onGonderiAc={(id, liste) => { setAyarlarAcik(false); setGonderi({ id, liste }); }}
             onListeHaritada={(l) => { setAyarlarAcik(false); listeyiAc(l); }}

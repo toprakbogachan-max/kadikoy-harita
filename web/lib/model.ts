@@ -74,6 +74,13 @@ export interface Kisi {
   pinSayisi: number;
   /** profiles.is_public — kapalıysa profili yalnızca sahibi görür */
   acikMi?: boolean;
+  /**
+   * Sosyal hesaplar — "@" ve URL olmadan, yalnızca kullanıcı adı.
+   * Bağlantıyı arayüz kuruyor (lib/paleti.ts → SOSYAL).
+   */
+  twitter?: string | null;
+  instagram?: string | null;
+  tiktok?: string | null;
   ben?: boolean;
 }
 

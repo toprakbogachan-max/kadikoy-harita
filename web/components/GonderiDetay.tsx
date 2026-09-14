@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fotoZeminGenis, simgeSvg, zaman } from "@/lib/gorsel";
+import { emoji } from "@/lib/paleti";
 import { useVeri } from "@/lib/kanca";
 import { pinGetir, begeniDegistir, begendimMi, kayitDegistir, kayitliMi, medyaUrl, sikayetEttimMi } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
@@ -197,15 +198,15 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
   const coklu = medya.length > 1;
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-[#1B1510]">
+    <div className="absolute inset-0 z-20 flex flex-col bg-[#141416]">
       {/* üst perde */}
-      <div className={`absolute inset-x-0 top-0 z-[6] flex items-start justify-between gap-3 bg-gradient-to-b from-[rgba(12,9,5,.62)] to-transparent px-4 pb-8 pt-3.5 transition-opacity duration-200 ${perdeStil}`}>
+      <div className={`absolute inset-x-0 top-0 z-[6] flex items-start justify-between gap-3 bg-gradient-to-b from-[rgba(10,10,12,.62)] to-transparent px-4 pb-8 pt-3.5 transition-opacity duration-200 ${perdeStil}`}>
         <div>
-          <h2 className="text-xl font-semibold leading-tight text-white">
+          <h2 className="text-xl font-extrabold leading-none tracking-isim text-white">
             {kisi.ad}
             {kisi.ben ? " · sen" : ""}
           </h2>
-          <div className="mt-1.5 font-tabela text-xs uppercase tracking-[0.13em] text-white/75">
+          <div className="mt-1.5 font-sayi text-xs lowercase text-white/70">
             @{kisi.k} · {zaman(p.saat)}
           </div>
         </div>
@@ -221,7 +222,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
                 onClick={() => pinGec(-1)}
                 disabled={pinIndex === 0}
                 aria-label="Önceki pin"
-                className="grid size-[26px] place-items-center rounded-md border-none bg-white/15 text-sm leading-none text-white disabled:opacity-30"
+                className="grid size-7 place-items-center rounded-md border-none bg-white/20 text-sm leading-none text-white disabled:opacity-30"
               >
                 ∧
               </button>
@@ -232,7 +233,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
                 onClick={() => pinGec(1)}
                 disabled={pinIndex === liste.length - 1}
                 aria-label="Sonraki pin"
-                className="grid size-[26px] place-items-center rounded-md border-none bg-white/15 text-sm leading-none text-white disabled:opacity-30"
+                className="grid size-7 place-items-center rounded-md border-none bg-white/20 text-sm leading-none text-white disabled:opacity-30"
               >
                 ∨
               </button>
@@ -241,7 +242,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           <button
             onClick={onKapat}
             aria-label="Kapat"
-            className="size-[30px] shrink-0 rounded-md border-none bg-white/15 text-base leading-none text-white"
+            className="grid size-8 shrink-0 place-items-center rounded-md border-none bg-white/20 text-base leading-none text-white"
           >
             ✕
           </button>
@@ -279,7 +280,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           })()}
           {m.tur === "video" && !medyaUrl(m.yol) && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
-              <span className="grid size-[52px] place-items-center rounded-full bg-[rgba(20,15,8,.5)] text-2xl text-white">▶</span>
+              <span className="grid size-[52px] place-items-center rounded-full bg-[rgba(10,10,12,.5)] text-2xl text-white">▶</span>
             </div>
           )}
         </div>
@@ -288,7 +289,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
           /* Konumlandırılmamış sarmalayıcı: içindeki `absolute` öğeler hâlâ
              gövdeye göre yerleşiyor, sadece hep birlikte soluyorlar. */
           <div className={`transition-opacity duration-200 ${perdeStil}`}>
-            <span className="absolute right-3.5 top-[74px] z-[7] rounded-full bg-[rgba(20,15,8,.55)] px-1.5 py-0.5 font-sayi text-2xs text-white">
+            <span className="absolute right-3.5 top-[74px] z-[7] rounded-full bg-[rgba(10,10,12,.55)] px-1.5 py-0.5 font-sayi text-2xs text-white">
               {medyaIndex + 1}/{medya.length}
             </span>
             <div className="absolute inset-x-0 top-[78px] z-[7] flex justify-center gap-1.5">
@@ -306,7 +307,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
               onClick={() => medyaGec(-1)}
               disabled={medyaIndex === 0}
               aria-label="Önceki medya"
-              className="absolute left-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(20,15,8,.5)] text-white disabled:opacity-30"
+              className="absolute left-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(10,10,12,.5)] text-white disabled:opacity-30"
             >
               ‹
             </button>
@@ -314,7 +315,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
               onClick={() => medyaGec(1)}
               disabled={medyaIndex === medya.length - 1}
               aria-label="Sonraki medya"
-              className="absolute right-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(20,15,8,.5)] text-white disabled:opacity-30"
+              className="absolute right-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(10,10,12,.5)] text-white disabled:opacity-30"
             >
               ›
             </button>
@@ -338,7 +339,7 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
             >
               <Avatar kisi={p.kisi} boyut={34} />
               <span className="flex-1">
-                <span className="block text-base font-semibold leading-tight text-white">
+                <span className="block text-base font-bold leading-tight tracking-siki text-white">
                   {kisi.ad}
                   {kisi.ben ? " · sen" : ""}
                 </span>
@@ -348,24 +349,30 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
               </span>
             </button>
             {p.puan != null && (
-              <span className="font-sayi text-base font-bold text-[#F2C879]">
+              <span className="font-sayi text-base font-bold text-white">
                 {p.puan}
                 <span className="text-2xs font-normal text-white/50">/10</span>
               </span>
             )}
           </div>
 
-          <div className="mb-2.5 inline-flex items-center gap-1.5 border-b border-[rgba(242,200,121,.4)] pb-0.5 font-tabela text-xs uppercase tracking-[0.06em] text-[#F2C879]">
-            {p.yerAdi} · {p.yerSemt}
+          {/* Kademe A: mekan adı. Altın alt çizgi kalktı — renk arayüz
+              iskeletinde yaşamıyor, kategoriyi emoji taşıyor. */}
+          <div className="mb-2.5 flex items-baseline gap-1.5">
+            <span aria-hidden className="text-sm">{emoji(p.yerTuru)}</span>
+            <span className="text-lg font-extrabold uppercase leading-tight tracking-siki text-white">
+              {p.yerAdi}
+            </span>
+            <span className="text-xs lowercase text-white/60">{p.yerSemt}</span>
           </div>
 
           {/* aktif medyanın kendi notu */}
-          {m.not && <p className="mb-2 font-el text-base leading-snug text-white/90">{m.not}</p>}
+          {m.not && <p className="mb-2 font-metin text-base leading-snug text-white/90">{m.not}</p>}
 
           {p.kelimeler.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-1.5">
               {p.kelimeler.map((k) => (
-                <span key={k} className="rounded-md border border-white/45 px-2 py-1 font-el text-sm font-bold leading-none">
+                <span key={k} className="rounded-full bg-white/15 px-2.5 py-1.5 text-xs font-semibold lowercase leading-none text-white">
                   {k}
                 </span>
               ))}
@@ -374,13 +381,13 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
 
           {/* Not artık zorunlu değil; boşken boş bir satır bırakmıyoruz. */}
           {p.metin.trim() && (
-            <p className="line-clamp-4 font-el text-lg leading-snug">{p.metin}</p>
+            <p className="line-clamp-4 font-metin text-base leading-snug text-white/90">{p.metin}</p>
           )}
 
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {p.senaryo && <span className="rounded-md bg-white/15 px-2 py-1 text-xs text-white/90">{p.senaryo}</span>}
-            {p.fiyat && <span className="rounded-md bg-white/15 px-2 py-1 text-xs text-white/90">kişi başı {p.fiyat}₺</span>}
-            {p.siklik && <span className="rounded-md bg-white/15 px-2 py-1 text-xs text-white/90">{p.siklik}</span>}
+            {p.senaryo && <span className="rounded-full bg-white/15 px-2.5 py-1.5 text-xs lowercase leading-none text-white/90">{p.senaryo}</span>}
+            {p.fiyat && <span className="rounded-full bg-white/15 px-2.5 py-1.5 text-xs lowercase leading-none text-white/90">kişi başı {p.fiyat}₺</span>}
+            {p.siklik && <span className="rounded-full bg-white/15 px-2.5 py-1.5 text-xs lowercase leading-none text-white/90">{p.siklik}</span>}
           </div>
 
           {/* eylem çubuğu — beğeni ve kaydetme yazma işlemi, kimlik bekliyor */}
@@ -472,7 +479,7 @@ function Eylem({
       aria-label={aria}
       aria-pressed={dolu}
       className={`flex items-center gap-1.5 border-none bg-transparent p-0 text-sm ${
-        dolu ? "text-[#F2C879]" : "text-white/90"
+        dolu ? "text-white" : "text-white/90"
       }`}
     >
       <svg width="17" height="17" viewBox="0 0 24 24" fill={dolu ? "currentColor" : "none"}

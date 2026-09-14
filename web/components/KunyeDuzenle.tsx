@@ -98,7 +98,7 @@ export default function KunyeDuzenle({
   };
 
   const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton";
-  const etiket = "mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
+  const etiket = "mb-1.5 block text-2xs font-bold uppercase tracking-etiket text-gri-600";
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Künye düzenle"
@@ -141,7 +141,7 @@ export default function KunyeDuzenle({
             {([["evet", "Gerekiyor"], ["hayir", "Gerekmiyor"], ["", "Bilinmiyor"]] as const).map(
               ([id, ad]) => (
                 <button key={ad} onClick={() => setRezervasyon(id)} aria-pressed={rezervasyon === id}
-                  className={`rounded-md px-2.5 py-1.5 font-tabela text-xs uppercase tracking-[0.1em] ${
+                  className={`rounded-md px-2.5 py-1.5 text-2xs font-bold uppercase tracking-etiket ${
                     rezervasyon === id ? "border-none bg-gri-900 text-white"
                       : "bg-yuzey shadow-kat-1 text-gri-600"
                   }`}>

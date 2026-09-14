@@ -13,7 +13,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 import type { Yer } from "@/lib/model";
 import type { Konum } from "@/lib/konum";
-import { jetonSVG, noktaSVG, fotoMarkerHTML } from "@/lib/gorsel";
+import { noktaSVG, fotoMarkerHTML, emojiMarkerHTML } from "@/lib/gorsel";
 import { kucukUrl } from "@/lib/veri";
 import { altligiSessizlestir } from "@/lib/harita-stili";
 
@@ -433,9 +433,12 @@ export default function Harita({
          Fotoğrafı olmayan ya da yüklenemeyen mekan jetona düşüyor; pinsiz
          mekan hâlâ sessiz nokta — hiyerarşi korunuyor. */
       const kucuk = (pinli || seciliMi) ? kucukUrl(y.kapak, 128) : null;
+      /* Tek işaret dili: dolu daire. İçi ya mekanın fotoğrafı, ya kategori
+         emojisi. Kategori RENGİ hiçbirinde yok — dokuz doygun renk haritayı
+         bir renk tablosuna çeviriyordu. Pinsiz mekan hâlâ sessiz nokta. */
       const icerik = kucuk
-        ? fotoMarkerHTML(kucuk, y, acik, populer)
-        : (pinli || seciliMi) ? jetonSVG(y, acik, populer, seciliMi) : noktaSVG(y, acik);
+        ? fotoMarkerHTML(kucuk, y, acik, populer, seciliMi)
+        : (pinli || seciliMi) ? emojiMarkerHTML(y, acik, populer, seciliMi) : noktaSVG(y, acik);
 
       /* innerHTML'i yalnızca gerçekten değiştiğinde yazıyoruz: her efekt
          koşusunda yeniden yazmak <img>'i sıfırlayıp yeniden indiriyor ve

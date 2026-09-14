@@ -91,7 +91,7 @@ export default function PaylasimKarti({ onKapat }: { onKapat: () => void }) {
             {kelimeler.length > 0 && (
               <div className="flex flex-wrap justify-center gap-1">
                 {kelimeler.map((k) => (
-                  <span key={k} className="rounded-lg shadow-kat-1 px-1.5 py-0.5 font-el text-xs font-bold">
+                  <span key={k} className="rounded-lg shadow-kat-1 px-1.5 py-0.5 font-metin text-xs font-bold">
                     {k}
                   </span>
                 ))}
@@ -106,7 +106,7 @@ export default function PaylasimKarti({ onKapat }: { onKapat: () => void }) {
 
         {ben.acikMi === false ? (
           <div className="mt-3.5 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-3 text-sm leading-snug">
-            <strong className="mb-1 block font-tabela text-xs uppercase tracking-[0.1em] text-[#921008]">
+            <strong className="mb-1 block text-2xs font-bold uppercase tracking-etiket text-[#921008]">
               Profilin gizli
             </strong>
             Bu link kimsede açılmaz. Ayarlardan “Profilim herkese açık”ı aç.

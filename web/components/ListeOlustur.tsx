@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVeri } from "@/lib/kanca";
-import { mekanAra, listeOlustur, kaydettigimYerler, pinlediklerim } from "@/lib/veri";
+import { mekanAra, listeOlustur, kaydettigimYerler, pinlediklerim, listeKapagiSil } from "@/lib/veri";
 import type { Yer } from "@/lib/model";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
 import ListeKapakSecici from "./ListeKapakSecici";
+import KayanSecim from "./KayanSecim";
 
 /**
  * Liste oluşturma — "kendi küratörlüğün".
@@ -29,6 +30,22 @@ export default function ListeOlustur({
      akış çıkardı ve kapak isteğe bağlı bir ek gibi görünürdü — oysa listenin
      adı kadar onun parçası. */
   const [kapak, setKapak] = useState<{ url: string | null; konum: number }>({ url: null, konum: 50 });
+  /* Kapak listeden ÖNCE yükleniyor, yani form iptal edilirse ya da başka
+     bir fotoğraf seçilirse kovada sahipsiz dosya kalıyor. Bu ekranda
+     yüklenen HER kapak burada birikiyor; çıkışta kaydedilmeyenler
+     siliniyor. Olmasaydı her vazgeçiş kalıcı çöp üretirdi. */
+  const yuklenenler = useRef<string[]>([]);
+  const kaydedildi = useRef(false);
+  /* Efekt sökülürken seçili kapağın son hâli lazım; state kapanışta eski
+     değerini gösterirdi. Render sırasında DEĞİL, seçim anında yazılıyor. */
+  const sonKapak = useRef<string | null>(null);
+
+  useEffect(() => () => {
+    for (const u of yuklenenler.current) {
+      if (kaydedildi.current && u === sonKapak.current) continue;
+      void listeKapagiSil(u);
+    }
+  }, []);
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
@@ -62,6 +79,7 @@ export default function ListeOlustur({
     setGonderiliyor(true); setHata(null);
     try {
       await listeOlustur(baslik, not, secilenler.map((y) => y.id), kapak);
+      kaydedildi.current = true;
       onOlusturuldu();
     } catch (e) {
       setHata(e instanceof Error ? e.message : String(e));
@@ -69,7 +87,7 @@ export default function ListeOlustur({
   };
 
   const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base outline-none placeholder:text-gri-600 focus:border-jeton";
-  const etiket = "mb-1.5 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
+  const etiket = "mb-1.5 block text-2xs font-bold uppercase tracking-etiket text-gri-600";
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Yeni liste"
@@ -108,7 +126,11 @@ export default function ListeOlustur({
         <div className="mb-5">
           <ListeKapakSecici
             liste={{ kapak: kapak.url, kapakKonum: kapak.konum, yerler: secilenler }}
-            onDegisti={setKapak}
+            onDegisti={(k) => {
+              if (k.url) yuklenenler.current.push(k.url);
+              sonKapak.current = k.url;
+              setKapak(k);
+            }}
             devreDisi={gonderiliyor}
           />
         </div>
@@ -137,24 +159,33 @@ export default function ListeOlustur({
         {gecikmeli.length >= 2 ? (
           <div className="mb-1.5 text-xs text-gri-600">Arama sonuçları</div>
         ) : (
-          <div className="mb-1.5 flex gap-1.5">
+          /* İki kaynak arasında geçiş de baloncukla: alt menüdeki hareketin
+             aynısı, ölçeği küçük. Tutarlılık burada işlevsel — kullanıcı
+             "siyah baloncuk = şu an baktığın yer" kuralını bir kez
+             öğreniyor. */
+          <KayanSecim
+            aktif={kaynak}
+            className="mb-1.5 flex gap-1.5"
+            baloncuk="baloncuk rounded-md"
+          >
             {([["kayit", "Kaydettiklerin", kayitlar.length], ["pin", "Pinlediklerin", pinlerim.length]] as const).map(
               ([id, ad, sayi]) => (
                 <button
                   key={id}
+                  data-kayan={id}
                   onClick={() => setKaynak(id)}
                   aria-pressed={kaynak === id}
-                  className={`rounded-md px-2.5 py-1 font-tabela text-xs uppercase tracking-[0.1em] ${
+                  className={`rounded-md border-none px-2.5 py-1 text-2xs font-bold uppercase tracking-etiket transition-[color,background-color,transform] duration-[240ms] ease-out active:scale-95 ${
                     kaynak === id
-                      ? "border-none bg-gri-900 text-white"
-                      : "bg-yuzey shadow-kat-1 text-gri-600"
+                      ? "bg-transparent text-white"
+                      : "bg-yuzey text-gri-600 shadow-kat-1"
                   }`}
                 >
                   {ad}{sayi > 0 && <span className="ml-1 font-sayi normal-case tracking-normal">{sayi}</span>}
                 </button>
               ),
             )}
-          </div>
+          </KayanSecim>
         )}
 
         {aday.length ? (

@@ -96,14 +96,18 @@
   --text-2xl:  26px;    --text-2xl--line-height:  1.12;
   --text-3xl:  30px;    --text-3xl--line-height:  1.08;
 
-  /* Kademe A ve B ağır, sıkı, geometrik bir grotesk ister → Inter.
+  /* Kademe A ve B ağır, sıkı, GEOMETRİK bir grotesk ister →
+     Plus Jakarta Sans. Inter'deydi ve nötr olduğu için 800'de bile düz
+     kalıyordu; gerekçe layout.tsx'te.
      Karla İNSANIN yazdığı metinde kalıyor: pin notları, yorumlar.
      Böylece "uygulama mı yazdı insan mı" ayrımı italik/düze ek
      olarak yazı tipiyle de kuruluyor. */
-  --font-tabela: Inter, "Segoe UI", system-ui, sans-serif;   /* Kademe A/B/C */
+  --font-tabela: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;  /* Kademe A/B/C */
   --font-metin:  Karla, "Segoe UI", sans-serif;              /* insan metni */
+  /* Kalam (el yazısı) kalktı: mantar pano metaforuyla birlikte gitti.
+     İnsanın yazdığı metnin işareti artık yazı tipi DEĞİŞİKLİĞİ değil,
+     Karla ile Inter arasındaki fark. */
   --font-sayi:   "JetBrains Mono", ui-monospace, monospace;
-  --font-el:     Kalam, "Segoe Print", cursive;
 
   --tracking-isim:   -0.035em;  /* Kademe A — kişi adı, iri başlık */
   --tracking-siki:   -0.03em;   /* Kademe A — mekan adı, ekran başlığı */
@@ -209,6 +213,51 @@ body {
   background: var(--ortu); pointer-events: none;
 }
 
+/* ---------- kayan seçim baloncuğu ----------
+   KayanSecim'in taşıdığı aktif durum. Dolu siyah DEĞİL, buzlu cam:
+   altındaki harita/zemin görünüyor, baloncuk ekranın üstüne oturan bir
+   leke olmaktan çıkıp ona ait bir katman gibi duruyor.
+
+   Opaklık göz kararı değil: %72 mürekkep beyaz zeminde #474748'e denk
+   geliyor, üstündeki beyaz yazı 7.4:1 — AA'yı rahat geçiyor. Daha
+   şeffaf (%58) denendi ve 3.9:1'e düşüyor, 13px çip yazısı için yetmez.
+   Haritanın koyu kısımlarında zaten daha da koyulaşıyor.
+
+   saturate: bulanıklaşan harita altında soluklaşıyordu; renk canlılığı
+   geri verilince cam gerçek cam gibi duruyor. */
+.baloncuk {
+  background: rgba(11, 11, 12, 0.72);
+  backdrop-filter: blur(10px) saturate(1.25);
+  -webkit-backdrop-filter: blur(10px) saturate(1.25);
+}
+
+/* backdrop-filter desteklenmiyorsa cam yok demektir; o zaman şeffaflık
+   okunurluğu bozmasın diye mürekkep koyulaşıyor. */
+@supports not (backdrop-filter: blur(1px)) {
+  .baloncuk { background: rgba(11, 11, 12, 0.88); }
+}
+
+/* ---------- kademeli beliriş ----------
+   Profil ızgarasındaki liste kartları tek blok hâlinde zıplamasın diye.
+   Hareket ölçülü: 10 piksel ve 0.42 saniye — fark edilen ama beklemeye
+   dönüşmeyen aralık. Gecikme çağıran tarafta satır içi veriliyor
+   (animation-delay), sekizinci karttan sonra artmıyor.
+
+   `both` şart: gecikme boyunca kart görünmez kalmalı, yoksa belirip
+   kaybolup tekrar beliriyor. */
+@keyframes belir {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.belir { animation: belir .42s cubic-bezier(.22, .61, .36, 1) both; }
+
+/* Hareket azaltma tercihi olanda içerik OLDUĞU GİBİ duruyor — animasyonu
+   kısaltmak değil, hiç oynatmamak. animation:none, fill-mode'un bıraktığı
+   opacity:0'ı da siliyor. */
+@media (prefers-reduced-motion: reduce) {
+  .belir { animation: none; }
+}
+
 /* Cam panel — form/kayıt ekranında uygulamanın kendi içeriği arkada
    bulanık durur. Hem derinlik verir hem girdiye odaklar. */
 .cam {
@@ -254,6 +303,21 @@ body {
   background: var(--color-gri-100);
   box-shadow: var(--shadow-kat-3);
 }
+/* Fotoğrafı olmayan pinli mekan: aynı kabuk, içinde emoji. */
+.foto-marker-emoji {
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  line-height: 1;
+  background: var(--color-yuzey);
+  /* İç saç teli ŞART: beyaz kenar beyaz altlığın üstünde kayboluyordu ve
+     emoji haritada boşlukta duruyormuş gibi görünüyordu. Fotoğraflı
+     marker'da bu sorun yok, orada kontrastı fotoğraf veriyor. */
+  box-shadow: var(--shadow-kat-3), inset 0 0 0 1px rgba(0, 0, 0, .12);
+}
+.foto-marker.populer .foto-marker-emoji { font-size: 23px; }
+.foto-marker.kapali .foto-marker-emoji { opacity: .55; }
+
 .foto-marker img {
   display: block;
   width: 100%; height: 100%;
@@ -271,14 +335,44 @@ body {
 .foto-marker.kapali img { filter: grayscale(.7) brightness(.95); }
 /* Kategori noktası: renk jetondan çıkıp buraya indi, filtre çiplerindeki
    noktayla aynı dil. */
-.foto-marker-nokta {
+/* Seçili işaretin yanındaki etiket. Haritanın üstünde serbest yazı
+   okunmaz — bu yüzden kendi beyaz hapında duruyor. pointer-events yok:
+   etikete dokunmak haritayı kaydırmaya devam etsin, işaret zaten
+   dokunulabilir. */
+.foto-marker-etiket {
   position: absolute;
-  right: -2px; bottom: -2px;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: var(--shadow-kat-1);
+  left: calc(100% + 7px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 150px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--color-yuzey);
+  box-shadow: var(--shadow-kat-2);
+  pointer-events: none;
+  white-space: nowrap;
 }
+.foto-marker-etiket b {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: var(--tracking-siki);
+  color: var(--color-gri-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Uygulamanın derlediği alt satır → EĞİK. İnsanın yazdığı metinle
+   arasındaki ayrım burada da geçerli (Akis.tsx'teki kural). */
+.foto-marker-etiket i {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--color-gri-600);
+}
+
+/* Kategori noktası KALKTI: haritadaki son doygun renk oydu. Kategori artık
+   ya fotoğrafın kendisinden ya emoji marker'ından okunuyor. */
 
 /* ---------- kullanıcının kendi konumu ----------
    Jeton dilinden ayrı bilerek: bu bir mekan değil, sen. Mavi/çelik tonu

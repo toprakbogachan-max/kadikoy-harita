@@ -56,9 +56,13 @@ export default function AraEkrani({ onYerAc, onKisiAc }: Props) {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             type="search"
-            placeholder="kişi veya mekan ara"
+            /* Ekran artık üstteki arama çubuğundan açılıyor: kullanıcı
+               "ara" düğmesine basmış oluyor, niyeti belli. Odağı elle
+               vermesini beklemek fazladan bir dokunuş olurdu. */
+            autoFocus
+            placeholder="mekan, kişi ya da pin ara"
             autoComplete="off"
-            aria-label="Kişi veya mekan ara"
+            aria-label="Mekan, kişi ya da pin ara"
             className="w-full border-none bg-transparent text-sm text-murekkep outline-none placeholder:text-gri-500 [&::-webkit-search-cancel-button]:hidden"
           />
           {q && (

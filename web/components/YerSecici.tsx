@@ -237,7 +237,7 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
             <>
               {/* Başlık, bunların bizde OLMADIĞINI söylüyor: seçilince yeni
                   mekan olarak açılacak, kullanıcı ilk pini atmış olacak. */}
-              <div className="border-y border-[var(--cizgi)] bg-[rgba(35,52,60,.04)] px-2.5 py-1.5 font-tabela text-2xs uppercase tracking-[0.12em] text-gri-600">
+              <div className="border-y border-[var(--cizgi)] bg-[rgba(16,16,20,.04)] px-2.5 py-1.5 text-2xs font-bold uppercase tracking-etiket text-gri-600">
                 Haritadan · henüz kayıtlı değil
               </div>
               <ul className="list-none p-0">
@@ -255,7 +255,7 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
                           {[h.semt, h.adres].filter(Boolean).join(" · ") || "Kadıköy"}
                         </span>
                       </span>
-                      <span className="shrink-0 font-tabela text-2xs uppercase tracking-[0.1em] text-jeton">
+                      <span className="shrink-0 font-tabela text-2xs uppercase tracking-[0.1em] text-gri-900">
                         Ekle
                       </span>
                     </button>
@@ -268,7 +268,7 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
       )}
 
       {bosSonuc && (
-        <div className="mb-2 rounded-md border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2.5">
+        <div className="mb-2 rounded-md border border-[rgba(0,0,0,.12)] bg-[rgba(16,16,20,.05)] p-2.5">
           <p className="text-sm leading-snug">
             <b>“{gecikmeli}”</b> ne bizde ne haritada bulunabildi. Google Haritalar’da
             olan her yer OpenStreetMap’te olmayabiliyor; o zaman ilk ekleyen sen
@@ -280,7 +280,7 @@ export default function YerSecici({ secim, secildi, onYerSec, onYeniNokta, onNok
               yerini sürükleyerek düzeltmek çok daha kolay. */}
           <button
             onClick={merkezeEkle}
-            className="mt-2 w-full rounded-full border-none bg-gri-900 px-3 py-2 font-tabela text-xs uppercase tracking-[0.1em] text-white"
+            className="mt-2 w-full rounded-full border-none bg-gri-900 px-3 py-2 text-2xs font-bold uppercase tracking-etiket text-white"
           >
             “{gecikmeli}” adıyla ekle
           </button>

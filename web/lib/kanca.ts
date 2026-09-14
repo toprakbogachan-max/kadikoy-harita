@@ -37,8 +37,12 @@ export function useVeri<T>(
       .then((d) => { if (!iptal) setSonuc({ anahtar, veri: d, hata: null }); })
       .catch((e: unknown) => {
         if (iptal) return;
-        const m = e instanceof Error ? e.message : String(e);
-        console.error("veri çekilemedi:", e);
+        /* Supabase hataları Error DEĞİL, düz nesne: {message, code, hint}.
+           String(e) onları "[object Object]" yapıyordu ve konsolda hangi
+           sorgunun patladığı hiç görünmüyordu. */
+        const h = e as { message?: string; code?: string; hint?: string } | null;
+        const m = e instanceof Error ? e.message : h?.message ?? String(e);
+        console.error("veri çekilemedi:", m, h?.code ?? "", h?.hint ?? "", e);
         setSonuc({ anahtar, veri: baslangic, hata: m });
       });
     return () => { iptal = true; };

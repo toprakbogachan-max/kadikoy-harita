@@ -1,23 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Karla, JetBrains_Mono, Kalam } from "next/font/google";
+import { Plus_Jakarta_Sans, Karla, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-/* BRIEF → Tasarım dili: Oswald (tabela/etiket), Karla (metin),
-   JetBrains Mono (sayı), Kalam (el yazısı — post-it notları).
-   latin-ext alt kümesi Türkçe karakterler için şart. */
-/* Inter Kademe A/B/C'yi birden taşıyor: 800 ağırlık ve negatif harf
-   aralığı olmadan "özel isim bağırır" kademesi kurulamıyor. Oswald
-   (sıkıştırılmış tabela yazısı) bu dilde karşılığı olmadığı için
-   düştü. 700 artık GERÇEKTEN yüklü — sahte kalınlaştırma bitti. */
-/* weight VERİLMİYOR: Inter değişken bir font, ağırlık dizisi vermek
-   statik dosya isteyip Turbopack'in font çözümleyicisini kırıyordu
-   ("Can't resolve @vercel/turbopack-next/internal/font/google/font").
-   Değişken hâlinde 100–900 arası her ağırlık zaten geliyor — 800 de
-   dahil, yani sahte kalınlaştırma sorunu yine çözülmüş oluyor. */
-const inter = Inter({ subsets: ["latin-ext"], variable: "--font-tabela" });
+/* Plus Jakarta Sans arayüzün sesi (Kademe A/B/C), Karla İNSANIN yazdığı
+   metin (pin notları, yorumlar, bio), JetBrains Mono sayılar. Oswald ve
+   Kalam mantar pano metaforuyla birlikte düştü.
+   latin-ext alt kümesi Türkçe karakterler için şart.
+
+   INTER'DEN NEDEN ÇIKILDI: Inter bilinçli olarak NÖTR bir arayüz fontu —
+   işi kendini belli etmemek. Corner'ın sesi ise tam tersi: geniş, yuvarlak,
+   geometrik ve ağır; "places", "Caffeine" gibi kısa etiketler bile bir
+   karaktere sahip. Nötr bir grotesk 800 ağırlıkta bile düz kalıyordu.
+   Plus Jakarta Sans o geometriyi veriyor ve Türkçe (İ ı ş ğ ç ö ü) tam
+   destekli — bu ikisi birden az fontta var.
+
+   weight VERİLMİYOR: değişken font, ağırlık dizisi vermek statik dosya
+   isteyip Turbopack'in font çözümleyicisini kırıyordu ("Can't resolve
+   @vercel/turbopack-next/internal/font/google/font"). Değişken hâlinde
+   200–800 arası her ağırlık geliyor; 800 de dahil, yani sahte
+   kalınlaştırma sorunu yok. */
+const arayuz = Plus_Jakarta_Sans({ subsets: ["latin-ext"], variable: "--font-tabela" });
 const karla = Karla({ subsets: ["latin-ext"], weight: ["400", "600"], style: ["normal", "italic"], variable: "--font-metin" });
 const mono = JetBrains_Mono({ subsets: ["latin-ext"], weight: ["400", "700"], variable: "--font-sayi" });
-const kalam = Kalam({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-el" });
 
 export const metadata: Metadata = {
   title: "Kadıköy Harita",
@@ -51,7 +55,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
-      <body className={`${inter.variable} ${karla.variable} ${mono.variable} ${kalam.variable}`}>
+      <body className={`${arayuz.variable} ${karla.variable} ${mono.variable}`}>
         {children}
       </body>
     </html>

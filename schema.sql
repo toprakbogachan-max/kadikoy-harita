@@ -39,12 +39,27 @@ create table if not exists profiles (
   -- görünmez olur (p_profiles_read) — kısıt arayüzde değil veritabanında.
   -- goc/04-profil-ve-avatar.sql bunu var olan kurulumlara ekliyor.
   is_public     boolean not null default true,
+  -- Sosyal hesaplar (göç 17): "@" ve URL olmadan, yalnızca kullanıcı adı.
+  -- Bağlantıyı arayüz kuruyor; böylece kullanıcının yapıştırdığı tam link
+  -- tek yerde temizleniyor (lib/veri.ts → sosyalTemizle).
+  twitter       text,
+  instagram     text,
+  tiktok        text,
   -- sayaçlar (trigger'la güncellenir, her seferinde count(*) atmamak için)
   pin_count      integer not null default 0,
   follower_count integer not null default 0,
   following_count integer not null default 0,
-  created_at    timestamptz not null default now()
+  created_at    timestamptz not null default now(),
+  constraint profiles_sosyal_bicim check (
+    (twitter   is null or twitter   ~ '^[A-Za-z0-9_.]{1,50}$') and
+    (instagram is null or instagram ~ '^[A-Za-z0-9_.]{1,50}$') and
+    (tiktok    is null or tiktok    ~ '^[A-Za-z0-9_.]{1,50}$')
+  )
 );
+-- Var olan kurulumlar için (göç 17 ile aynı iş)
+alter table profiles add column if not exists twitter   text;
+alter table profiles add column if not exists instagram text;
+alter table profiles add column if not exists tiktok    text;
 create index if not exists profiles_username_trgm on profiles using gin (username gin_trgm_ops);
 
 -- Profiller için de aynısı: "bogac" araması "Bogaç"ı bulsun.

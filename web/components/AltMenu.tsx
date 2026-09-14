@@ -3,16 +3,26 @@
 import { useState } from "react";
 import { useOturum } from "@/lib/oturum";
 import Avatar from "./Avatar";
+import KayanSecim from "./KayanSecim";
 
 export type Ekran = "harita" | "akis" | "ara" | "profil";
 
 const IKON: Record<Ekran, React.ReactNode> = {
   harita: <path d="M9 4 3 6.4v13.2L9 17.2l6 2.4 6-2.4V4l-6 2.4zM9 4v13.2M15 6.4v13.2" />,
+  /* Akış = insanlar, kart yığını değil.
+     İki üst üste dikdörtgen "liste/haber akışı" diyordu; oysa buradaki
+     akış bir içerik kuyruğu değil, TANIDIKLARININ nereye gittiği. İşaret
+     de onu söylüyor: iki soyut figür — büyük olan önde, küçük olan
+     arkada. Diğer ikisinin aksine ÇİZGİ değil DOLU: bir ikon değil bir
+     damga, ve dolu olduğu için aktif/pasif farkını renk tek başına
+     rahatça taşıyor. */
   akis: (
-    <>
-      <rect x="3.5" y="4" width="17" height="7" rx="1.6" />
-      <rect x="3.5" y="14" width="17" height="6" rx="1.6" />
-    </>
+    <g fill="currentColor" stroke="none">
+      <circle cx="8.5" cy="7.2" r="4.5" />
+      <rect x="2.2" y="14" width="12.6" height="5.6" rx="2.8" />
+      <circle cx="18.4" cy="9.4" r="2.9" />
+      <rect x="15.4" y="15.2" width="6.4" height="4.4" rx="2.2" />
+    </g>
   ),
   ara: (
     <>
@@ -68,17 +78,25 @@ export default function AltMenu({
   const dugme = (e: Ekran) => (
     <button
       key={e}
+      /* KayanSecim aktif kutuyu bu öznitelikle buluyor. */
+      data-kayan={e}
       onClick={() => onGec(e)}
       aria-current={ekran === e ? "page" : undefined}
       aria-label={AD[e]}
-      className={`grid size-11 place-items-center rounded-full border-none bg-transparent transition-colors ${
-        ekran === e ? "text-gri-900" : "text-gri-400"
+      /* active:scale-95 — dokunulduğu an düğme hafifçe içeri basıyor.
+         Baloncuk YOLA ÇIKARKEN parmağın altındaki düğmenin tepki vermesi,
+         hareketin kullanıcının kendi dokunuşundan doğduğu hissini veriyor.
+         Renk geçişi baloncuktan biraz yavaş (240ms): baloncuk varmadan
+         yazı beyaza dönseydi bir an beyaz zeminde beyaz ikon kalırdı. */
+      className={`grid size-11 place-items-center rounded-full border-none bg-transparent transition-[color,transform] duration-[240ms] ease-out active:scale-95 ${
+        ekran === e ? "text-white" : "text-gri-500"
       }`}
     >
       {e === "profil" && ben ? (
         <span
           className="grid place-items-center rounded-full transition-shadow"
-          style={{ boxShadow: ekran === e ? "0 0 0 2px var(--color-gri-900)" : "none" }}
+          /* Aktif hâlde halka beyaz: altındaki baloncuk siyah. */
+          style={{ boxShadow: ekran === e ? "0 0 0 2px #fff" : "none" }}
         >
           <Avatar kisi={ben.id} boyut={24} sekil="daire" />
         </span>
@@ -102,12 +120,23 @@ export default function AltMenu({
      giriş formunun üstünde yüzen bir gezinme çubuğu kalırdı. */
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-2.5 px-4 pb-3">
-      <nav className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-yuzey px-2 py-1.5 shadow-kat-3">
+      {/* Aktif sekme artık renk değil bir NESNE: buzlu cam baloncuk
+          sekmeden sekmeye akıyor. Dört ayrı durum yerine tek taşınan durum.
+
+          "Ara" bu kapsülden ÇIKTI (AramaCubugu). Alt menü "neredeyim"
+          sorusunu yanıtlıyor; arama ise bir yere gitmek değil bir şey
+          bulmak — haritanın üstünde duran bir araç. Arama ekranındayken
+          hiçbir sekme aktif değil, baloncuk da soluyor: doğru, çünkü
+          gerçekten bir sekmede değilsin. */}
+      <KayanSecim
+        aktif={ekran}
+        className="pointer-events-auto flex items-center gap-0.5 rounded-full bg-yuzey px-2 py-1.5 shadow-kat-3"
+        baloncuk="baloncuk rounded-full"
+      >
         {dugme("harita")}
         {dugme("akis")}
-        {dugme("ara")}
         {dugme("profil")}
-      </nav>
+      </KayanSecim>
 
       <div className="pointer-events-auto relative shrink-0">
         {acik && (

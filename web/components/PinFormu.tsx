@@ -150,7 +150,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
   };
 
   const alan = "px-4 py-3.5";
-  const etiket = "mb-2 block font-tabela text-xs uppercase tracking-[0.12em] text-gri-600";
+  const etiket = "mb-2 block text-2xs font-bold uppercase tracking-etiket text-gri-600";
   const girdi = "w-full rounded-lg bg-yuzey shadow-kat-1 px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton";
 
   return (
@@ -201,7 +201,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
           {yeniYer && (
             <div className="mt-2 rounded-lg bg-yuzey shadow-kat-1 p-3">
-              <div className="mb-2 font-tabela text-xs uppercase tracking-[0.11em] text-jeton">
+              <div className="mb-2 text-2xs font-bold uppercase tracking-etiket text-gri-900">
                 Yeni mekan
               </div>
               {/* ENGEL değil uyarı: sınır çokgeni 201 noktaya sadeleştirilmiş,
@@ -209,7 +209,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                   İskelesi Kütüphanesi iskelenin üstünde ve bu testte "dışarıda"
                   görünüyor). Karar kullanıcının. */}
               {!karadaMi(yeniYer.lat, yeniYer.lng) && (
-                <p className="mb-2 rounded-md border border-[rgba(184,128,26,.45)] bg-[rgba(184,128,26,.09)] p-2 text-sm leading-snug">
+                <p className="mb-2 rounded-md border border-[rgba(0,0,0,.12)] bg-[rgba(16,16,20,.05)] p-2 text-sm leading-snug">
                   Bu nokta <b>Kadıköy’ün karası dışında</b> görünüyor — deniz ya da
                   başka bir ilçe olabilir. İğneyi haritada sürükleyerek düzeltebilirsin.
                   İskele gibi gerçekten suyun üstündeki bir yer için olduğu gibi bırak.
@@ -355,7 +355,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
             <input id="puan" type="range" min={1} max={10} step={0.5} value={puan}
               onChange={(e) => setPuan(Number(e.target.value))}
               className="h-1 flex-1 accent-[var(--color-jeton)]" />
-            <output className="w-10 shrink-0 text-right font-sayi text-lg font-bold text-jeton">
+            <output className="w-10 shrink-0 text-right font-sayi text-lg font-bold text-gri-900">
               {puan}
             </output>
           </div>
@@ -379,7 +379,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
         {/* ---- isteğe bağlı ---- */}
         <details className={alan}>
-          <summary className="cursor-pointer font-tabela text-xs uppercase tracking-[0.12em] text-gri-600">
+          <summary className="cursor-pointer text-2xs font-bold uppercase tracking-etiket text-gri-600">
             İstersen birkaç şey daha
           </summary>
           <div className="mt-3 space-y-3">
@@ -497,7 +497,7 @@ export function Onizleme({ dosya }: { dosya: File }) {
 
   if (video) {
     return (
-      <div className="grid size-[52px] shrink-0 place-items-center rounded-md bg-[#3B2C12] text-xl text-white">
+      <div className="grid size-[52px] shrink-0 place-items-center rounded-md bg-gri-900 text-xl text-white">
         ▶
       </div>
     );
