@@ -420,12 +420,18 @@ body {
    Tek olduğu için GİRİŞİ de hak ediyor: küçükten gelir, hedefini aşar,
    sonra eğik açısına oturur — birinin elle yapıştırdığı gibi.
 
-   Dönüş açısı Cikartma bileşenindeki -9deg ile aynı bitmek ZORUNDA,
-   yoksa animasyon bitince çıkartma yerinden sıçrıyor. */
+   Bitiş açısı çağıranın duruş açısıyla AYNI olmak zorunda, yoksa animasyon
+   bitince çıkartma yerinden sıçrıyor. Eskiden son kare -9deg'e çiviliydi ve
+   bu, başka açıdaki her çıkartmayı animasyonsuz bırakıyordu. Artık açı
+   --aci-cikartma'dan geliyor; ara kareler ona GÖRECELİ:
+     giriş  = açı - 17deg  (küçükten ve daha yatık gelir)
+     tepe   = açı +  5deg  (hedefi aşar)
+     bitiş  = açı          (yerine oturur)
+   Çağıran yalnızca --aci-cikartma'yı yazar; hiç yazmazsa -9deg. */
 @keyframes yapistir {
-  0%   { transform: rotate(-26deg) scale(.3);  opacity: 0; }
-  62%  { transform: rotate(-4deg)  scale(1.1); opacity: 1; }
-  100% { transform: rotate(-9deg)  scale(1);   opacity: 1; }
+  0%   { transform: rotate(calc(var(--aci-cikartma, -9deg) - 17deg)) scale(.3);  opacity: 0; }
+  62%  { transform: rotate(calc(var(--aci-cikartma, -9deg) +  5deg)) scale(1.1); opacity: 1; }
+  100% { transform: rotate(var(--aci-cikartma, -9deg))               scale(1);   opacity: 1; }
 }
 .yapistir { animation: yapistir .52s var(--ease-yayli) both; }
 
