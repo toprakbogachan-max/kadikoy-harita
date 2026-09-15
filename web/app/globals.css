@@ -54,22 +54,62 @@
   --color-rozet-nane:      #D3F2E0;  --color-rozet-nane-ink:  #1F6B45;
 
   /* ---------- durum ----------
-     YALNIZCA metin rengi olarak kullanılır, dolu zemin olarak değil. */
+     YALNIZCA metin rengi olarak kullanılır, dolu zemin olarak değil.
+     Hepsi beyaz yüzeyde AA geçiyor (5.34–6.54:1, ölçüldü). */
   --color-acik:      #1E7A3C;
   --color-kapali:    #B3261E;
   --color-jeton:     #8A5F0F;   /* eski pirinç — yalnızca rozet/metin */
   --color-mercan:    #B8452F;   /* uyarı metni */
   --color-su:        #EAEAE9;
 
-  /* kategori renkleri: yalnızca fotoğrafsız kart degradelerinde ve
-     jeton yedek marker'ında. Arayüz çipinde/kartında DEĞİL — orada
-     kategoriyi emoji taşıyor (skill §6 "Emoji birinci sınıf vatandaş"). */
+  /* ---------- tek renkli eylem ----------
+     Skill §14: "UI elemanını renklendirme" kuralının TEK istisnası
+     birincil eylemdir — referansta kaydet düğmesi dolu mavi bir daire,
+     konum düğmesi de mavi. Siyah çapa "neredeyim"i, mavi "ne
+     yapabilirim"i taşıyor. Ekranda ikisinden FAZLASI olmamalı, yani
+     bu token bir palet değil bir kota: aynı anda tek eylem.
+
+     Değer haritadaki "sen" noktasından (.benim-konum-nokta) alındı ve
+     o nokta da artık bu tokena bağlı — konumun ve birincil eylemin
+     aynı maviyi konuşması bilinçli. Üstünde beyaz 5.14:1. */
+  --color-mavi:      #2F6FB8;
+  --color-mavi-koyu: #2A6099;   /* basılı hâl; beyazla 6.50:1 */
+
+  /* ---------- kategori: iki uç, ikisinin de yeri belli ----------
+     Skill §3'ün doygunluk kuralı: DOYGUNLUK ALANLA TERS ORANTILI.
+     Bu yüzden kategori rengi iki ayrı kademede yaşıyor ve biri
+     diğerinin yerine geçemez.
+
+       1) DOYGUN uç (--color-yemek …) — lib/paleti.ts RENK[].ana'nın
+          CSS aynası. Tek meşru yeri fotoğrafı OLMAYAN geniş yüzeyler:
+          kayıt akışındaki kişiselleştirme ızgarası (skill §8) ve
+          jetonun yedek marker'ı. Çipte, kartta, butonda KULLANMA.
+       2) ROZET ucu (--color-rozet-yemek …) — kategori arayüzde
+          görünecekse buradan görünür. Pastel zemin + koyu mürekkep;
+          zeminler lib/paleti.ts KAGIT'ten, mürekkepler RENK[].golge'den,
+          yani iki dosya aynı rengi söylüyor. Çiftlerin hepsi AA geçiyor
+          (4.93–8.83:1, ölçüldü — en dar olan kahve).
+
+     Arayüzün VARSAYILANI ikisi de değil: kategoriyi emoji taşıyor
+     (lib/paleti.ts EMOJI, skill §6). Rozet, emojinin tek başına
+     yetmediği yerde devreye girer — sıralama etiketi, çıkartma,
+     filtre sayacı. Boyut büyüdükçe rozet de düşer, emoji kalır. */
   --color-yemek:  #E0271C;
   --color-kahve:  #DE9B2E;
   --color-bar:    #7360C4;
   --color-tatli:  #DC6389;
   --color-kultur: #329179;
   --color-park:   #569E4C;
+
+  --color-rozet-yemek:   #FBDDD5;  --color-rozet-yemek-ink:  #921008;
+  --color-rozet-kahve:   #FBEECB;  --color-rozet-kahve-ink:  #8E5C11;
+  --color-rozet-bar:     #E3DDF8;  --color-rozet-bar-ink:    #412F86;
+  --color-rozet-tatli:   #FBDCE7;  --color-rozet-tatli-ink:  #8F3053;
+  --color-rozet-kultur:  #D5EAE2;  --color-rozet-kultur-ink: #12594B;
+  --color-rozet-park:    #E0EDD2;  --color-rozet-park-ink:   #2D652A;
+  --color-rozet-otel:    #D6E7F2;  --color-rozet-otel-ink:   #123F58;
+  --color-rozet-magaza:  #FAE1CE;  --color-rozet-magaza-ink: #7A3608;
+  --color-rozet-diger:   #EAE3D6;  --color-rozet-diger-ink:  #453A2C;
 
   /* ---------- tipografi: İKİ KADEMELİ SİSTEM ----------
      Skill §4, bu dilin en ayırt edici özelliği.
@@ -116,6 +156,23 @@
   --tracking-tabela:  0.06em;   /* eski ad → Kademe C'ye bağlandı */
   --tracking-genis:   0.09em;   /* Kademe C, ekstra ferah */
 
+  /* İstatistik karosunun (skill §6) iri rakamı text-xl (20px) kullanır.
+     Skill 22px diyor; 2 piksellik fark için sekiz basamaklı rampaya
+     dokuzuncu bir basamak eklemedik — rampanın az sayıda ve tanınır
+     olması, tek bir bileşenin birebir eşleşmesinden önemli.
+     Bu karar verildi, tekrar açma. */
+
+  /* ---------- boşluk ----------
+     Skill 4/8/12/16/24/32/48 istiyor, varsayılan kenar boşluğu 16.
+     Burada TOKEN YOK ve bu bilinçli: Tailwind'in kendi --spacing'i
+     (0.25rem) bu merdiveni birebir veriyor → p-1 p-2 p-3 p-4 p-6 p-8
+     p-12. Px'e sabitleseydik rem'in kullanıcının tarayıcı yazı
+     boyutuyla birlikte büyüme davranışını, yani bir erişilebilirlik
+     özelliğini, hiçbir kazanç karşılığı olmadan öldürürdük.
+
+     KURAL: kenar boşluğu px-4. Keyfi p-[13px] yazma — ölçek dışına
+     çıkman gerekiyorsa önce ölçeğin yanlış olup olmadığını sor. */
+
   /* ---------- şekil ----------
      Üç şekil, net kuralları var (skill §5):
        pill (rounded-full) — yatay, metin içeren her şey
@@ -130,6 +187,10 @@
   --radius-lg:  20px;   /* kart, panel */
   --radius-xl:  22px;   /* profil avatarı (squircle) */
   --radius-2xl: 28px;   /* çekilebilir alt panel üst köşeleri */
+  /* Pill ve daire için token yok: ikisi de Tailwind'in rounded-full'u.
+     Ayrımı yarıçap değil ORAN yapıyor — kare bir kutuda rounded-full
+     daire, geniş bir kutuda pill. Ayrı bir --radius-hap eklemek aynı
+     şeyi söylemenin ikinci yolunu yaratır, o da tutarsızlık üretir. */
 
   /* ---------- gölge ----------
      Derinliğin TEK kaynağı; ayraç çizgisi ve kalın kenarlık yok.
@@ -241,6 +302,30 @@ body {
   content: ""; position: absolute; inset: 0;
   background: var(--ortu); pointer-events: none;
 }
+
+/* ---------- yatay kaydırma şeridi ----------
+   Skill §6: fotoğraf şeritleri, istatistik karoları ve avatar listeleri
+   yatay kaydırılır ve son eleman KASITLI olarak kenardan taşar — "devamı
+   var" sinyalinin kendisi bu. Scrollbar gizlendiği için (mobilde zaten
+   görünmüyor) kenardaki solma, kaydırılabildiğine dair TEK işaret;
+   olmadan şerit kesilmiş bir liste gibi duruyor.
+
+   Solma genişliği değişken: dar bir avatar şeridinde 2rem fazla, orada
+   çağıran taraf --serit-solma'yı kısar. Maskeyi iki kez yazmak zorundayız,
+   -webkit- öneki Safari için hâlâ gerekli.
+
+   Bu sınıf şu an bir bileşene bağlı DEĞİL: aynı maske beş ekranda satır içi
+   Tailwind keyfi değeriyle kopyalanmış (FiltreCipleri, HikayeSeridi,
+   AraEkrani, ListeSayfasi) ve üç şeritte hiç yok (MekanSayfasi'nın fotoğraf,
+   etiket ve yorum şeritleri). Toplama işi primitif fazının. */
+.serit {
+  --serit-solma: 2rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--serit-solma)), transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--serit-solma)), transparent);
+}
+.serit::-webkit-scrollbar { display: none; }
 
 /* ---------- kayan seçim baloncuğu ----------
    KayanSecim'in taşıdığı aktif durum. Dolu siyah DEĞİL, buzlu cam:
@@ -549,12 +634,15 @@ body {
 
 /* ---------- kullanıcının kendi konumu ----------
    Jeton dilinden ayrı bilerek: bu bir mekan değil, sen. Mavi/çelik tonu
-   pirinç jetonlarla karışmasın diye seçildi. */
+   pirinç jetonlarla karışmasın diye seçildi; artık --color-mavi'ye bağlı
+   (skill §14'ün "tek renkli eylem" istisnası — aynı değer, tek kaynak).
+   Hale'nin rgba'sı da aynı mavi; token'a bağlanmadı çünkü color-mix
+   desteklenmediğinde hale tamamen kaybolurdu, değeri o riske değmiyor. */
 .benim-konum { position: relative; width: 28px; height: 28px; }
 .benim-konum-nokta {
   position: absolute; inset: 6px;
   border-radius: 50%;
-  background: #2F6FB8;
+  background: var(--color-mavi);
   border: 3px solid #fff;
   box-shadow: 0 1px 4px rgba(20, 15, 8, .45);
 }
