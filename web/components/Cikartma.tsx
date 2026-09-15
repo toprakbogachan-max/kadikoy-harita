@@ -40,7 +40,10 @@ export default function Cikartma({
   return (
     <span
       aria-hidden
-      className={`grid size-[82px] shrink-0 -rotate-[9deg] place-items-center text-center ${className}`}
+      /* -rotate-[9deg] animasyonla ÇAKIŞMIYOR, onun yedeği: hareket azaltma
+         tercihinde animation:none oluyor ve eğik açıyı bu sınıf taşıyor.
+         Animasyon koşarken fill:both son kareyi (aynı -9deg) tutuyor. */
+      className={`yapistir grid size-[82px] shrink-0 -rotate-[9deg] place-items-center text-center ${className}`}
       style={{
         clipPath: patlama(),
         background: `var(--color-rozet-${ton})`,

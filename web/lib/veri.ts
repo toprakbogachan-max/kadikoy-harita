@@ -412,38 +412,70 @@ export async function kisileriGetir(): Promise<Record<string, Kisi>> {
 
 /* ---------- listeler ---------- */
 
+const LISTE_SECIM = `id, owner_id, slug, title, intro, cover_url, cover_pos,
+             list_items ( ordering, places ( id, slug, name, category, neighborhood, lat, lng, pin_count ) )`;
+
+interface HamListe {
+  id: string; owner_id: string; slug: string; title: string; intro: string | null;
+  cover_url: string | null; cover_pos: number | null;
+  list_items: { ordering: number; places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; lat: number | null; lng: number | null; pin_count: number | null } }[];
+}
+
+const listeCevir = (l: HamListe): Liste => ({
+  id: l.id, sahip: l.owner_id, slug: l.slug, baslik: l.title, not: l.intro,
+  /* cover_pos'u eski satırlarda null bulabiliriz (göç 16'dan önce yazılmış
+     liste yok ama sütun nullable okunabiliyor); ortadan kadraj varsayılan. */
+  kapak: l.cover_url, kapakKonum: l.cover_pos ?? 50,
+  yerler: l.list_items
+    .slice().sort((a, b) => a.ordering - b.ordering)
+    .map((li): Yer => ({
+      id: li.places.id, slug: li.places.slug, ad: li.places.name,
+      tur: li.places.category, semt: li.places.neighborhood ?? "Kadıköy",
+      /* Koordinat artık buradan geliyor: lat/lng places üstünde hesaplanan
+         alanlar olarak tanımlı, PostgREST okuyabiliyor. Önce 0,0 yazılıyordu
+         ve liste ekranlarında harita çizilemiyordu. */
+      lat: li.places.lat ?? 0, lng: li.places.lng ?? 0, saatler: null,
+      /* Liste satırındaki "· N pin" bu olmadan hiç görünmüyordu. */
+      pinSayisi: li.places.pin_count ?? 0,
+    })),
+});
+
 export async function kisininListeleri(kisiId: string): Promise<Liste[]> {
   const { data, error } = await db
     .from("lists")
-    .select(`id, owner_id, slug, title, intro, cover_url, cover_pos,
-             list_items ( ordering, places ( id, slug, name, category, neighborhood, lat, lng, pin_count ) )`)
+    .select(LISTE_SECIM)
     .eq("owner_id", kisiId)
     .order("created_at", { ascending: false });
   if (error) throw error;
+  return (data as unknown as HamListe[]).map(listeCevir);
+}
 
-  interface HamListe {
-    id: string; owner_id: string; slug: string; title: string; intro: string | null;
-    cover_url: string | null; cover_pos: number | null;
-    list_items: { ordering: number; places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; lat: number | null; lng: number | null; pin_count: number | null } }[];
-  }
-  return (data as unknown as HamListe[]).map((l) => ({
-    id: l.id, sahip: l.owner_id, slug: l.slug, baslik: l.title, not: l.intro,
-    /* cover_pos'u eski satırlarda null bulabiliriz (göç 16'dan önce yazılmış
-       liste yok ama sütun nullable okunabiliyor); ortadan kadraj varsayılan. */
-    kapak: l.cover_url, kapakKonum: l.cover_pos ?? 50,
-    yerler: l.list_items
-      .slice().sort((a, b) => a.ordering - b.ordering)
-      .map((li): Yer => ({
-        id: li.places.id, slug: li.places.slug, ad: li.places.name,
-        tur: li.places.category, semt: li.places.neighborhood ?? "Kadıköy",
-        /* Koordinat artık buradan geliyor: lat/lng places üstünde hesaplanan
-           alanlar olarak tanımlı, PostgREST okuyabiliyor. Önce 0,0 yazılıyordu
-           ve liste ekranlarında harita çizilemiyordu. */
-        lat: li.places.lat ?? 0, lng: li.places.lng ?? 0, saatler: null,
-        /* Liste satırındaki "· N pin" bu olmadan hiç görünmüyordu. */
-        pinSayisi: li.places.pin_count ?? 0,
-      })),
-  }));
+/**
+ * "Beğenebileceğin listeler" — açık bir listenin altında duran şerit.
+ *
+ * Benzerlik ölçüsü YOK ve bu bilinçli: ortak mekan sayısına göre sıralamak
+ * için list_items üstünde bir kesişim sorgusu gerekiyor, o da RPC demek.
+ * Şu an elde olan dürüst ölçü "başkalarının son yaptığı listeler" — kullanıcı
+ * bir listeye bakarken başka bir seçki keşfetsin diye. Gerçek benzerlik
+ * gerekirse önce bir RPC yazılmalı, burayı zorlamak değil.
+ *
+ * Kendi listesi ve açık olan liste dışarıda: birine zaten baktığı şeyi ya da
+ * kendi yaptığını önermek öneri değil.
+ */
+export async function benzerListeler(
+  haricListeId: string, haricSahip: string, limit = 8,
+): Promise<Liste[]> {
+  const { data, error } = await db
+    .from("lists")
+    .select(LISTE_SECIM)
+    .neq("id", haricListeId)
+    .neq("owner_id", haricSahip)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  /* Boş liste önerilmiyor: kapağı degradeye düşen, içinde hiçbir şey
+     olmayan bir kart keşif değil, gürültü. */
+  return (data as unknown as HamListe[]).map(listeCevir).filter((l) => l.yerler.length > 0);
 }
 
 /** Bir kişinin pinlediği mekanlar — hikaye şeridi filtresi bunu kullanır. */

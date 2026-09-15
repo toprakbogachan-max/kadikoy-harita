@@ -94,7 +94,12 @@ export default function AraEkrani({ onYerAc, onKisiAc }: Props) {
                 className="flex w-[92px] shrink-0 flex-col items-center gap-1.5 rounded-lg border-none bg-yuzey px-2 py-3 shadow-kat-1"
               >
                 <Avatar kisi={k.id} boyut={40} />
-                <span className="w-full truncate text-center text-xs font-bold uppercase tracking-siki">{k.ad}</span>
+                {/* KİŞİ ADI BÜYÜK HARF DEĞİL. Referansın hiçbir ekranında
+                    insan adı büyük harfe çevrilmiyor — mekan adı vitrine
+                    konduğu için bağırıyor, insanın adı kimlik olduğu için
+                    kendi kasasında duruyor. Profil sayfası zaten böyleydi,
+                    arama kartı ondan ayrı düşmüştü. */}
+                <span className="w-full truncate text-center text-xs font-bold tracking-siki">{k.ad}</span>
                 <span className="text-center font-sayi text-2xs text-gri-500">
                   {k.takipci} takipçi
                 </span>

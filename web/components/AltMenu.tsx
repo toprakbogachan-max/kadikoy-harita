@@ -148,9 +148,18 @@ export default function AltMenu({
               aria-label="Kapat"
               className="fixed inset-0 z-[45] border-none bg-transparent"
             />
+            {/* Satırlar TEK bir kutunun içinde ayraç çizgisiyle bölünmüş
+                değil, ARALIKLI ayrı beyaz kartlar. Referanstaki eylem
+                sayfası (engelle / bildir / paylaş) böyle: her seçenek
+                kendi kartında duruyor.
+
+                Fark önemli, çünkü ayraç çizgisi "bunlar tek bir listenin
+                parçaları" der; aralık ise "bunlar ayrı ayrı eylemler" —
+                ikincisi doğru. Ayrıca skill §5'in "ayraç çizgisi yok,
+                derinlik gölgeden gelir" kuralına uyan tek biçim bu. */}
             <div
               role="menu"
-              className="absolute bottom-[60px] right-0 z-[46] w-[176px] overflow-hidden rounded-lg bg-yuzey shadow-kat-4"
+              className="absolute bottom-[60px] right-0 z-[46] flex w-[176px] flex-col gap-1.5"
             >
               {/* Kademe B: arayüz küçük harf. */}
               {([["pin at", onPinAt], ["liste oluştur", onListeOlustur]] as const).map(([ad, islem]) => (
@@ -158,7 +167,7 @@ export default function AltMenu({
                   key={ad}
                   role="menuitem"
                   onClick={() => { setAcik(false); islem(); }}
-                  className="block w-full border-none border-b border-[var(--cizgi-2)] bg-transparent px-4 py-3 text-left text-sm font-semibold lowercase text-gri-900 last:border-0"
+                  className="bas block w-full rounded-lg border-none bg-yuzey px-4 py-3 text-left text-sm font-semibold lowercase text-gri-900 shadow-kat-4"
                 >
                   {ad}
                 </button>

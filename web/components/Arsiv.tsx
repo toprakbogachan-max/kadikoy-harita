@@ -55,13 +55,14 @@ export default function Arsiv({
         onKapat={() => setAcikListe(null)}
         onYerAc={onYerAc}
         onHaritada={onListeHaritada}
+        onListeAc={setAcikListe}
       />
     );
   }
 
   return (
     <div role="dialog" aria-modal="true" aria-label={BASLIK[tur]}
-         className="absolute inset-0 z-40 flex flex-col bg-kagit">
+         className="yuksel absolute inset-0 z-40 flex flex-col bg-kagit">
       <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div className="flex items-center gap-2.5">
           <button onClick={onKapat} aria-label="Geri"

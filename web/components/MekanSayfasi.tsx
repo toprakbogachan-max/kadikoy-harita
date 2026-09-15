@@ -220,6 +220,12 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
     () => (ben ? kayitliMi(yerId) : Promise.resolve(false)), [yerId, ben?.id], false);
   const [kayitYerel, setKayitYerel] = useState<boolean | null>(null);
   const kayitli = kayitYerel ?? kayitSunucu;
+  /* Zıplama sayacı, boolean değil: aynı yöne iki kez basıldığında da
+     (kaydet → vazgeç → kaydet) animasyon yeniden koşsun diye React
+     anahtarı olarak kullanılıyor — anahtar değişince ikon yeniden
+     kuruluyor ve animasyon baştan başlıyor.
+     0 = kullanıcı henüz dokunmadı; ilk yüklemede ikon zıplamamalı. */
+  const [zipSayaci, setZipSayaci] = useState(0);
 
   /* Mekan değişince kademe ve açık bölümler başa döner. Karusel indeksi
      yok artık — pinler zaman tünelinde alt alta, "kaçıncı pin" diye bir
@@ -609,7 +615,7 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
               <a
                 href={`https://www.google.com/maps/dir/?api=1&destination=${yer.lat},${yer.lng}`}
                 target="_blank" rel="noreferrer"
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 no-underline shadow-kat-1"
+                className="bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 no-underline shadow-kat-1"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
                   <path d="M9 4 3 6.4v13.2L9 17.2l6 2.4 6-2.4V4l-6 2.4zM9 4v13.2M15 6.4v13.2" />
@@ -621,22 +627,30 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
                   if (!ben) return onGirisIste();
                   const su = kayitli;
                   setKayitYerel(!su);
+                  setZipSayaci((n) => n + 1);
                   try { await kayitDegistir(yerId, su); }
                   catch (e) { setKayitYerel(su); alert(e instanceof Error ? e.message : String(e)); }
                 }}
                 aria-pressed={kayitli}
-                className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none px-3.5 py-2 text-sm font-semibold lowercase tracking-ui shadow-kat-1 ${
+                className={`bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none px-3.5 py-2 text-sm font-semibold lowercase tracking-ui shadow-kat-1 ${
                   kayitli ? "bg-rozet-nane text-rozet-nane-ink" : "bg-yuzey text-gri-900"
                 }`}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
-                  <path d="M6 3.6h12v17l-6-4.2-6 4.2z" />
-                </svg>
+                {/* Renk değişimi tek başına zayıf bir onay: göz düğmenin
+                    üstündeyken zeminin naneye döndüğünü kaçırabiliyor,
+                    hareketi kaçıramıyor. Zıplayan yalnızca İKON — hapın
+                    tamamı zıplarsa yanındaki haplar da oynuyormuş gibi
+                    görünüyor. */}
+                <span key={zipSayaci} className={zipSayaci ? "zipla grid" : "grid"}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+                    <path d="M6 3.6h12v17l-6-4.2-6 4.2z" />
+                  </svg>
+                </span>
                 {kayitli ? "kaydettin" : "kaydet"}
               </button>
               <button
                 onClick={() => { setKademe("tam"); setKunyeAcik(true); }}
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-1"
+                className="bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-1"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                   <path d="M4 6h16M4 12h16M4 18h10" />

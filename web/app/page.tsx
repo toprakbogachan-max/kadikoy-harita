@@ -329,6 +329,13 @@ function Uygulama() {
                 onAc={() => setSeritAcik(true)}
               />
 
+              {/* Şerit yalnızca SONUÇ VARKEN: sonuç yoksa aşağıdaki Durum
+                  zaten ve daha doğrudan konuşuyor, iki kutu üst üste
+                  gelirse ikisi de okunmuyor. */}
+              {!yukleniyor && !hata && gorunenler.length > 0 && (
+                <FiltreSeridi filtre={filtre} />
+              )}
+
               <Durum
                 yukleniyor={yukleniyor}
                 hata={hata}
@@ -544,6 +551,38 @@ function Uygulama() {
         />
       </div>
     </main>
+  );
+}
+
+/* Aktif filtrenin ne yaptığını söyleyen şerit.
+   Referansın keşif sayfasında filtre çiplerinin altında böyle bir satır var
+   ("🟢 new — be the first to try them!"): çipin adı ne olduğunu söylüyor,
+   şerit NİYE önemli olduğunu.
+
+   Bizde en çok gereken yer "şu an açık": saati bilinmeyen mekanlar bu
+   sorgudan eleniyor (412 mekanın 281'i) ve kullanıcı haritanın neden
+   boşaldığını anlayamıyordu. Çipin kendisi bunu söyleyemez, yeri yok.
+
+   "hepsi" ve kategori çiplerinde şerit YOK: çipin adı zaten tam olarak ne
+   olduğunu söylüyor, üstüne bir cümle eklemek gürültü. */
+const FILTRE_ACIKLAMA: Record<string, { nokta: string; ad: string; not: string }> = {
+  takip:          { nokta: "👥", ad: "takip ettiklerin", not: "pinledikleri her yer, ekranın neresi olursa olsun" },
+  kaydettiklerim: { nokta: "🔖", ad: "kaydettiklerin",   not: "sonra bakmak için işaretlediklerin" },
+  acik:           { nokta: "🟢", ad: "şu an açık",       not: "saati bilinmeyen mekanlar bu listede yok" },
+};
+
+function FiltreSeridi({ filtre }: { filtre: string }) {
+  const a = FILTRE_ACIKLAMA[filtre];
+  if (!a) return null;
+  return (
+    <div className="pointer-events-auto mx-3 mt-2 flex items-center gap-2 rounded-full bg-yuzey px-3.5 py-2 shadow-kat-2">
+      <span aria-hidden className="shrink-0 text-sm leading-none">{a.nokta}</span>
+      <span className="min-w-0 text-2xs leading-snug text-gri-600">
+        <b className="font-semibold text-gri-900">{a.ad}</b>
+        {" — "}
+        {a.not}
+      </span>
+    </div>
   );
 }
 

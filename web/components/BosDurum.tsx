@@ -48,7 +48,7 @@ export default function BosDurum({
         {eylem && eylemEtiketi && (
           <button
             onClick={eylem}
-            className="mt-3.5 rounded-full border-none bg-white px-4 py-2.5 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-2"
+            className="bas mt-3.5 rounded-full border-none bg-white px-4 py-2.5 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-2"
           >
             {eylemEtiketi}
           </button>

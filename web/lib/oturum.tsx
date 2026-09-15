@@ -11,7 +11,10 @@ interface OturumDurumu {
   ben: Kisi | null;
   yukleniyor: boolean;
   girisYap: (eposta: string, sifre: string) => Promise<void>;
-  kayitOl: (eposta: string, sifre: string, kullaniciAdi: string, ad: string) => Promise<string | null>;
+  kayitOl: (
+    eposta: string, sifre: string, kullaniciAdi: string, ad: string,
+    ekstra?: Record<string, unknown>,
+  ) => Promise<string | null>;
   cikisYap: () => Promise<void>;
   tazele: () => void;
 }
@@ -78,13 +81,21 @@ export function OturumSaglayici({ children }: { children: React.ReactNode }) {
   }, [db]);
 
   const kayitOl = useCallback(
-    async (eposta: string, sifre: string, kullaniciAdi: string, ad: string) => {
+    async (
+      eposta: string, sifre: string, kullaniciAdi: string, ad: string,
+      /* Kayıt akışında toplanan ek tercihler (nereden geldi, hangi türleri
+         seviyor). user_metadata'ya yazılıyor — ŞEMA GÖÇÜ GEREKTİRMİYOR:
+         handle_new_user trigger'ı yalnızca username ve display_name'i
+         okuyor, tanımadığı anahtarlar auth.users.raw_user_meta_data'da
+         duruyor ve profiles'a dokunmuyor. */
+      ekstra?: Record<string, unknown>,
+    ) => {
       const { data, error } = await db.auth.signUp({
         email: eposta,
         password: sifre,
         options: {
           /* Trigger bu iki alanı okuyup profiles satırını dolduruyor */
-          data: { username: kullaniciAdi, display_name: ad },
+          data: { username: kullaniciAdi, display_name: ad, ...ekstra },
           /* Bu verilmezse Supabase projenin "Site URL" ayarına düşüyor —
              oradaki localhost yüzünden onay bağlantısı hata veriyordu.
              origin'i çalışma anında okuyoruz: geliştirmede localhost,

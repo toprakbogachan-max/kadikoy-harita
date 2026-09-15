@@ -166,13 +166,16 @@ export default function Profil({
 
   if (acikListe) {
     return (
+      /* sahibi ve düzenleme yetkisi artık ListeSayfasi'nin kendi işi:
+         öneri şeridinden BAŞKASININ listesi açılabiliyor ve buradan
+         geçirilen değerler o an yanlış olurdu. */
       <ListeSayfasi
         liste={acikListe}
-        sahibi={benim ? undefined : kisi.ad}
         onKapat={() => setAcikListe(null)}
         onYerAc={onYerAc}
         onHaritada={onListeHaritada}
-        {...(benim ? { onDuzenle: () => setDuzenlenen(acikListe) } : {})}
+        onListeAc={setAcikListe}
+        onDuzenle={() => setDuzenlenen(acikListe)}
       />
     );
   }

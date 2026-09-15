@@ -84,7 +84,7 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Ayarlar"
-         className="absolute inset-0 z-40 flex flex-col bg-kagit">
+         className="yuksel absolute inset-0 z-40 flex flex-col bg-kagit">
       <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div>
           <h2 className="text-xl font-semibold leading-tight">Ayarlar</h2>
@@ -133,7 +133,9 @@ export default function Ayarlar({ onKapat, onYerAc, onGonderiAc, onListeOlustur,
         <Satir ad="Gizlilik politikası" aciklama="Hangi veri nerede, kime görünür"
                onTikla={() => setYasal("gizlilik")}
                ikon={<><rect x="5" y="10" width="14" height="10" rx="1.6" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>} />
-        <div className="border-b border-[var(--cizgi)] px-4 py-3">
+        {/* Ayraç çizgisi kalktı (skill §5): ayrım artık boşlukla kuruluyor.
+            Atıf metninin KENDİSİ duruyor — ODbL gereği zorunlu, kaldırılamaz. */}
+        <div className="px-4 pb-1 pt-4">
           <div className="text-base">Veri kaynakları</div>
           <div className="mt-0.5 text-xs leading-snug text-gri-600">
             Mekan verisi © OpenStreetMap katkıcıları (ODbL).

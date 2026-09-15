@@ -44,7 +44,7 @@ export default function Bildirimler({
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Bildirimler"
-         className="iridesan absolute inset-0 z-40 flex flex-col">
+         className="yuksel iridesan absolute inset-0 z-40 flex flex-col">
       <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div>
           <h2 className="text-2xl font-extrabold uppercase leading-none tracking-siki">Bildirimler</h2>

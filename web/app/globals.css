@@ -151,6 +151,25 @@
   /* eski adlar */
   --shadow-kagit:  var(--shadow-kat-1);
   --shadow-kagit2: var(--shadow-kat-3);
+
+  /* ---------- hareket eğrileri ----------
+     Referans bir iOS uygulaması ve oradaki hareketin tamamı YAYLI: hiçbir
+     şey hedefine düz bir hızla varmıyor, hepsi hafifçe aşıp oturuyor. Bu
+     yüzden tek bir "ease-out" yetmiyor, üç ayrı ses gerekiyor.
+
+       yayli    VARIŞ — panel açılışı, çıkartma yerleşimi, sekme geçişi.
+                Hafif aşma (1.18) "fiziksel bir şey yerine oturdu" diyor.
+       yumusak  KISA MESAFE — basma tepkisi, renk/opaklık geçişi. Aşma YOK:
+                8 pikselde aşma titreme gibi okunuyor.
+       cikis    GİDİŞ — kapanan katman. Hızlanarak çıkar, çünkü giden şeyin
+                varışını izlemiyoruz.
+
+     KURAL: yeni bir geçiş yazarken bu üçünden birini seç, satır içi
+     cubic-bezier yazma — eğri tutarsızlığı tek tek fark edilmez ama
+     uygulamanın tamamı "ucuz" hissettirir. */
+  --ease-yayli:   cubic-bezier(.22, 1.18, .36, 1);
+  --ease-yumusak: cubic-bezier(.22, .61, .36, 1);
+  --ease-cikis:   cubic-bezier(.32, 0, .67, 0);
 }
 
 :root {
@@ -169,8 +188,18 @@
   --ortu: linear-gradient(to top,
           rgba(0,0,0,.72) 0%, rgba(0,0,0,.35) 38%, rgba(0,0,0,0) 72%);
 
-  --cam-bulanik: 24px;
-  --cam-zemin: rgba(255, 255, 255, 0.72);
+  /* Bulanıklık 24px'ten 36px'e çıktı. 24'te arkadaki uygulama fazla
+     OKUNUR kalıyordu: kendi arama çubuğu, çipleri ve alt menüsü seçilebiliyor
+     ve önlerinde duran beyaz onboarding elemanları onlara karışıyordu.
+     Referansta arka plan "harita olduğu anlaşılan ama detayı seçilmeyen"
+     bir yıkama — bağlam veriyor, dikkat çalmıyor. Aranan denge o. */
+  --cam-bulanik: 36px;
+  /* Perde 0.72 → 0.82. Kayıt akışı bu camın üstünde yaşıyor ve 0.72'de
+     arkadaki kendi arayüzümüz (başlık kartı, alt menü, çipler) hâlâ
+     seçiliyordu: "haritanı kişiselleştir" başlığı arkadaki "BAHARİYE"
+     kartının üstüne binince ikisi de okunmuyordu. Bağlam hissi 0.82'de
+     duruyor — harita olduğu anlaşılıyor, detayı okunmuyor. */
+  --cam-zemin: rgba(255, 255, 255, 0.82);
 }
 
 * { box-sizing: border-box; }
@@ -256,6 +285,150 @@ body {
    opacity:0'ı da siliyor. */
 @media (prefers-reduced-motion: reduce) {
   .belir { animation: none; }
+}
+
+/* ============================================================
+   HAREKET KATMANI
+
+   Referansın en zor kopyalanan tarafı burası: ekran görüntüsünden
+   tipografi ve renk okunuyor ama hareket okunmuyor. Oysa o uygulamanın
+   "pahalı" hissinin büyük kısmı harekette — hiçbir şey anında takas
+   olmuyor, her şey bir yerden GELİYOR.
+
+   Dört kalıp var ve hepsinin ayrı bir işi var:
+     .bas        dokunulan şey içeri basılır      → "tıkladım"
+     .yuksel     üste açılan katman yükselir      → "üstüne bir şey açtım"
+     .yapistir   çıkartma yerine oturur           → karakter anı
+     .zipla      durum değiştiren düğme zıplar    → "oldu"
+
+   Yatay sekme geçişi bu listede yok: onu KayanGecis yapıyor (Web
+   Animations API, çünkü yönü çalışma anında hesaplanıyor).
+   ============================================================ */
+
+/* ---------- basma tepkisi ----------
+   Dokunulabilir HER şey içeri basılmalı: çip, hap, ikon düğmesi, kart.
+   Tek başına küçük bir detay ama yokluğu arayüzü "web sitesi" gibi
+   gösteriyor — parmağın altındaki şey tepki vermezse tıklanabilir
+   olduğuna dair tek işaret imleç oluyor, telefonda imleç yok.
+
+   0.955: 44 piksellik bir düğmede 2 piksel. Daha fazlası (0.92) oyuncak,
+   daha azı fark edilmiyor. */
+.bas { transition: transform .15s var(--ease-yumusak); }
+.bas:active { transform: scale(.955); }
+
+/* ---------- üste açılan katman ----------
+   Tam ekran katmanlar (giriş, ayarlar, bildirimler, form) anında
+   beliriyordu; bir katmanın nereden geldiği belli olmayınca kullanıcı
+   "geri" ile nereye döneceğini de bilmiyor.
+
+   YÜZDE, piksel değil: katmanlar çerçeveyi kaplıyor, 8 yüzde her
+   yükseklikte aynı oranda yol demek. Opaklık 0'dan değil 0.4'ten
+   başlıyor — sıfırdan gelen katman "yanıp söndü" gibi duruyor. */
+@keyframes yuksel {
+  from { transform: translateY(8%);  opacity: .4; }
+  to   { transform: none;            opacity:  1; }
+}
+.yuksel { animation: yuksel .36s var(--ease-yayli) both; }
+
+/* ---------- çıkartma yerleşimi ----------
+   Çıkartma ekranın karakter katmanı (skill §6) ve ekran başına bir tane.
+   Tek olduğu için GİRİŞİ de hak ediyor: küçükten gelir, hedefini aşar,
+   sonra eğik açısına oturur — birinin elle yapıştırdığı gibi.
+
+   Dönüş açısı Cikartma bileşenindeki -9deg ile aynı bitmek ZORUNDA,
+   yoksa animasyon bitince çıkartma yerinden sıçrıyor. */
+@keyframes yapistir {
+  0%   { transform: rotate(-26deg) scale(.3);  opacity: 0; }
+  62%  { transform: rotate(-4deg)  scale(1.1); opacity: 1; }
+  100% { transform: rotate(-9deg)  scale(1);   opacity: 1; }
+}
+.yapistir { animation: yapistir .52s var(--ease-yayli) both; }
+
+/* ---------- durum zıplaması ----------
+   Kaydet/beğen gibi DURUM DEĞİŞTİREN düğmeler için. Renk değişimi tek
+   başına yeterli bir onay değil: göz düğmenin üstündeyken rengin
+   döndüğünü kaçırabiliyor, hareketi kaçıramıyor.
+
+   Aşıp geri geliyor (1.22 → .94 → 1): tek yönlü büyüme "büyüdü ve öyle
+   kaldı" der, bize gereken "tepki verdi". */
+@keyframes zipla {
+  0%, 100% { transform: none; }
+  35%      { transform: scale(1.22); }
+  65%      { transform: scale(.94); }
+}
+.zipla { animation: zipla .36s var(--ease-yumusak); }
+
+/* Hareket azaltma: hepsi kapalı, içerik son hâlinde duruyor.
+   .bas'ta transition'ı da siliyoruz — :active hâlâ ölçek uygularsa
+   geçişsiz bir sıçrama kalır, bu azaltılmış hareket değil daha kötü
+   hareket olur. */
+@media (prefers-reduced-motion: reduce) {
+  .yuksel, .yapistir, .zipla { animation: none; }
+  .bas { transition: none; }
+  .bas:active { transform: none; }
+}
+
+/* ============================================================
+   KARŞILAMA EKRANI — iç ekranlardan BİLEREK farklı
+
+   Skill §7: içeride arayüz sessizdir, karşılama ekranında arayüz
+   performans yapar. Referansın açılışında marka adı balon gibi
+   şişirilmiş, yansımalı krom 3B harfler olarak gökyüzünde süzülüyor
+   ve etrafında objeler (kahve, sushi, disko topu) dolaşıyor.
+
+   Burada 3B render yok: aynı his CSS'le kuruluyor. WebGL'in maliyeti
+   bu tek ekran için ağır ve gerçek kazancı yok — hareket + metalik
+   degrade + gölge üçlüsü hissi zaten veriyor.
+   ============================================================ */
+
+/* Krom harf: degrade metnin İÇİNE kırpılıyor (background-clip).
+   Duraklar eşit aralıklı DEĞİL — gerçek krom yansımasında açık ve
+   koyu bantlar düzensizdir, eşit aralık plastik gibi durur. */
+.krom {
+  background-image: linear-gradient(
+    177deg,
+    #eaf1f7 0%, #9db1c5 13%, #435366 31%,
+    #f6fafd 47%, #7a8da1 56%, #2b3847 73%,
+    #9dadbd 86%, #f1f6fa 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Satır yüksekliği ve dolgu BİRLİKTE ayarlanmalı: background-clip:text
+     degradeyi elemanın ARKA PLAN KUTUSUNA çiziyor, kutunun dışında kalan
+     glif parçası boyasız — yani görünmez — kalıyor. Sıkı leading'de
+     (.82) "KADIKÖY"ün Ö noktaları kutunun üstünde kalıp tamamen
+     kayboluyordu. Dolgu kutuyu büyütüyor, sıkı görünüm bozulmuyor. */
+  line-height: 1;
+  padding-block: .12em;
+  /* İki gölge: yakın olan harfi zeminden koparıyor, uzak olan
+     gökyüzüne oturtuyor. Tek gölgeyle harfler yapıştırma gibi duruyor. */
+  filter:
+    drop-shadow(0 2px 1px rgba(255, 255, 255, .55))
+    drop-shadow(0 10px 20px rgba(28, 48, 74, .38));
+}
+
+/* Süzülme — marka adı yerçekimsiz durmalı. Dönüş ŞART: yalnızca
+   yukarı-aşağı giden bir şey asansör gibi duruyor, hafif salınım
+   onu yüzen bir objeye çeviriyor. */
+@keyframes suzul {
+  0%, 100% { transform: translateY(0)     rotate(-1.2deg); }
+  50%      { transform: translateY(-14px) rotate(1.2deg); }
+}
+.suzul { animation: suzul 5.5s ease-in-out infinite; }
+
+/* Etraftaki objeler: aynı hareket ama daha yavaş, daha geniş ve her
+   biri farklı gecikmede — hepsi aynı anda tepe noktasına varırsa
+   ekran nefes alıp veriyormuş gibi oluyor, istenen şey dağınık bir
+   sürüklenme. Gecikme ve süre çağıran tarafta satır içi veriliyor. */
+@keyframes suzul-obje {
+  0%, 100% { transform: translateY(6px)   rotate(-8deg); }
+  50%      { transform: translateY(-18px) rotate(8deg); }
+}
+.suzul-obje { animation: suzul-obje 7s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .suzul, .suzul-obje { animation: none; }
 }
 
 /* Cam panel — form/kayıt ekranında uygulamanın kendi içeriği arkada

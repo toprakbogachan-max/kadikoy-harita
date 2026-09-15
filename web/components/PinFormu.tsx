@@ -155,7 +155,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Pin at"
-         className="absolute inset-0 z-40 flex flex-col bg-kagit">
+         className="yuksel absolute inset-0 z-40 flex flex-col bg-kagit">
       <div className="flex shrink-0 items-start justify-between gap-3 px-4 py-[15px]">
         <div>
           <h2 className="text-xl font-semibold leading-tight">Pin at</h2>
