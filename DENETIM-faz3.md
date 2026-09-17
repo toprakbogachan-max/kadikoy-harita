@@ -110,11 +110,28 @@ kalanı ya tarayıcıda ölçülmüş yer tutucu boyu (`KayitRozeti`,
 `DereceGostergesi`) ya da yerleşime özgü (`Cip` dikey genişliği, etiket
 kaydırması) — kalsın.
 
-**Özet:** 21 bulgu · 8 düzelt (T1, T4, T5, T10, T11, T12, T13, T15 + T19
-yorumu) · 7 karar (T6, T7, T8, T9, T16, T17, T19/T20) · 6 kalsın.
+**Özet:** 21 bulgu · 8 düzelt (T1, T4, T5, T10, T11, T12, T13, T15; ayrıca
+T19'un yorum kısmı) · 8 karar (T6, T7, T8, T9, T16, T17, T19, T20) · 5 kalsın
+(T2, T3, T14, T18, T21).
 
 ### 3b düzeltme grupları
 
 1. **Pill etkileşimsiz biçimi** — T1.
 2. **Kenar, süre, basma** — T4, T5, T10, T11.
 3. **Glif, kanca, yorum** — T12, T13, T15, T19 yorumları.
+
+## Paket 3b — düzeltmeler
+
+### Grup 1 — Pill etkileşimsiz biçimi (T1)
+
+`Pill`'e `etkilesimsiz` prop'u: `<span>` üretir, `bas` sınıfı ve
+`aria-pressed` / `disabled` / `aria-busy` yok, `onTikla` ve `href` yok
+sayılır. Varsayılan `false`, yani mevcut her kullanım aynı. Örnek
+`/tasarim/primitifler`'e eklendi.
+
+| sayfa | fark | neden |
+|---|---|---|
+| `/tasarim/degerlendirme` | 53 `button` → `span`; konum, boyut ve stil farkı **0** (etiket adı yok sayılarak öğe öğe karşılaştırıldı) | `DereceGostergesi` çipleri artık `inert` kap yerine etkileşimsiz Pill |
+| `/tasarim/harita-eksikleri` | arkadaş etiketleri 22 → 24 px (1 px yukarı, 1 px aşağı büyüdü) | elle çizilmiş hap standart küçük Pill'den 2 px kısaydı; artık Pill'in kendisi. Farkın kendisi düzeltilen tutarsızlık |
+| `/tasarim/primitifler` | yeni "etkileşimsiz" kutusu, altındaki içerik aşağı kaydı | varyantın önizlemesi |
+| diğerleri | yok | — |

@@ -1,6 +1,7 @@
 "use client";
 
 import Avatar from "@/components/corner/primitives/Avatar";
+import Pill from "@/components/corner/primitives/Pill";
 
 /**
  * B5 — arkadaş marker'ı. Referansta mor kişi silüeti + `@jake saved`.
@@ -132,17 +133,18 @@ export default function ArkadasMarkeri({
       </span>
 
       {etiketVar && (
-        /* Beyaz hap. `Pill` primitifi kullanılamıyor: o her zaman
-           <button>/<a> üretiyor ve haritanın üstünde tıklamayı yutan bir
-           düğme istemiyoruz (eksik varyant → rapor). */
-        <span
-          aria-hidden
-          className="pointer-events-none absolute left-full top-1/2 ml-[7px] max-w-[160px] -translate-y-1/2 truncate whitespace-nowrap rounded-full bg-yuzey px-2.5 py-1 text-xs shadow-kat-2"
-        >
-          {/* Kişi adı ASLA BÜYÜK HARF (skill §4): insanın adı vitrin
-              değil kimlik. Kalın + sıkı aralık yeter. */}
-          <b className="font-extrabold tracking-siki text-gri-900">@{kullaniciAdi}</b>{" "}
-          <span className="font-semibold lowercase tracking-ui text-gri-600">{eylem}</span>
+        /* Beyaz hap, `Pill etkilesimsiz`: haritanın üstünde tıklamayı yutan
+           bir düğme istemiyoruz (Faz 3'e kadar Pill yalnızca düğme
+           üretiyordu ve bu hap elle çiziliyordu — DENETIM-faz3 T1).
+           MUTLAKA mutlak konumlu ve `pointer-events-none`: etikete dokunmak
+           haritayı kaydırmaya devam etsin. Okunur metin dış kapta. */
+        <span aria-hidden className="pointer-events-none absolute left-full top-1/2 ml-[7px] -translate-y-1/2">
+          <Pill etkilesimsiz boy="kucuk" kat={2} kasa="aynen" className="max-w-[160px]">
+            {/* Kişi adı ASLA BÜYÜK HARF (skill §4): insanın adı vitrin
+                değil kimlik. Kalın + sıkı aralık yeter. */}
+            <b className="font-extrabold tracking-siki text-gri-900">@{kullaniciAdi}</b>{" "}
+            <span className="font-semibold lowercase tracking-ui text-gri-600">{eylem}</span>
+          </Pill>
         </span>
       )}
     </span>

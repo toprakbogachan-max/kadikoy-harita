@@ -86,6 +86,17 @@ export interface PillProps {
   onTikla?: () => void;
   /** KayanSecim akan baloncuğu bu öznitelikle buluyor. */
   kayan?: string;
+  /**
+   * Yalnızca gösterim: `<button>` yerine `<span>` üretir. Basma tepkisi,
+   * `aria-pressed` / `disabled` / `aria-busy` yok; `onTikla` ve `href`
+   * yok sayılır. Haritanın üstündeki etiket ya da bir puanın kademesi gibi
+   * dokunulmayan haplar için — düğme olmayan şeyi düğme yapıp sonra
+   * `inert` ile susturmak yerine.
+   *
+   * Anlamı çağıran taraf verir (`role`, `aria-label` dış kapta): tek
+   * başına bir `<span>` ekran okuyucuya bir şey söylemez.
+   */
+  etkilesimsiz?: boolean;
   className?: string;
 }
 
@@ -107,6 +118,7 @@ export default function Pill({
   href,
   onTikla,
   kayan,
+  etkilesimsiz = false,
   className = "",
 }: PillProps) {
   const zipSayaci = useZipla(zipla, aktif);
@@ -124,7 +136,9 @@ export default function Pill({
       : { boxShadow };
 
   const sinif = [
-    "bas inline-flex items-center justify-center whitespace-nowrap rounded-full border-none no-underline",
+    /* bas: dokunulabilir her şey basılır (skill §13) — dokunulmayan hariç. */
+    etkilesimsiz ? "" : "bas",
+    "inline-flex items-center justify-center whitespace-nowrap rounded-full border-none no-underline",
     "font-semibold tracking-ui transition-[background-color,color] duration-200 ease-yumusak",
     kasa === "kucuk" ? "lowercase" : "",
     /* Degrade kenarlıkta zemin satır içi geliyor; dolgu sınıfı yalnızca
@@ -160,6 +174,14 @@ export default function Pill({
       )}
     </>
   );
+
+  if (etkilesimsiz) {
+    return (
+      <span data-kayan={kayan} className={sinif} style={stil}>
+        {ic}
+      </span>
+    );
+  }
 
   if (href) {
     return (

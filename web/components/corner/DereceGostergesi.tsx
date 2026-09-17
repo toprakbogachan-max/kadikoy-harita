@@ -41,10 +41,11 @@ import Pill from "@/components/corner/primitives/Pill";
  * halkadan ve yazıdan alıyor, renkten değil.
  *
  * ── Erişilebilirlik ────────────────────────────────────────────────
- * Pill her zaman <button> üretiyor; göstergede basılacak bir şey yok.
- * Çipler `inert` bir kabın içinde duruyor (odaklanmıyor, tıklanmıyor,
- * ekran okuyucuya görünmüyor) ve dış kap tek bir `role="img"` + cümle
- * taşıyor: "puan 8,5 · beğendim". Dört düğme okutmak yerine tek bilgi.
+ * Göstergede basılacak bir şey yok: çipler `Pill etkilesimsiz`, yani
+ * düğme değil `<span>`. Dış kap tek bir `role="img"` + cümle taşıyor
+ * ("puan 8,5 · beğendim"); `role="img"` içeriğini ekran okuyucudan
+ * saklıyor, dört çip okunmuyor. (Faz 3'e kadar Pill'in etkileşimsiz hâli
+ * yoktu ve çipler `inert` bir kapla susturuluyordu — DENETIM-faz3 T1.)
  *
  * Saf sunum: `puan` props'tan gelir, `lib/` çağrılmaz.
  */
@@ -144,11 +145,11 @@ export default function DereceGostergesi({
     >
       {/* items-stretch: yazılı çip yazının satır yüksekliğini taşıyor, emoji
           çipler taşımıyor (35 / 29 px). Uzatılınca dördü aynı boyda. */}
-      <span inert className="inline-flex min-w-0 max-w-full items-stretch gap-1.5">
+      <span className="inline-flex min-w-0 max-w-full items-stretch gap-1.5">
         {bicim === "tek" && bos ? (
           /* Boş `tek`: kademe yok, cümle var. Soluk ama okunur —
              "puan yok" bir hata değil, henüz kimse gitmemiş. */
-          <Pill ikon="🫥" boy={boy} kat={1} className="min-w-0">
+          <Pill ikon="🫥" boy={boy} kat={1} etkilesimsiz className="min-w-0">
             {/* Renk iç yazıda: Pill'in kendi `text-gri-900`ı ile aynı
                 özellikte ikinci bir sınıf yarışır, kazananı sıra belirler. */}
             <span className="text-gri-500">{bosMetin}</span>
@@ -165,6 +166,7 @@ export default function DereceGostergesi({
                 kenar={aktif && bicim === "olcek" ? "halka" : "yok"}
                 boy={boy}
                 kat={1}
+                etkilesimsiz
                 /* min-h: yazısız çip 29 px, yazılı 35 px. Seçili çip varken
                    items-stretch eşitliyor; puan YOKKEN (hepsi yazısız) satır
                    yer tutucudan ve dolu hâlden kısa kalmasın diye. */

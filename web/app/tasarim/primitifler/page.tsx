@@ -244,6 +244,29 @@ export default function PrimitiflerSayfasi() {
           </div>
         </Kutu>
 
+        <Kutu baslik="etkileşimsiz — dokunulmayan hap (faz 3)">
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill etkilesimsiz boy="kucuk" kat={2} kasa="aynen">
+              <b className="font-extrabold tracking-siki">@deniz</b>{" "}
+              <span className="lowercase text-gri-600">kaydetti</span>
+            </Pill>
+            <Pill etkilesimsiz ikon="😋" kenar="halka" kat={1}>
+              beğendim
+            </Pill>
+            <Pill etkilesimsiz ikon="😐" kat={1} className="opacity-55 grayscale" />
+            <Pill etkilesimsiz dolgu="nane" boy="kucuk" kat={0} ikon="✓">
+              kayıtlı
+            </Pill>
+          </div>
+          <p className="mt-3 max-w-[56ch] font-metin text-2xs text-gri-600">
+            <code className="font-sayi">etkilesimsiz</code>: <code className="font-sayi">&lt;button&gt;</code>{" "}
+            değil <code className="font-sayi">&lt;span&gt;</code>, basma tepkisi ve{" "}
+            <code className="font-sayi">aria-pressed</code> yok. Haritadaki arkadaş etiketi ve derece
+            göstergesinin kademeleri böyle. Anlamı dış kap verir — tek başına bir span ekran okuyucuya
+            bir şey söylemez.
+          </p>
+        </Kutu>
+
         <Kutu baslik="yuvarlak chrome düğmeleri (A4)">
           <div className="flex flex-wrap items-center gap-2">
             {["‹", "✕", "⋯", "🔔", "✈", "⚙"].map((i) => (
