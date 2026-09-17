@@ -1,0 +1,342 @@
+"use client";
+
+/**
+ * /tasarim/degerlendirme — değerlendirmenin iki bileşeni (Faz 2, Paket 4).
+ *
+ *   E1 DereceGostergesi (Pill üstüne) — 1–10 puanın dört kademeli okunuşu
+ *   E2 YineGiderMisin   (Kart + Pill üstüne) — `pins.would_return` + favorim
+ *
+ * Kurallar önceki vitrinlerle aynı:
+ *   1) Ürün değil ALET. Buradaki hiçbir düzen gerçek bir ekran değil.
+ *   2) ÖRNEK VERİ BURADA DURUR. Puan, cevap, kalp — hepsi bu sayfanın state'i.
+ *   3) Sayfa denetlediği dile uyuyor: iridesan zemin, beyaz kart, ayraç
+ *      çizgisi yok, iki kademeli tipografi.
+ *
+ * Veri modeli değişmiyor (karar 2026-09-15): E1 yalnızca gösterim.
+ * Montaj yok: ikisi de hiçbir ekrana bağlı değil, o iş sonraki fazın.
+ */
+
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import DereceGostergesi, {
+  DERECE_KADEMELERI,
+  puanKademesi,
+} from "@/components/corner/DereceGostergesi";
+import YineGiderMisin, { type YineGiderDegeri } from "@/components/corner/YineGiderMisin";
+
+/* ---------- vitrin iskeleti (önceki vitrinlerle aynı kalıp) ---------- */
+
+function Baslik({ no, ad, kod, not }: { no: string; ad: string; kod: string; not: string }) {
+  return (
+    <header className="mb-4 mt-12 first:mt-0">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="font-sayi text-2xs text-gri-500">{no}</span>
+        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
+        <span className="font-sayi text-2xs text-gri-400">{kod}</span>
+      </div>
+      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
+    </header>
+  );
+}
+
+function Etiket({ children }: { children: ReactNode }) {
+  return <div className="mb-2.5 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>;
+}
+
+/* Kağıt zemin: beyaz hapın gölgesi ancak burada görünür. */
+function Kutu({ baslik, children, className = "" }: { baslik: string; children: ReactNode; className?: string }) {
+  return (
+    <section className="mb-3">
+      <Etiket>{baslik}</Etiket>
+      <div className={`rounded-lg bg-kagit p-4 ${className}`} style={{ border: "1px solid var(--cizgi)" }}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function Alt({ children }: { children: ReactNode }) {
+  return <div className="mt-2 text-2xs lowercase tracking-ui text-gri-500">{children}</div>;
+}
+
+/* Sayfadaki sayı yazımı bileşeninkiyle aynı: Türkçe virgül. */
+const yaz = (p: number) => new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 }).format(p);
+
+/* Eşiğin iki yanı — sınır değerleri yan yana görmeden eşik denetlenmez. */
+const SINIRLAR = [3.5, 4, 6.5, 7, 8.5, 9];
+
+const bosDegis = () => {};
+
+export default function DegerlendirmeSayfasi() {
+  /* E1 canlı: PinFormu'ndaki kaydırıcının aynısı — 1–10, yarım adım. */
+  const [puan, setPuan] = useState(7);
+
+  /* E2 canlı: cevap nullable, kalp ayrı bayrak. */
+  const [tekrar, setTekrar] = useState<YineGiderDegeri | null>(null);
+  const [favori, setFavori] = useState(false);
+  const [favoriBekliyor, setFavoriBekliyor] = useState(false);
+  const zaman = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (zaman.current) clearTimeout(zaman.current); }, []);
+  /* Kalp ağ isteği bekliyormuş gibi: kısa bir halka, sonra durum döner. */
+  const favoriDegis = (yeni: boolean) => {
+    setFavoriBekliyor(true);
+    if (zaman.current) clearTimeout(zaman.current);
+    zaman.current = setTimeout(() => {
+      setFavoriBekliyor(false);
+      setFavori(yeni);
+    }, 600);
+  };
+
+  return (
+    <main className="iridesan min-h-dvh">
+      <div className="mx-auto max-w-[900px] px-4 pb-24 pt-10">
+        <p className="text-2xs font-bold uppercase tracking-etiket text-gri-500">
+          kadıköy harita · corner dili · faz 2
+        </p>
+        <h1 className="mt-2 text-3xl font-extrabold uppercase tracking-siki text-gri-900">
+          Değerlendirme
+        </h1>
+        <p className="mt-2 max-w-[62ch] font-metin text-base text-gri-800">
+          Değerlendirmenin iki bileşeni: <code className="font-sayi text-sm">E1 · E2</code>.
+          Veri modeli değişmiyor — uygulamadaki 1–10 puan kalıyor, E1 onu yalnızca
+          Corner&apos;ın dört kademeli çipleriyle <strong>gösteriyor</strong>. E2 ise zaten
+          şemada olan <code className="font-sayi text-sm">pins.would_return</code> alanının
+          görünümü. İkisi de Pill/Kart primitiflerinin üstüne kuruldu, hiçbiri veri çekmiyor.
+        </p>
+
+        {/* ============ 1 · E1 ============ */}
+        <Baslik
+          no="01"
+          ad="Derece göstergesi"
+          kod="E1 · DereceGostergesi"
+          not="Referansta disliked / okay / liked / favorite. Bizde sayı kalıyor, kademe onun okunuşu. Dört çip yan yana ama yalnızca seçili olan yazısını taşıyor: dördünün tam etiketi 390 pikselde sığmıyor, iki satıra kırılan bir ölçek de sıralı okunmuyor. Seçili hâl siyah halka; diğerleri soluk ve gri tonlu."
+        />
+
+        <Kutu baslik="canlı — PinFormu’ndaki kaydırıcı: 1–10, yarım adım">
+          <div className="flex flex-col gap-4">
+            <label className="flex items-center gap-3 text-2xs lowercase tracking-ui text-gri-600">
+              puan
+              <input
+                type="range"
+                min={1}
+                max={10}
+                step={0.5}
+                value={puan}
+                onChange={(e) => setPuan(Number(e.target.value))}
+                aria-label="puan"
+                className="w-56 max-w-full accent-gri-900"
+              />
+              <code className="w-8 font-sayi text-xs text-gri-900">{yaz(puan)}</code>
+            </label>
+            <DereceGostergesi puan={puan} puanGoster />
+            <DereceGostergesi puan={puan} bicim="tek" />
+          </div>
+          <Alt>
+            üstte ölçek + sayı · altta tek biçim · kademe:{" "}
+            <code className="font-sayi">{puanKademesi(puan)}</code> · ekran okuyucu tek cümle duyuyor,
+            dört düğme değil
+          </Alt>
+        </Kutu>
+
+        <Kutu baslik="dört kademe (donmuş)">
+          <div className="flex flex-col gap-3">
+            {[2, 5.5, 8, 9.5].map((p) => (
+              <div key={p} className="flex flex-wrap items-center gap-3">
+                <code className="w-8 font-sayi text-2xs text-gri-500">{yaz(p)}</code>
+                <DereceGostergesi puan={p} />
+              </div>
+            ))}
+          </div>
+          <Alt>emoji tonun yedeği değil ölçeğin kendisi — gri tonlu olanlar da sırayı söylüyor</Alt>
+        </Kutu>
+
+        <Kutu baslik="eşik sınırları — öneri, kesin değil (NOT.md)">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-3">
+            {SINIRLAR.map((p) => (
+              <div key={p} className="flex items-center gap-2">
+                <code className="w-7 font-sayi text-2xs text-gri-500">{yaz(p)}</code>
+                <DereceGostergesi puan={p} bicim="tek" />
+              </div>
+            ))}
+          </div>
+          <Alt>
+            {DERECE_KADEMELERI.map((k, i) => {
+              const sonraki = DERECE_KADEMELERI[i + 1];
+              return (
+                <span key={k.id}>
+                  {i > 0 && " · "}
+                  {k.ad} {sonraki ? `< ${sonraki.alt}` : `≥ ${k.alt}`}
+                </span>
+              );
+            })}
+          </Alt>
+        </Kutu>
+
+        <Kutu baslik="ortalama · boş · yükleniyor">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <DereceGostergesi puan={8.26} puanGoster />
+              <span className="text-2xs lowercase tracking-ui text-gri-500">mekan ortalaması 8,26</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <DereceGostergesi puan={null} />
+              <DereceGostergesi puan={null} bicim="tek" />
+              <span className="text-2xs lowercase tracking-ui text-gri-500">henüz pin yok</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <DereceGostergesi puan={7} yukleniyor />
+              <DereceGostergesi puan={7} bicim="tek" yukleniyor />
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <DereceGostergesi puan={4.5} boy="kucuk" puanGoster />
+              <DereceGostergesi puan={4.5} boy="kucuk" yukleniyor />
+              <span className="text-2xs lowercase tracking-ui text-gri-500">küçük boy + yer tutucusu</span>
+            </div>
+            <div className="w-[250px] rounded-md p-2" style={{ border: "1px dashed var(--cizgi)" }}>
+              <DereceGostergesi puan={2} puanGoster />
+            </div>
+          </div>
+          <Alt>
+            ortalama ondalık da olsa tek kademeye düşüyor, sayı bir haneye yuvarlanıyor · boş ölçekte
+            hiçbiri seçili değil · yer tutucu gerçek çiplerle aynı yeri kaplıyor · 250 piksellik kesik
+            çerçeve: sayı alta iniyor, seçili yazı kırpılıyor, emoji çipler küçülmüyor
+          </Alt>
+        </Kutu>
+
+        {/* ============ 2 · E2 ============ */}
+        <Baslik
+          no="02"
+          ad="Yine gider miydin"
+          kod="E2 · YineGiderMisin"
+          not="Referansta would you go back? — 👎 / 👍 ikilisi ve ayrı bir ♥ fav’d kutusu. Bizde iki değil ÜÇ seçenek var, çünkü şema öyle: pins.would_return in ('evet','belki','hayır'). Seçili hâl dolu siyah değil siyah halka. Favorim kalbi ayrı düğme; veri modelinde karşılığı yok, o yüzden yalnızca onFavoriDegis verilirse çiziliyor."
+        />
+
+        <Kutu baslik="canlı — tıkla, seçiliyi tekrar tıkla boşalt · kalp bekleyip dönüyor">
+          <div className="max-w-[420px]">
+            <YineGiderMisin
+              deger={tekrar}
+              onDegis={setTekrar}
+              ipucu="isteğe bağlı"
+              favori={favori}
+              onFavoriDegis={favoriDegis}
+              favoriYukleniyor={favoriBekliyor}
+            />
+          </div>
+          <Alt>
+            değer: <code className="font-sayi">{tekrar === null ? "null" : `"${tekrar}"`}</code> · favori:{" "}
+            <code className="font-sayi">{String(favori)}</code> · değer aynen `pins.would_return`e yazılabilir
+          </Alt>
+        </Kutu>
+
+        <Kutu baslik="üç durum (donmuş)">
+          <div className="grid gap-3 md:grid-cols-3">
+            {(["evet", "belki", "hayır"] as const).map((d) => (
+              <YineGiderMisin key={d} deger={d} onDegis={bosDegis} />
+            ))}
+          </div>
+          <Alt>halka tek işaret; yazı ağırlığı değişmiyor, gölge bir kademe düşüyor</Alt>
+        </Kutu>
+
+        <Kutu baslik="favorim · bekleyen istek · pasif · uzun soru">
+          <div className="grid gap-3 md:grid-cols-2">
+            <YineGiderMisin deger="evet" onDegis={bosDegis} favori onFavoriDegis={bosDegis} />
+            <YineGiderMisin deger={null} onDegis={bosDegis} favori={false} onFavoriDegis={bosDegis} />
+            <YineGiderMisin deger={null} onDegis={bosDegis} yukleniyor="belki" onFavoriDegis={bosDegis} favoriYukleniyor />
+            <YineGiderMisin deger="hayır" onDegis={bosDegis} pasif favori onFavoriDegis={bosDegis} />
+            <YineGiderMisin
+              deger="belki"
+              onDegis={bosDegis}
+              baslik="bu mekana bir daha yolun düşse içeri girer miydin?"
+              ipucu="isteğe bağlı"
+            />
+          </div>
+          <Alt>
+            soldan sağa, yukarıdan aşağı: favorim dolu · favorim boş · iki bekleyen istek · pasif
+            (giriş yok / demo hesap) · uzun soru + kalpsiz (onFavoriDegis verilmedi)
+          </Alt>
+        </Kutu>
+
+        {/* ============ 3 · dar çerçeve ============ */}
+        <Baslik
+          no="03"
+          ad="Dar çerçeve"
+          kod="390 px · asıl kullanım"
+          not="Uygulama telefonda yaşıyor. Aşağıdaki sütun tam 390 piksel ve bir pin detayının değerlendirme bloğunu taklit ediyor — düzen yalnızca oturuşu görmek için, montaj değil."
+        />
+
+        {/* Kutu'nun İÇİNE konmuyor: kutunun kendi dolgusu telefon genişliğinde
+            çerçeveyi 324 piksele düşürüyor ve gerçek bir ekrandan dar bir şey
+            sınanmış oluyor. Çerçeve doğrudan sayfa sütununda. */}
+        <section className="mb-3">
+          <Etiket>390 px · pin detayı</Etiket>
+          <div
+            className="mx-auto flex w-[390px] max-w-full flex-col gap-3 overflow-hidden rounded-lg bg-kagit p-4"
+            style={{ border: "1px dashed var(--cizgi)" }}
+          >
+            <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
+              <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">bana hitap puanı</div>
+              <div className="mt-2.5">
+                <DereceGostergesi puan={puan} puanGoster />
+              </div>
+            </div>
+            <YineGiderMisin
+              deger={tekrar}
+              onDegis={setTekrar}
+              ipucu="isteğe bağlı"
+              favori={favori}
+              onFavoriDegis={favoriDegis}
+              favoriYukleniyor={favoriBekliyor}
+            />
+            {/* Akış kartındaki dar yer: yalnızca tek çip, küçük boy. */}
+            <div className="flex items-center justify-between gap-3 rounded-lg bg-yuzey p-3 shadow-kat-1">
+              <span className="min-w-0 truncate text-sm font-extrabold uppercase tracking-siki text-gri-900">
+                ☕ Yeldeğirmeni Kahvecisi
+              </span>
+              <DereceGostergesi puan={9.5} bicim="tek" boy="kucuk" />
+            </div>
+            <div className="flex flex-col gap-2 rounded-lg bg-yuzey p-3 shadow-kat-1">
+              <span className="text-sm font-bold text-gri-900">Deniz Arslan</span>
+              <DereceGostergesi puan={3} boy="kucuk" puanGoster />
+            </div>
+          </div>
+          <Alt>
+            yatay taşma var mı · en geniş kademe (beğenmedim) de tek satır mı · kalp satırı itmiyor
+            mu · dar kapta önce sayı alta iniyor, sonra seçili yazı kırpılıyor
+          </Alt>
+        </section>
+
+        {/* ============ kapanış ============ */}
+        <Baslik
+          no="04"
+          ad="Açık kalan kararlar"
+          kod="ürün sahibine · NOT.md"
+          not="Uydurmak yerine yazıyoruz."
+        />
+
+        <div className="flex flex-col gap-2.5">
+          <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
+            <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">E1 · eşik</div>
+            <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-800">
+              Öneri: 4 altı beğenmedim, 4–6,5 idare eder, 7–8,5 beğendim, 9 ve üstü favorim. Demo
+              pinlerin puanları 6,5–9,5 arasında toplanıyor; insanlar zaten sevdikleri yere pin
+              atıyor. “Belki” diyen iki pin 6,5 ve 7’de — sınır tam oradan geçiyor.
+            </p>
+          </div>
+          <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
+            <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">E2 · favorim kalbi</div>
+            <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-800">
+              Şemada favori alanı yok. Kalp ya ayrı bir bayrak olur (yeni sütun) ya da puanın ≥ 9
+              okunuşu (E1’in favorim bandı). Bileşen ikisine de açık.
+            </p>
+          </div>
+          <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
+            <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">E2 · üç seçenek</div>
+            <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-800">
+              Spec 👎/👍 ikilisi diyor, şema üç değer tutuyor. İkiye indirmek “belki” cevaplarını
+              kaybettirir; bileşen şemaya uydu.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

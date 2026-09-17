@@ -35,3 +35,59 @@ Açık karar yok. Metin çalışırken değişmiyor ("aranıyor…"a dönseydi h
 genişlik değiştirip yerinden sıçrardı); durum ekran okuyucuya `aria-label` ve
 `aria-busy` ile gidiyor.
 
+## Paket 4 — değerlendirme
+
+Dosyalar: `DereceGostergesi`, `YineGiderMisin` (spec: TekrarGiderMiydin).
+Önizleme: `/tasarim/degerlendirme`.
+
+### Puan eşiği (öneri — kesinleştirilmedi)
+
+Şemadaki gerçek aralık spec'in yazdığı 0–10 değil, **1–10 ve yarım adımlı**
+(`pins.rating numeric(3,1)`, `PinFormu` kaydırıcısı `step={0.5}`, varsayılan 7).
+Mekan özetindeki ortalama ise herhangi bir ondalık olabilir. Bu yüzden eşik tam
+sayı kovası değil, sürekli aralık:
+
+| puan | kademe |
+|---|---|
+| < 4 (1–3,5) | beğenmedim 😕 |
+| 4 – < 7 (4–6,5) | idare eder 😐 |
+| 7 – < 9 (7–8,5) | beğendim 😋 |
+| ≥ 9 (9–10) | favorim 😍 |
+
+Neden bu eşik:
+
+- **Puanlar yukarı yığılıyor.** Elimizdeki tek puan verisi demo pinleri (15
+  pin, `scripts/tohum/tohum-demo.sql`): hepsi 6,5 ile 9,5 arasında, ortanca 8.
+  İnsanlar zaten sevdikleri yere pin atıyor. Spec'teki örnek eşikle (6–8
+  beğendim) 6'lık bir puan, ortancanın iki puan altında olduğu hâlde
+  "beğendim" okunurdu.
+- **"Belki" cevapları sınırı gösteriyor.** `would_return = 'belki'` diyen iki
+  pin 6,5 ve 7'de. İdare eder / beğendim sınırı tam oradan geçiyor.
+- **Favorim nadir kalmalı.** ≥ 9 demo verisinde 15 pinin 3'ü. Eşik 8,5 olsaydı
+  6'sı olurdu ve "favorim" ayırt edici olmaktan çıkardı.
+- **7 kaydırıcının başlangıç değeri.** Kaydırıcıya dokunmadan pin atan biri
+  "beğendim" okunuyor. Bu tartışmaya açık, aşağıdaki sorulardan biri.
+
+Karşı seçenek: spec'in örneği (0–2 / 3–5 / 6–8 / 9–10). Daha eşit aralıklı ama
+yukarı yığılan bir dağılımda dört kademenin ikisi neredeyse hiç görünmez.
+
+**Sorular:**
+1. Eşik bu mu olsun? Demo verisi uydurma; gerçek pin birikince
+   `place_summary`'nin `rating_buckets` çıktısıyla yeniden bakılmalı.
+2. Kaydırıcının varsayılanı 7 kalırsa dokunulmamış puan "beğendim" sayılıyor.
+   Bu kabul mü?
+
+### Favorim kalbi
+
+Spec `TekrarGiderMiydin`'e ayrı bir "favorim" kalp düğmesi istiyor. Şemada
+favori alanı yok. Bileşende kalp yalnızca `onFavoriDegis` verilirse çiziliyor,
+durumu dışarıdan geliyor. **Soru:** favori ayrı bir bayrak mı olacak (yeni
+sütun), yoksa puanın ≥ 9 okunuşu mu (yukarıdaki "favorim" bandı)? İkincisi
+yeni veri gerektirmez ama kullanıcı puanı değiştirmeden kalbi açıp kapatamaz.
+
+### İki değil üç seçenek
+
+Spec 👎 / 👍 ikilisi diyor. `pins.would_return` ise `'evet' | 'belki' | 'hayır'`
+tutuyor ve `PinFormu` üçünü de soruyor. İkiye indirmek "belki" cevaplarını
+kaybettirirdi; bileşen şemaya uydu. **Soru:** "belki" üründe kalıyor mu?
+
