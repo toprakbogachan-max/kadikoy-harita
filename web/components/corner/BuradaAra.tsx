@@ -21,7 +21,7 @@ import Pill from "@/components/corner/primitives/Pill";
  * geçişte tek değişen şey renk.
  *
  * Durum değişimini ekran okuyucuya yazı taşımadığı için `aria-label`
- * taşıyor (Pill `etiket`i oraya bağlıyor), `aria-busy` da Pill'den
+ * taşıyor (Pill `okunur`u oraya bağlıyor), `aria-busy` da Pill'den
  * geliyor.
  *
  * ⚠ SAF SUNUM: ne zaman görüneceğine, neyi arayacağına ve sonucu kime
@@ -58,7 +58,7 @@ export interface BuradaAraProps {
    * Etiket. Varsayılan marka sesiyle ve küçük harf (Kademe B). Değişirse
    * `calisiyor` hâlinde de aynısı kalır — genişlik oynamasın diye.
    */
-  metin?: string;
+  etiket?: string;
   /**
    * Harita durunca beliriyorsa girişi de olsun: kademeli beliriş
    * (globals `.belir`, hareket azaltmada kapalı).
@@ -71,7 +71,7 @@ export default function BuradaAra({
   calisiyor = false,
   onTikla,
   pasif = false,
-  metin = "burada ara",
+  etiket = "burada ara",
   belir = false,
   className = "",
 }: BuradaAraProps) {
@@ -87,10 +87,10 @@ export default function BuradaAra({
       yukleniyor={calisiyor}
       /* Haritanın üstünde yüzen en üst katman (skill §5, kademe 3). */
       kat={3}
-      etiket={calisiyor ? "aranıyor" : metin}
+      okunur={calisiyor ? "aranıyor" : etiket}
       className={`${belir ? "belir" : ""} ${className}`.trim()}
     >
-      {metin}
+      {etiket}
     </Pill>
   );
 }

@@ -214,7 +214,7 @@ export default function PrimitiflerSayfasi() {
               {kayitli ? "kaydettin" : "kaydet"}
             </Pill>
             <IkiliPill
-              etiket="Gitme durumu"
+              okunur="Gitme durumu"
               secili={gidisDurumu}
               onSec={setGidisDurumu}
               secenekler={[
@@ -270,7 +270,7 @@ export default function PrimitiflerSayfasi() {
         <Kutu baslik="yuvarlak chrome düğmeleri (A4)">
           <div className="flex flex-wrap items-center gap-2">
             {["‹", "✕", "⋯", "🔔", "✈", "⚙"].map((i) => (
-              <Pill key={i} boy="orta" etiket={`Düğme ${i}`} className="size-10 !px-0">
+              <Pill key={i} boy="orta" okunur={`Düğme ${i}`} className="size-10 !px-0">
                 <span aria-hidden>{i}</span>
               </Pill>
             ))}
@@ -316,7 +316,7 @@ export default function PrimitiflerSayfasi() {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-2xs lowercase text-gri-600">aktif biçim:</span>
             <IkiliPill
-              etiket="Aktif biçim"
+              okunur="Aktif biçim"
               secili={aktifBicim}
               onSec={setAktifBicim}
               secenekler={[
@@ -444,7 +444,7 @@ export default function PrimitiflerSayfasi() {
 
         <Kutu baslik="tıklanabilir kabuk + fotoğraflı davet (boş durum)">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Kart onTikla={() => {}} dolgu="dar" etiket="Örnek kart">
+            <Kart onTikla={() => {}} dolgu="dar" okunur="Örnek kart">
               <div className="flex items-center gap-3">
                 <Avatar ad="Deniz Kaya" renk="#7360C4" boyut="lg" />
                 <div className="min-w-0">
@@ -624,7 +624,7 @@ export default function PrimitiflerSayfasi() {
             </div>
 
             <Panel
-              etiket="Mekan paneli"
+              okunur="Mekan paneli"
               duraklar={[0.3, 0.62, 0.94]}
               durak={durak}
               onDurakDegis={setDurak}
@@ -633,10 +633,10 @@ export default function PrimitiflerSayfasi() {
                   <h3 className="min-w-0 flex-1 truncate text-2xl font-extrabold leading-none tracking-isim text-gri-900">
                     Karga Bar
                   </h3>
-                  <Pill boy="kucuk" etiket="Paylaş" className="size-8 !px-0">
+                  <Pill boy="kucuk" okunur="Paylaş" className="size-8 !px-0">
                     <span aria-hidden>✈</span>
                   </Pill>
-                  <Pill boy="kucuk" etiket="Kapat" className="size-8 !px-0">
+                  <Pill boy="kucuk" okunur="Kapat" className="size-8 !px-0">
                     <span aria-hidden>✕</span>
                   </Pill>
                 </div>

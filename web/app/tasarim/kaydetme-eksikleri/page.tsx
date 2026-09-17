@@ -134,12 +134,12 @@ export default function KaydetmeEksikleriSayfasi() {
 
         <Kutu baslik="tek kart durumları">
           <div className="flex flex-col gap-2">
-            <ListeSecimKarti liste={LISTELER[0]} secili={false} onSec={bosDegis} />
-            <ListeSecimKarti liste={LISTELER[0]} secili onSec={bosDegis} />
-            <ListeSecimKarti liste={LISTELER[1]} secili={false} onSec={bosDegis} />
-            <ListeSecimKarti liste={LISTELER[2]} secili={false} onSec={bosDegis} />
-            <ListeSecimKarti liste={LISTELER[3]} secili={false} onSec={bosDegis} />
-            <ListeSecimKarti liste={LISTELER[0]} secili={false} onSec={bosDegis} pasif />
+            <ListeSecimKarti liste={LISTELER[0]} aktif={false} onSec={bosDegis} />
+            <ListeSecimKarti liste={LISTELER[0]} aktif onSec={bosDegis} />
+            <ListeSecimKarti liste={LISTELER[1]} aktif={false} onSec={bosDegis} />
+            <ListeSecimKarti liste={LISTELER[2]} aktif={false} onSec={bosDegis} />
+            <ListeSecimKarti liste={LISTELER[3]} aktif={false} onSec={bosDegis} />
+            <ListeSecimKarti liste={LISTELER[0]} aktif={false} onSec={bosDegis} pasif />
           </div>
           <Alt>
             seçilmemiş · seçili (not alanı yok, çünkü `onNotDegis` verilmedi) · gizli ·

@@ -49,7 +49,7 @@ export interface OrtakListeHapiProps {
   /** başkasının listesi, giriş yok ya da demo hesap. */
   pasif?: boolean;
   /** varsayılan cümleyi ez — pasif hâlde "sahibi davet edebilir" gibi. */
-  metin?: string;
+  etiket?: string;
   boy?: "kucuk" | "orta";
   /** liste başlığının altında tam genişlik de duruyor (boş liste ekranı). */
   tamGenislik?: boolean;
@@ -72,7 +72,7 @@ export default function OrtakListeHapi({
   durum = "davet",
   yukleniyor = false,
   pasif = false,
-  metin,
+  etiket,
   boy = "orta",
   tamGenislik = false,
   onTikla,
@@ -86,7 +86,7 @@ export default function OrtakListeHapi({
      Katkıcı varken cümle değişiyor çünkü soru da değişiyor: artık "bu
      liste ortak mı" değil, "bir kişi daha var mı". */
   const cumle =
-    metin ??
+    etiket ??
     (kopyalandi
       ? "kopyaladım, yolla"
       : sayi > 0
@@ -96,7 +96,7 @@ export default function OrtakListeHapi({
   /* Ekran okuyucu avatarları görmüyor: kaç kişi olduğunu cümleye ekliyoruz.
      Görsel metni tekrar etmek yerine ONU DA içeriyor, yoksa aria-label
      görünen etiketi tamamen bastırır. */
-  const etiket =
+  const okunur =
     sayi > 0 && !kopyalandi ? `${sayi} kişi bu listeyi dolduruyor · ${cumle}` : cumle;
 
   const ikon: ReactNode = kopyalandi ? (
@@ -123,7 +123,7 @@ export default function OrtakListeHapi({
       yukleniyor={yukleniyor}
       pasif={pasif}
       tamGenislik={tamGenislik}
-      etiket={etiket}
+      okunur={okunur}
       onTikla={onTikla}
       /* max-w-full olmadan hap `whitespace-nowrap` yüzünden kapsayıcıyı
          aşıyor ve 390 pikselde degrade kenarlık ekranın dışına taşıyor.

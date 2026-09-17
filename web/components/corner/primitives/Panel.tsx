@@ -48,7 +48,8 @@ export interface PanelProps {
   tutamac?: boolean;
   zemin?: PanelZemin;
   kat?: 3 | 4 | 5;
-  etiket?: string;
+  /** ekran okuyucu metni (aria-label) — görünen metin DEĞİL. Görünen metnin adı bu kütüphanede `etiket` (DENETIM-faz3 T16). */
+  okunur?: string;
   /** panelin üstünde, tutamacın altında duran sabit bölüm (başlık satırı). */
   tepe?: ReactNode;
   className?: string;
@@ -66,7 +67,7 @@ export default function Panel({
   tutamac = true,
   zemin = "iridesan",
   kat = 5,
-  etiket = "Panel",
+  okunur = "Panel",
   tepe,
   className = "",
   style,
@@ -145,7 +146,7 @@ export default function Panel({
   return (
     <section
       ref={kutu}
-      aria-label={etiket}
+      aria-label={okunur}
       className={`absolute inset-x-0 bottom-0 flex flex-col rounded-t-2xl ${ZEMIN[zemin]} ${
         cekiliyor ? "" : "transition-[top,transform] duration-(--sure-panel) ease-yayli motion-reduce:transition-none"
       } ${className}`}

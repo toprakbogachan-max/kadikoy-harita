@@ -156,13 +156,13 @@ export default function HaritaEksikleriSayfasi() {
           <HaritaZemini yukseklik={150}>
             <div className="flex h-full flex-wrap items-center gap-8 p-6">
               <span className="text-center">
-                <YerImiPini simge="☕" etiket="Kaydedilmiş mekan" />
+                <YerImiPini simge="☕" okunur="Kaydedilmiş mekan" />
                 <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
                   simgeli
                 </span>
               </span>
               <span className="text-center">
-                <YerImiPini etiket="Kaydedilmiş mekan" />
+                <YerImiPini okunur="Kaydedilmiş mekan" />
                 <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
                   simgesiz
                 </span>
@@ -193,11 +193,11 @@ export default function HaritaEksikleriSayfasi() {
         <Kutu baslik="durum ve ölçek">
           <HaritaZemini yukseklik={150}>
             <div className="flex h-full flex-wrap items-end gap-8 p-6">
-              <YerImiPini simge="🍝" boyut={32} etiket="Kaydedilmiş mekan" />
-              <YerImiPini simge="🍝" boyut={40} etiket="Kaydedilmiş mekan" />
-              <YerImiPini simge="🍝" boyut={52} etiket="Kaydedilmiş mekan" />
+              <YerImiPini simge="🍝" boyut={32} okunur="Kaydedilmiş mekan" />
+              <YerImiPini simge="🍝" boyut={40} okunur="Kaydedilmiş mekan" />
+              <YerImiPini simge="🍝" boyut={52} okunur="Kaydedilmiş mekan" />
               <span className="text-center">
-                <YerImiPini simge="🍺" kapali etiket="Kaydedilmiş mekan, kapalı" />
+                <YerImiPini simge="🍺" kapali okunur="Kaydedilmiş mekan, kapalı" />
                 <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
                   bilinen kapalı
                 </span>
@@ -208,7 +208,7 @@ export default function HaritaEksikleriSayfasi() {
                   onClick={() => setSeciliPin((s) => !s)}
                   className="bas border-none bg-transparent p-0"
                 >
-                  <YerImiPini simge="🥐" secili={seciliPin} etiket="Kaydedilmiş mekan" />
+                  <YerImiPini simge="🥐" aktif={seciliPin} okunur="Kaydedilmiş mekan" />
                 </button>
                 <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
                   seçili · dokun
@@ -240,7 +240,7 @@ export default function HaritaEksikleriSayfasi() {
               ] as const}
               secili={mod}
               onSec={setMod}
-              etiket="Kimin mekanlarına bakıyorum"
+              okunur="Kimin mekanlarına bakıyorum"
             />
           </div>
           <HaritaZemini yukseklik={215}>
@@ -278,7 +278,7 @@ export default function HaritaEksikleriSayfasi() {
               />
             </Nokta>
             <Nokta sol="6%" ust="53%">
-              <ArkadasMarkeri kullaniciAdi="sinem" ad="Sinem Kaya" renk="hsl(318 46% 42%)" eylem="gitti" secili />
+              <ArkadasMarkeri kullaniciAdi="sinem" ad="Sinem Kaya" renk="hsl(318 46% 42%)" eylem="gitti" aktif />
             </Nokta>
             <Nokta sol="6%" ust="78%">
               <ArkadasMarkeri kullaniciAdi="uzunbirkullaniciadi" eylem="kaydetti" boyut={34} />
@@ -370,7 +370,7 @@ export default function HaritaEksikleriSayfasi() {
             <div className="flex h-full flex-wrap items-center gap-4 p-6">
               <BuradaAra pasif />
               <BuradaAra belir onTikla={() => {}} />
-              <BuradaAra metin="bu mahallede ara" onTikla={() => {}} />
+              <BuradaAra etiket="bu mahallede ara" onTikla={() => {}} />
             </div>
           </HaritaZemini>
           <Alt>
@@ -408,7 +408,7 @@ export default function HaritaEksikleriSayfasi() {
                 <YerImiPini simge="☕" />
               </Nokta>
               <Nokta sol="63%" ust="34%">
-                <YerImiPini simge="🥐" secili />
+                <YerImiPini simge="🥐" aktif />
               </Nokta>
               <Nokta sol="14%" ust="56%">
                 <ArkadasMarkeri kullaniciAdi="deniz" eylem="kaydetti" />

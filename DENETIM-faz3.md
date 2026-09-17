@@ -298,3 +298,22 @@ Tarayıcıda ölçüldü: üç bileşende geçiş `transform 0.15s, background-c
 color / box-shadow 0.2s`; hareket azaltmada `none`. Durağan görünüm: yalnızca
 çip sayıları 9 → 10 px (primitifler 2, harita 9 çip; komşular 1–5 px kaydı),
 diğer dört sayfada sıfır fark.
+
+### API adlandırma (T16, T17)
+
+- **T16** görünmez metin `okunur`, görünen metin `etiket`:
+  `Pill`, `IkiliPill`, `Kart`, `Panel`, `YerImiPini` → `etiket` (aria-label)
+  `okunur` oldu. Görünen metni değiştiren `BuradaAra.metin` ve
+  `OrtakListeHapi.metin` → `etiket` (`RozetSayac`, `SeriRozeti`, `KayitRozeti`,
+  `ListeAcKarosu` zaten öyleydi). İçerik gövdesi olan `MekanNotu.metin`
+  bilerek kaldı: etiket değil metin.
+- **T17** öneri değişti: `secili` değil **`aktif`**. Primitif katmanı (`Pill`,
+  `Cip`, `SemtCipi`) zaten `aktif` kullanıyordu ve `aria-pressed`'in karşılığı
+  o; primitifi üç bileşene uydurmak yerine üç bileşen primitife uydu:
+  `YerImiPini`, `ArkadasMarkeri`, `ListeSecimKarti` → `secili` `aktif` oldu.
+  Seçili **kimlik** tutan prop'lar (`IkiliPill.secili: T`,
+  `ListeSecici.secililer`) boolean değil değer olduğu için kaldı.
+
+Önizlemelerde yalnızca ilgili bileşenin JSX etiketinin içindeki öznitelikler
+değişti (30 yer); tip denetimi eksik bırakılan kullanımı yakalıyor.
+Yerleşim dökümü altı sayfada iki genişlikte sıfır fark.

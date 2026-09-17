@@ -117,7 +117,7 @@ function Daire({
         kat={2}
         pasif={pasif}
         yukleniyor={yukleniyor}
-        etiket={ad}
+        okunur={ad}
         onTikla={onTikla}
         className="size-14"
       />

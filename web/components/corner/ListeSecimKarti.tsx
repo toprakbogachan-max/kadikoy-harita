@@ -91,8 +91,8 @@ export const KARO_GENISLIK = 116;
 /* Seçili kart siyah halka alıyor. Halka ile gölge AYNI özellikte
    (box-shadow) yaşadığı için satır içi birleştiriliyor — iki ayrı
    Tailwind sınıfı yazılsa sonraki öncekini siler. */
-const halkaGolge = (secili: boolean, kat = 1) =>
-  secili
+const halkaGolge = (aktif: boolean, kat = 1) =>
+  aktif
     ? `0 0 0 2px var(--color-gri-900), var(--shadow-kat-${kat})`
     : `var(--shadow-kat-${kat})`;
 
@@ -145,8 +145,8 @@ function Kapak({ liste }: { liste: SecilebilirListe }) {
   );
 }
 
-function OnayDairesi({ secili, boyut = 24 }: { secili: boolean; boyut?: number }) {
-  const zip = useZipla(true, secili);
+function OnayDairesi({ aktif, boyut = 24 }: { aktif: boolean; boyut?: number }) {
+  const zip = useZipla(true, aktif);
   return (
     <span
       aria-hidden
@@ -154,7 +154,7 @@ function OnayDairesi({ secili, boyut = 24 }: { secili: boolean; boyut?: number }
       style={{
         width: boyut,
         height: boyut,
-        ...(secili
+        ...(aktif
           ? { background: "var(--color-rozet-nane)", color: "var(--color-rozet-nane-ink)" }
           : {
               /* Boş hâl saç teli halka: kesik çizgi ya da gri dolu kutu
@@ -199,7 +199,7 @@ function YerSayisi({ n, koyu = false }: { n: number; koyu?: boolean }) {
 
 export interface ListeSecimKartiProps {
   liste: SecilebilirListe;
-  secili: boolean;
+  aktif: boolean;
   onSec: (id: string) => void;
   /**
    * satir → tam genişlik satır (kapak + ad + N yer + ✓). Kaydetme
@@ -221,7 +221,7 @@ export interface ListeSecimKartiProps {
 
 export default function ListeSecimKarti({
   liste,
-  secili,
+  aktif,
   onSec,
   bicim = "satir",
   genislik = KARO_GENISLIK,
@@ -242,7 +242,7 @@ export default function ListeSecimKarti({
       <button
         type="button"
         onClick={() => onSec(liste.id)}
-        aria-pressed={secili}
+        aria-pressed={aktif}
         disabled={pasif}
         className={`bas block shrink-0 border-none bg-transparent p-0 disabled:pointer-events-none disabled:opacity-45 ${className}`}
         style={{ width: genislik }}
@@ -253,7 +253,7 @@ export default function ListeSecimKarti({
           yaricap="md"
           oran="1/1"
           className="w-full"
-          style={{ boxShadow: halkaGolge(secili) }}
+          style={{ boxShadow: halkaGolge(aktif) }}
         >
           <Kapak liste={liste} />
           {/* Koyu degrade örtü ZORUNLU, dekorasyon değil (skill §6):
@@ -268,7 +268,7 @@ export default function ListeSecimKarti({
               ) : (
                 <span />
               )}
-              <OnayDairesi secili={secili} boyut={22} />
+              <OnayDairesi aktif={aktif} boyut={22} />
             </span>
             <span className="mt-auto min-w-0">
               <span className="line-clamp-2 text-sm font-extrabold leading-tight tracking-isim text-white">
@@ -291,14 +291,14 @@ export default function ListeSecimKarti({
       dolgu="yok"
       yaricap="lg"
       className={`w-full ${className}`}
-      style={{ boxShadow: halkaGolge(secili) }}
+      style={{ boxShadow: halkaGolge(aktif) }}
     >
       {/* Not alanı düğmenin İÇİNDE olamaz (input in button geçersiz), o
           yüzden satır ile not kardeş; kabuk ikisini sarıyor. */}
       <button
         type="button"
         onClick={() => onSec(liste.id)}
-        aria-pressed={secili}
+        aria-pressed={aktif}
         disabled={pasif}
         className="bas flex w-full items-center gap-3 border-none bg-transparent p-3 text-left disabled:pointer-events-none disabled:opacity-45"
       >
@@ -316,10 +316,10 @@ export default function ListeSecimKarti({
           </span>
         </span>
 
-        <OnayDairesi secili={secili} />
+        <OnayDairesi aktif={aktif} />
       </button>
 
-      {secili && onNotDegis && (
+      {aktif && onNotDegis && (
         <div className="px-3 pb-3">
           <label htmlFor={notId} className="sr-only">
             {liste.baslik} listesi için not
@@ -432,7 +432,7 @@ export function ListeSecici({
             <ListeSecimKarti
               key={l.id}
               liste={l}
-              secili={secililer.includes(l.id)}
+              aktif={secililer.includes(l.id)}
               onSec={onSec}
               bicim="karo"
               genislik={karoGenislik}
@@ -449,7 +449,7 @@ export function ListeSecici({
             <ListeSecimKarti
               key={l.id}
               liste={l}
-              secili={secililer.includes(l.id)}
+              aktif={secililer.includes(l.id)}
               onSec={onSec}
               bicim="satir"
               not={notlar?.[l.id] ?? ""}

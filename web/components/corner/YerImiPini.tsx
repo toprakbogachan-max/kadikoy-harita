@@ -46,7 +46,7 @@ export interface YerImiPiniProps {
   simge?: ReactNode;
   /** yükseklik (px). Genişlik oranla türüyor. */
   boyut?: number;
-  secili?: boolean;
+  aktif?: boolean;
   /**
    * BİLİNEN kapalı. `undefined` = saat bilgisi yok ve o durumda
    * soldurma YOK — bilmediğimiz şeyi biliyormuş gibi göstermemek
@@ -54,25 +54,25 @@ export interface YerImiPiniProps {
    */
   kapali?: boolean;
   /** ekran okuyucu metni. Marker'a dışarıdan da verilebilir. */
-  etiket?: string;
+  okunur?: string;
   className?: string;
 }
 
 export default function YerImiPini({
   simge,
   boyut = 40,
-  secili = false,
+  aktif = false,
   kapali = false,
-  etiket,
+  okunur,
   className = "",
 }: YerImiPiniProps) {
   const genislik = Math.round(boyut * 0.75);
 
   return (
     <span
-      role={etiket ? "img" : undefined}
-      aria-label={etiket}
-      aria-hidden={etiket ? undefined : true}
+      role={okunur ? "img" : undefined}
+      aria-label={okunur}
+      aria-hidden={okunur ? undefined : true}
       className={`relative block ${className}`}
       style={{ width: genislik, height: boyut }}
     >
@@ -85,7 +85,7 @@ export default function YerImiPini({
           kapali ? "brightness-98 grayscale-65" : ""
         }`}
         style={{
-          transform: secili ? "scale(1.18)" : undefined,
+          transform: aktif ? "scale(1.18)" : undefined,
           /* Gölge şekli izliyor (drop-shadow-sekil), kutuyu değil. */
           opacity: kapali ? 0.62 : undefined,
         }}

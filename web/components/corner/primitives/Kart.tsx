@@ -70,7 +70,8 @@ export interface KartProps {
   /** saç teli kenarlık: gölgeyi destekler, ayırmaz. */
   sacTeli?: boolean;
   onTikla?: () => void;
-  etiket?: string;
+  /** ekran okuyucu metni (aria-label) — görünen metin DEĞİL. Görünen metnin adı bu kütüphanede `etiket` (DENETIM-faz3 T16). */
+  okunur?: string;
   className?: string;
   style?: CSSProperties;
 }
@@ -87,7 +88,7 @@ export default function Kart({
   oran,
   sacTeli = false,
   onTikla,
-  etiket,
+  okunur,
   className = "",
   style,
 }: KartProps) {
@@ -135,14 +136,14 @@ export default function Kart({
 
   if (onTikla) {
     return (
-      <button type="button" onClick={onTikla} aria-label={etiket} className={sinif} style={stil}>
+      <button type="button" onClick={onTikla} aria-label={okunur} className={sinif} style={stil}>
         {ic}
       </button>
     );
   }
 
   return (
-    <div className={sinif} style={stil} aria-label={etiket}>
+    <div className={sinif} style={stil} aria-label={okunur}>
       {ic}
     </div>
   );

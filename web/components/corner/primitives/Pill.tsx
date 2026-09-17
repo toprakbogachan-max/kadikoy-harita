@@ -81,7 +81,8 @@ export interface PillProps {
   pasif?: boolean;
   /** Kademe B küçük harf varsayılan; özel isim taşıyorsa "aynen". */
   kasa?: "kucuk" | "aynen";
-  etiket?: string;
+  /** ekran okuyucu metni (aria-label) — görünen metin DEĞİL. Görünen metnin adı bu kütüphanede `etiket` (DENETIM-faz3 T16). */
+  okunur?: string;
   href?: string;
   onTikla?: () => void;
   /** KayanSecim akan baloncuğu bu öznitelikle buluyor. */
@@ -114,7 +115,7 @@ export default function Pill({
   yukleniyor = false,
   pasif = false,
   kasa = "kucuk",
-  etiket,
+  okunur,
   href,
   onTikla,
   kayan,
@@ -189,7 +190,7 @@ export default function Pill({
         href={href}
         target="_blank"
         rel="noreferrer"
-        aria-label={etiket}
+        aria-label={okunur}
         data-kayan={kayan}
         className={sinif}
         style={stil}
@@ -205,7 +206,7 @@ export default function Pill({
       onClick={onTikla}
       disabled={pasif}
       aria-pressed={aktif}
-      aria-label={etiket}
+      aria-label={okunur}
       aria-busy={yukleniyor || undefined}
       data-kayan={kayan}
       className={sinif}
@@ -227,19 +228,20 @@ export function IkiliPill<T extends string>({
   secenekler,
   secili,
   onSec,
-  etiket,
+  okunur,
   className = "",
 }: {
   secenekler: readonly { id: T; ad: string; ikon?: ReactNode }[];
   secili: T;
   onSec: (id: T) => void;
-  etiket?: string;
+  /** ekran okuyucu metni (aria-label) — görünen metin DEĞİL. Görünen metnin adı bu kütüphanede `etiket` (DENETIM-faz3 T16). */
+  okunur?: string;
   className?: string;
 }) {
   return (
     <div
       role="group"
-      aria-label={etiket}
+      aria-label={okunur}
       className={`inline-flex items-center gap-1 rounded-full bg-gomuk p-1 ${className}`}
     >
       {secenekler.map((s) => {

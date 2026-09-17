@@ -75,7 +75,7 @@ export interface ArkadasMarkeriProps {
   renk?: string;
   /** etiketi gizle — kalabalık kadrajda yalnız daireler kalır. */
   etiketsiz?: boolean;
-  secili?: boolean;
+  aktif?: boolean;
   /** dairenin çapı (px). */
   boyut?: number;
   className?: string;
@@ -88,7 +88,7 @@ export default function ArkadasMarkeri({
   foto,
   renk,
   etiketsiz = false,
-  secili = false,
+  aktif = false,
   boyut = 40,
   className = "",
 }: ArkadasMarkeriProps) {
@@ -105,7 +105,7 @@ export default function ArkadasMarkeri({
       {/* Ölçek iç katmanda — MapLibre'nin transform'uyla çakışmasın. */}
       <span
         className="block size-full origin-center transition-transform duration-(--sure-gecis) ease-yumusak motion-reduce:transition-none"
-        style={{ transform: secili ? "scale(1.18)" : undefined }}
+        style={{ transform: aktif ? "scale(1.18)" : undefined }}
       >
         {foto || ad ? (
           /* Kim olduğunu BİLİYORSAK yüzü göstermek silüetten iyidir:

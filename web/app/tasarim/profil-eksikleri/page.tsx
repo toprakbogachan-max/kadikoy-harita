@@ -122,14 +122,14 @@ export default function ProfilEksikleriSayfasi() {
             <div className="flex flex-wrap items-center gap-3">
               <OrtakListeHapi boy="kucuk" katkicilar={CREW.slice(0, 3)} onTikla={() => {}} />
               <OrtakListeHapi boy="orta" katkicilar={CREW.slice(0, 3)} onTikla={() => {}} />
-              <OrtakListeHapi pasif metin="sahibi davet edebilir" />
+              <OrtakListeHapi pasif etiket="sahibi davet edebilir" />
             </div>
             <div className="w-full max-w-[320px]">
               <OrtakListeHapi tamGenislik katkicilar={CREW.slice(0, 2)} onTikla={() => {}} />
               <Alt>tam genişlik · boş liste ekranında başlığın altında böyle duruyor</Alt>
             </div>
             <div className="w-[210px]">
-              <OrtakListeHapi metin={UZUN_METIN} katkicilar={CREW.slice(0, 3)} onTikla={() => {}} />
+              <OrtakListeHapi etiket={UZUN_METIN} katkicilar={CREW.slice(0, 3)} onTikla={() => {}} />
               <Alt>210 px kapsayıcı · cümle kırpılıyor, degrade kenarlık bozulmuyor</Alt>
             </div>
           </div>
