@@ -20,11 +20,15 @@ import { RozetSayac, type RozetTon } from "@/components/corner/primitives/Rozet"
  * pikselde doğru olan şey 300 pikselde ucuz durur.
  *
  * ⚠ BU BİLEŞEN SAF SUNUMDUR — ve öyle kalmalı.
- * Uygulamada "seri" diye bir kavram YOK: ne tabloda bir sayaç, ne bir
- * hafta tanımı, ne de neyin seriyi ilerlettiğine dair bir karar var.
- * Hafta sayısı ve durum PROPS olarak gelir; burada fetch, şema tahmini
- * ya da `lib/` çağrısı YOKTUR. Hesaplama önerisi Faz 2 raporunda,
- * kararı ürünün.
+ * Uygulamada "seri" diye bir kavram henüz YOK: ne tabloda bir sayaç ne de
+ * bir hesap. Hafta sayısı ve durum PROPS olarak gelir; burada fetch, şema
+ * tahmini ya da `lib/` çağrısı YOKTUR.
+ *
+ * Tanım kararlaştırıldı (2026-09-17), hesap henüz yazılmadı:
+ *   - bir haftayı seriye sayan şey EN AZ BİR PİN (kaydetmek saymaz),
+ *   - hafta PAZARTESİ başlar, İstanbul saatine göre (ISO hafta;
+ *     Postgres'te `date_trunc('week', ... at time zone 'Europe/Istanbul')`),
+ *   - `risk` = seri sürüyor ama içinde bulunulan haftada henüz pin yok.
  *
  * Kardeşi H9 (seri ipucu kartı — `bu haftayı tamamladın`, `seri şu tarihte
  * başladı`) cümleyi kuran yüzey ve ayrı bir iş. Rozet yalnızca sayıyı

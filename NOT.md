@@ -1,51 +1,59 @@
-# Faz 2 — açık kararlar
+# Faz 2 — kararlar
 
-`SPEC-faz2.md`'nin istediği not: atlanan paketler ve insana sorulması gereken
-kararlar. Buradaki hiçbir madde kesinleşmiş değil; bileşenler her birinde iki
-seçeneğe de açık bırakıldı.
+`SPEC-faz2.md`'nin istediği not. İlk hâlinde atlanan paketleri ve insana
+sorulacak kararları topluyordu; soruların hepsi **2026-09-17**'de
+cevaplandı ve aşağıya karar olarak işlendi.
 
-**Atlanan paket yok.**
+**Atlanan paket yok.** Kararların doğurduğu ama Faz 2'nin kapsamında
+olmayan işler en altta, "Sonraya kalan işler"de.
 
 ## Paket 1 — harita ek işaretleri
 
 Dosyalar: `YerImiPini` (spec: BookmarkPin), `ArkadasMarkeri` (AktifKisiIsareti),
 `SemtCipi` (SehirCipi). Önizleme: `/tasarim/harita-eksikleri`.
 
-- **Yer imi pininin rengi.** Spec ve referans mavi diyor. Ürün kuralı ise
-  "kaydetmenin rengi nane, mavi yalnızca çalışıyor / burada ara" ve
-  `--color-mavi` haritada zaten kullanıcının kendi konum noktası. Varsayılan
-  nane yapıldı, `ton="mavi"` duruyor. Nane'nin doygun bir tokenı yok, dolgu
-  şimdilik `--color-rozet-nane-ink`. **Soru:** hangisi, ve nane kalırsa
-  doygun bir nane tokenı açılsın mı?
-- **Arkadaş marker'ının verisi yok.** `places_nearby` "bu mekanı kim kaydetti"
-  bilgisini döndürmüyor. Bileşen saf sunum; `eylem` spec'teki üç değerli
-  birleşim yerine düz `string`, çünkü hangi eylemlerin var olduğu veri
-  modelinin kararı. **Soru:** arkadaş modu için RPC'ye mi eklenecek?
-- **Şehir çipi semt çipine uyarlandı.** Kadıköy tek ilçe, dünya zoom'u yok.
-  Çip ancak pin sayısı taşırsa altlık haritanın semt etiketinden fazlasını
-  söylüyor. **Soru:** semt çipi kalsın mı, yoksa "bu üründe karşılığı yok"
-  deyip atlansın mı?
+- **Yer imi pini nane.** Mavi haritada zaten kullanıcının kendi konum noktası,
+  kaydetmenin rengi nane. Pin için doygun `--color-nane` (`#0F7F62`) tokeni
+  açıldı: beyazla 4.96:1, harita zemini ile 4.05:1 — mavinin (5.14 / 4.20)
+  ışıklığına yakın. Yalnızca bu pinin dolgusu; buton ya da yüzey rengi değil.
+  Referansa sadık mavi varyant kaldırıldı.
+- **Arkadaş verisi ayrı bir RPC'den gelecek.** Yalnızca arkadaş modunda
+  çağrılacak; `places_nearby` her harita hareketinde koştuğu için
+  genişletilmiyor.
+- **Semt çipi kalıyor, yalnızca pin sayısıyla.** Sayısız çip altlık haritanın
+  semt etiketini tekrar ediyordu; `sayi` zorunlu prop yapıldı. `ArkadasMarkeri`
+  içindeki `eylem` düz `string` kaldı, çünkü hangi eylemlerin var olduğu veri
+  modelinin kararı.
 
 ## Paket 2 — burada ara
 
-Dosya: `BuradaAra` (spec: AraBuradan). Önizleme: `/tasarim/harita-eksikleri`
-(Paket 1 ile aynı sayfa; 390 px çerçevede dördü birlikte sınanıyor).
+Dosya: `BuradaAra` (spec: AraBuradan). Önizleme: `/tasarim/harita-eksikleri`.
 
-Açık karar yok. Metin çalışırken değişmiyor ("aranıyor…"a dönseydi hap
+Karar gerektirmedi. Metin çalışırken değişmiyor ("aranıyor…"a dönseydi hap
 genişlik değiştirip yerinden sıçrardı); durum ekran okuyucuya `aria-label` ve
 `aria-busy` ile gidiyor.
+
+## Paket 3 — mekan detayı
+
+Dosyalar: `KayitRozeti`, `GidecegimGittim` (spec: ToTryBeen), `MekanNotu`
+(EditoryalBolum). Önizleme: `/tasarim/mekan-eksikleri`. Commit `3011ac9`.
+
+- **Gideceğim / gittim iki ayrı daire olarak kalıyor.** Spec, Faz 1.5'in
+  segmented pill kararının bozulmamasını istiyordu; bileşen daire çifti olarak
+  yazılmıştı ve bu bilinçli bir karar değişikliği olarak kabul edildi.
+  `IkiliPill` primitifi başka yerler için duruyor.
 
 ## Paket 4 — değerlendirme
 
 Dosyalar: `DereceGostergesi`, `YineGiderMisin` (spec: TekrarGiderMiydin).
 Önizleme: `/tasarim/degerlendirme`.
 
-### Puan eşiği (öneri — kesinleştirilmedi)
+### Puan eşiği
 
 Şemadaki gerçek aralık spec'in yazdığı 0–10 değil, **1–10 ve yarım adımlı**
-(`pins.rating numeric(3,1)`, `PinFormu` kaydırıcısı `step={0.5}`, varsayılan 7).
-Mekan özetindeki ortalama ise herhangi bir ondalık olabilir. Bu yüzden eşik tam
-sayı kovası değil, sürekli aralık:
+(`pins.rating numeric(3,1)`, `PinFormu` kaydırıcısı `step={0.5}`). Mekan
+özetindeki ortalama ise herhangi bir ondalık olabilir. Bu yüzden eşik tam sayı
+kovası değil, sürekli aralık (`puanKademesi`):
 
 | puan | kademe |
 |---|---|
@@ -54,42 +62,33 @@ sayı kovası değil, sürekli aralık:
 | 7 – < 9 (7–8,5) | beğendim 😋 |
 | ≥ 9 (9–10) | favorim 😍 |
 
-Neden bu eşik:
+Neden bu eşik, spec'in örneği (0–2 / 3–5 / 6–8 / 9–10) değil:
 
 - **Puanlar yukarı yığılıyor.** Elimizdeki tek puan verisi demo pinleri (15
   pin, `scripts/tohum/tohum-demo.sql`): hepsi 6,5 ile 9,5 arasında, ortanca 8.
-  İnsanlar zaten sevdikleri yere pin atıyor. Spec'teki örnek eşikle (6–8
-  beğendim) 6'lık bir puan, ortancanın iki puan altında olduğu hâlde
-  "beğendim" okunurdu.
+  İnsanlar zaten sevdikleri yere pin atıyor. Spec'in örneğinde 6'lık bir puan,
+  ortancanın iki puan altında olduğu hâlde "beğendim" okunurdu ve alt iki
+  kademe neredeyse hiç görünmezdi.
 - **"Belki" cevapları sınırı gösteriyor.** `would_return = 'belki'` diyen iki
-  pin 6,5 ve 7'de. İdare eder / beğendim sınırı tam oradan geçiyor.
-- **Favorim nadir kalmalı.** ≥ 9 demo verisinde 15 pinin 3'ü. Eşik 8,5 olsaydı
-  6'sı olurdu ve "favorim" ayırt edici olmaktan çıkardı.
-- **7 kaydırıcının başlangıç değeri.** Kaydırıcıya dokunmadan pin atan biri
-  "beğendim" okunuyor. Bu tartışmaya açık, aşağıdaki sorulardan biri.
+  pin 6,5 ve 7'de; idare eder / beğendim sınırı tam oradan geçiyor.
+- **Favorim nadir kalıyor.** ≥ 9 demo verisinde 15 pinin 3'ü; eşik 8,5 olsaydı
+  6'sı olurdu ve ayırt edici olmaktan çıkardı.
+- **Kaydırıcının varsayılanı 7 kalıyor.** Dokunulmadan atılan pin "beğendim"
+  okunuyor; bu kabul edildi.
 
-Karşı seçenek: spec'in örneği (0–2 / 3–5 / 6–8 / 9–10). Daha eşit aralıklı ama
-yukarı yığılan bir dağılımda dört kademenin ikisi neredeyse hiç görünmez.
+Demo verisi uydurma olduğu için gerçek pinler birikince eşiğe
+`place_summary`'nin `rating_buckets` çıktısıyla yeniden bakılacak.
 
-**Sorular:**
-1. Eşik bu mu olsun? Demo verisi uydurma; gerçek pin birikince
-   `place_summary`'nin `rating_buckets` çıktısıyla yeniden bakılmalı.
-2. Kaydırıcının varsayılanı 7 kalırsa dokunulmamış puan "beğendim" sayılıyor.
-   Bu kabul mü?
+### Favorim = puanın ≥ 9 okunuşu
 
-### Favorim kalbi
+Ayrı bir favori sütunu açılmadı. Favorim, eşiğin en üst kademesi; kalp
+`YineGiderMisin`'de düğme değil, sorunun yanında beliren bir rozet ve
+`puanKademesi`'nden okunuyor. Kalbi açıp kapatmanın yolu puanı değiştirmek.
 
-Spec `TekrarGiderMiydin`'e ayrı bir "favorim" kalp düğmesi istiyor. Şemada
-favori alanı yok. Bileşende kalp yalnızca `onFavoriDegis` verilirse çiziliyor,
-durumu dışarıdan geliyor. **Soru:** favori ayrı bir bayrak mı olacak (yeni
-sütun), yoksa puanın ≥ 9 okunuşu mu (yukarıdaki "favorim" bandı)? İkincisi
-yeni veri gerektirmez ama kullanıcı puanı değiştirmeden kalbi açıp kapatamaz.
+### Üç seçenek kalıyor
 
-### İki değil üç seçenek
-
-Spec 👎 / 👍 ikilisi diyor. `pins.would_return` ise `'evet' | 'belki' | 'hayır'`
-tutuyor ve `PinFormu` üçünü de soruyor. İkiye indirmek "belki" cevaplarını
-kaybettirirdi; bileşen şemaya uydu. **Soru:** "belki" üründe kalıyor mu?
+Spec 👎 / 👍 ikilisi diyordu. `pins.would_return` ve `PinFormu` evet / belki /
+hayır tutuyor; "belki" bu üründe bilgi taşıdığı için kalıyor.
 
 ## Paket 5 — liste / curation
 
@@ -98,42 +97,41 @@ Dosyalar: `ListeSecimKarti` + `ListeSecici` (spec: CurationSecici),
 Önizleme: `/tasarim/kaydetme-eksikleri` (seçici + karo) ve
 `/tasarim/profil-eksikleri` (ortak liste hapı).
 
-- **Gizlilik bayrağı modele çevrilmiyor.** `lists.is_public` şemada var ama
-  `lib/model.ts`'teki `Liste` tipinde yok; kilit rozeti şu an yalnızca props'tan
-  geliyor. Montajda model + `lib/veri.ts` o alanı taşımalı.
+- **Ortak liste yol haritasında.** Katkıcı tablosu, davet bağlantısı ve çoklu
+  yazma için RLS ayrı bir veri modeli işi olarak planlanacak; o kurulana kadar
+  `OrtakListeHapi` montaja girmiyor.
 - **Not var, bağlantı yok.** Referans kartında "not ekle" ve "bağlantı ekle"
   var; `list_items.note` sütunu olduğu için yalnızca not çizildi.
-- **Ortak listenin veri modeli yok.** `lists` tek `owner_id` tutuyor; katkıcı
-  tablosu, davet bağlantısı, çoklu yazma yetkisi yok. Hap saf sunum.
-  **Soru:** ortak liste yol haritasında mı? Değilse hap montajda beklesin.
-- Pill primitifinin degrade kenarlık varyantı Faz 1.5'te zaten eklenmişti
-  (`kenar="degrade"`); yeni varyant ya da token açılmadı.
+- Pill'in degrade kenarlık varyantı Faz 1.5'te zaten vardı (`kenar="degrade"`);
+  yeni varyant ya da token açılmadı.
 
 ## Paket 6 — haftalık seri rozeti
 
 Dosya: `SeriRozeti` (+ çift rozet için `SeriRozetSatiri`). Önizleme:
 `/tasarim/profil-eksikleri`.
 
-- **"Seri" kavramı kod tabanında yok.** Ne sayaç, ne hafta tanımı, ne de
-  seriyi neyin ilerlettiği belli. **Soru:** bir hafta "en az bir pin" mi,
-  "en az bir kayıt" mı? Hafta pazartesi mi başlıyor?
-- **Etiket altta değil yanda.** Spec "içinde sayı + altında iki satır etiket"
-  diyor. Uygulama `corner-tasarim` skill'inin ekran görüntüsünden doğrulanan
-  §14 kalıbını izliyor: "yanlarında iki satırlık küçük harf gri etiket".
-  Profil başlığında yan yana iki rozet dar ekranda da tek satıra sığıyor.
-- **Sıralama rozeti bileşeni yazılmadı.** Çift rozetin ikinci yarısının
-  ("kadıköy sırası") ne verisi ne hesabı var. Önizlemede doğrudan `RozetSayac`
-  ile gösteriliyor.
-- **Ateş eşiği 4 hafta** (`atesEsigi`) — "bir ay". Ürün eşiği, tasarım sabiti
-  değil.
+- **Seri tanımı:** bir haftayı seriye sayan şey **en az bir pin** (kaydetmek
+  saymaz). Hafta **pazartesi** başlar, **İstanbul saatine** göre (ISO hafta).
+  `risk` = seri sürüyor ama içinde bulunulan haftada henüz pin yok.
+- **Etiket altta değil yanda.** Spec "altında iki satır" diyordu; uygulama
+  `corner-tasarim` skill'inin ekran görüntüsünden doğrulanan §14 kalıbını
+  izliyor ("yanlarında iki satırlık küçük harf gri etiket").
+- **Ateş eşiği 4 hafta** (`atesEsigi`, "bir ay").
+- Çift rozetin ikinci yarısı ("kadıköy sırası") için ayrı bileşen yazılmadı;
+  ne verisi ne hesabı var, önizlemede doğrudan `RozetSayac` ile gösteriliyor.
 
-## Faz 2'nin geneli
+## Paket 7 — çıkartma açısı
 
-### Adlar spec'le birebir değil
+`.yapistir` keyframe'inin `--aci-cikartma`'ya bağlanması Faz 1.5'te
+(`2779396`) yapılmıştı. `/tasarim/primitifler`'de −9°, +7° ve −18° çıkartmalar
+animasyonlu; bu fazda ayrıca iş çıkmadı.
+
+## Adlar Türkçe kalıyor
 
 Bileşenler spec'teki İngilizce/karma adlar yerine Türkçe envanter adlarıyla
-yazıldı. Önizleme sayfaları da paket başına değil ekran başına toplandı; böylece
-aynı ekranda duracak bileşenler 390 px çerçevede yan yana sınanabiliyor.
+yazıldı (projenin "dosya adları Türkçe" kuralı) ve bu kalıcı. Önizlemeler de
+paket başına değil ekran başına toplandı; aynı ekranda duracak bileşenler
+390 px çerçevede yan yana sınanıyor.
 
 | paket | spec adı | dosya | önizleme |
 |---|---|---|---|
@@ -152,20 +150,19 @@ aynı ekranda duracak bileşenler 390 px çerçevede yan yana sınanabiliyor.
 | 6 | SeriRozeti | `SeriRozeti` | `/tasarim/profil-eksikleri` |
 | 7 | — | `globals.css` `--aci-cikartma` | `/tasarim/primitifler` |
 
-**Soru:** Montajdan önce adlar spec'e çekilsin mi, yoksa envanter adları mı
-kalıcı?
+## Sonraya kalan işler
 
-### Paket 3 — gideceğim / gittim spec kararına aykırı
+Faz 2 bileşen + önizleme fazıydı; aşağıdakiler kararlarla netleşti ama veri
+katmanı ya da montaj işi olduğu için burada yapılmadı.
 
-Spec açıkça "segmented pill (birleşik kapsül) kalsın, ayrı daire çifti
-varyantı eklenmedi, o kararı bozma" diyor. `GidecegimGittim` (commit
-`3011ac9`) **iki ayrı daire** olarak yazıldı. Faz 1.5'in `IkiliPill`'i
-`/tasarim/primitifler`'de segmented hâliyle duruyor. **Soru:** daire çifti
-bilinçli bir karar değişikliği olarak kabul mü, yoksa bileşen `IkiliPill`
-üstüne yeniden mi yazılsın?
-
-### Paket 7 zaten bitmişti
-
-`.yapistir` keyframe'inin `--aci-cikartma`'ya bağlanması Faz 1.5'te
-(`2779396`) yapıldı. `/tasarim/primitifler`'de −9°, +7° ve −18° çıkartmalar
-animasyonlu. Bu fazda ayrıca iş çıkmadı.
+- **Arkadaş modu RPC'si** — "bu mekanı kim kaydetti, ne yaptı"; yalnızca
+  arkadaş modunda çağrılır (Paket 1).
+- **Ortak liste veri modeli** — katkıcı tablosu, davet bağlantısı, RLS
+  (Paket 5).
+- **Seri hesabı** — en az bir pin / pazartesi / İstanbul tanımıyla hafta
+  sayacı ve `risk` durumu (Paket 6).
+- **`lists.is_public` modele** — şemada var ama `lib/model.ts`'teki `Liste`
+  tipinde yok; kilit rozeti montajda bunu bekliyor (Paket 5).
+- **Eşiği gerçek veriyle yeniden değerlendirme** — `rating_buckets` (Paket 4).
+- **Montaj** — bileşenlerin gerçek ekranlara ve `Harita.tsx`'in ham DOM
+  marker'larına taşınması.

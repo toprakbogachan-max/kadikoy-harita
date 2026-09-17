@@ -114,8 +114,8 @@ export default function ProfilEksikleriSayfasi() {
           Profilde ve liste detayında karşılığı olmayan iki bileşen:{" "}
           <code className="font-sayi text-sm">F2 · H2</code>. İkisi de mevcut
           primitiflerin üstüne kuruldu (Pill + Avatar, RozetSayac) ve hiçbiri kendi
-          verisini çekmiyor — çünkü ikisinin de arkasında <strong>veri yok</strong>:
-          `lists` tablosunda tek bir sahip var, “seri” diye bir kavram ise hiç yok.
+          verisini çekmiyor — çünkü ikisinin de arkasında henüz <strong>veri yok</strong>:
+          `lists` tablosunda tek bir sahip var, “seri” diye bir hesap ise hiç yok.
           Sürüm B temel alındı.
         </p>
 
@@ -124,7 +124,7 @@ export default function ProfilEksikleriSayfasi() {
           no="01"
           ad="Ortak liste hapı"
           kod="F2 · OrtakListeHapi"
-          not="Referansta 👤 collaborate. Beyaz hap, degrade KENARLIK — degrade zemin değil 1.5 piksellik bir hat olduğu için “UI elemanını renklendirme” kuralını bozmuyor. Degrade pastel (lila → pembe); referansın doygun mor-mavisi bu üründe geniş yüzeyde yasak. Katkıcı varken emoji yerini daire avatar kümesine bırakıyor."
+          not="Referansta 👤 collaborate. Beyaz hap, degrade KENARLIK — degrade zemin değil 1.5 piksellik bir hat olduğu için “UI elemanını renklendirme” kuralını bozmuyor. Degrade pastel (lila → pembe); referansın doygun mor-mavisi bu üründe geniş yüzeyde yasak. Katkıcı varken emoji yerini daire avatar kümesine bırakıyor. Ortak liste yol haritasında (karar 2026-09-17); veri modeli kurulana kadar montaj yok."
         />
 
         <Kutu baslik="canlı — dokun: bağlantı üretiliyor, sonra kopyalanıyor">
@@ -174,7 +174,7 @@ export default function ProfilEksikleriSayfasi() {
           no="02"
           ad="Haftalık seri rozeti"
           kod="H2 · SeriRozeti"
-          not="Referansta 🔥 37 week streak. Pastel gradyan daire + iki satırlık küçük harf gri etiket (skill §14). Ton soğuktan sıcağa gidiyor: yeni seri lila, bir ayı geçen seri pembe-krem, risk krem-şeftali. Sıfır bej — KayitRozeti’ndeki sıfırla aynı karar: davet övünmeyle aynı sesle konuşmaz. Kırmızı yok; kırmızı bu dilde yalnızca “kapalı” ve “sil” demek."
+          not="Referansta 🔥 37 week streak. Pastel gradyan daire + iki satırlık küçük harf gri etiket (skill §14). Ton soğuktan sıcağa gidiyor: yeni seri lila, bir ayı geçen seri pembe-krem, risk krem-şeftali. Sıfır bej — KayitRozeti’ndeki sıfırla aynı karar: davet övünmeyle aynı sesle konuşmaz. Kırmızı yok; kırmızı bu dilde yalnızca “kapalı” ve “sil” demek. Tanım (karar 2026-09-17): haftayı en az bir pin doldurur, hafta pazartesi başlar, İstanbul saati."
         />
 
         <Kutu baslik="canlı — hafta sayısını kaydır, eşikte ton ve emoji dönüyor">
@@ -303,11 +303,11 @@ export default function ProfilEksikleriSayfasi() {
         </Kutu>
 
         <p className="mt-12 max-w-[62ch] font-metin text-2xs text-gri-600">
-          İkisi de hiçbir ekrana bağlı değil ve ikisinin de arkasında veri modeli YOK.
+          İkisi de hiçbir ekrana bağlı değil ve ikisinin de arkasında henüz veri modeli yok.
           F2 için <code className="font-sayi">lists</code> tablosunda tek{" "}
-          <code className="font-sayi">owner_id</code> var, katkıcı/davet kavramı yok;
-          H2 için ise kod tabanında “seri” diye bir kavram hiç geçmiyor. İkisi de durumu
-          dışarıdan alıyor — şema önerisi raporda, kararı ürünün.
+          <code className="font-sayi">owner_id</code> var; ortak liste yol haritasında ve ayrı
+          bir veri modeli işi olarak planlanacak. H2 için tanım kararlaştırıldı (en az bir pin,
+          pazartesi, İstanbul saati) ama hesap yazılmadı. İkisi de durumu dışarıdan alıyor.
         </p>
       </div>
     </main>

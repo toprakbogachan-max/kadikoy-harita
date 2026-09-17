@@ -19,7 +19,10 @@ import Avatar from "@/components/corner/primitives/Avatar";
  * `owner_id` var, katkıcı tablosu, davet bağlantısı, çoklu yazma yetkisi
  * hiçbiri kurulu değil. Buradaki katkıcı listesi ve "kopyalandı" durumu
  * PROPS olarak gelir; fetch, şema tahmini ya da `lib/` çağrısı YOKTUR.
- * Veri modeli önerisi Faz 2 raporunda, kararı ürünün.
+ *
+ * Ürün kararı (2026-09-17): ortak liste YOL HARİTASINDA. Katkıcı tablosu,
+ * davet bağlantısı ve çoklu yazma için RLS ayrı bir veri modeli işi olarak
+ * planlanacak; o kurulana kadar bu hap montaja girmiyor.
  *
  * Kardeşi F8 (`curate with your crew` modalı) bu hapın açtığı yüzey ve
  * ayrı bir iş — bu dosya onu ÇAĞIRMIYOR, yalnızca `onTikla` veriyor.
