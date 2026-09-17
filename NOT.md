@@ -91,3 +91,21 @@ Spec 👎 / 👍 ikilisi diyor. `pins.would_return` ise `'evet' | 'belki' | 'hay
 tutuyor ve `PinFormu` üçünü de soruyor. İkiye indirmek "belki" cevaplarını
 kaybettirirdi; bileşen şemaya uydu. **Soru:** "belki" üründe kalıyor mu?
 
+## Paket 5 — liste / curation
+
+Dosyalar: `ListeSecimKarti` + `ListeSecici` (spec: CurationSecici),
+`ListeAcKarosu` (YeniCurationKarosu), `OrtakListeHapi` (BirlikteCalis).
+Önizleme: `/tasarim/kaydetme-eksikleri` (seçici + karo) ve
+`/tasarim/profil-eksikleri` (ortak liste hapı).
+
+- **Gizlilik bayrağı modele çevrilmiyor.** `lists.is_public` şemada var ama
+  `lib/model.ts`'teki `Liste` tipinde yok; kilit rozeti şu an yalnızca props'tan
+  geliyor. Montajda model + `lib/veri.ts` o alanı taşımalı.
+- **Not var, bağlantı yok.** Referans kartında "not ekle" ve "bağlantı ekle"
+  var; `list_items.note` sütunu olduğu için yalnızca not çizildi.
+- **Ortak listenin veri modeli yok.** `lists` tek `owner_id` tutuyor; katkıcı
+  tablosu, davet bağlantısı, çoklu yazma yetkisi yok. Hap saf sunum.
+  **Soru:** ortak liste yol haritasında mı? Değilse hap montajda beklesin.
+- Pill primitifinin degrade kenarlık varyantı Faz 1.5'te zaten eklenmişti
+  (`kenar="degrade"`); yeni varyant ya da token açılmadı.
+
