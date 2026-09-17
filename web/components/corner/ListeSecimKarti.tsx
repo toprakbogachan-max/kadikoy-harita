@@ -174,7 +174,7 @@ function OnayDairesi({ aktif, boyut = 24 }: { aktif: boolean; boyut?: number }) 
   );
 }
 
-/** `🔒 GİZLİ` rozeti. Kasa elde yazılı: `<html lang="tr">` altında Chrome CSS `uppercase`'i Türkçe yapıyor (ölçüldü: "pin" → "PİN"), ama iOS Safari doğrulanmadı ve bileşen `lang` bağlamına güvenmemeli — DENETIM-faz3 T19. */
+/** `🔒 GİZLİ` rozeti. Kasa elde yazılı: `<html lang="tr">` altında CSS `uppercase` Türkçe doğru — Chrome ve WebKit 26.6'da (Safari motoru, iPhone emülasyonu) ölçüldü: "pin" → "PİN". JS'te büyütme zorunlu değil; bileşen `lang="tr"` dışı bir bağlamda render edilirse diye güvence (DENETIM-faz3 T19). */
 function GizliRozeti() {
   return (
     /* Bej ton bilinçli: gizlilik bir övünme değil bir ayar. Pembe/lila

@@ -60,7 +60,7 @@ export interface MekanNotuProps {
   className?: string;
 }
 
-/* Türkçe kasa JS'te ("ne içsen" → "NE İÇSEN"): `<html lang="tr">` altında Chrome CSS `uppercase`'i Türkçe yapıyor (ölçüldü: "pin" → "PİN"), ama iOS Safari doğrulanmadı ve bileşen `lang` bağlamına güvenmemeli — DENETIM-faz3 T19. */
+/* Türkçe kasa JS'te ("ne içsen" → "NE İÇSEN"): `<html lang="tr">` altında CSS `uppercase` Türkçe doğru — Chrome ve WebKit 26.6'da (Safari motoru, iPhone emülasyonu) ölçüldü: "pin" → "PİN". JS'te büyütme zorunlu değil; bileşen `lang="tr"` dışı bir bağlamda render edilirse diye güvence (DENETIM-faz3 T19). */
 const buyut = (s: string) => s.toLocaleUpperCase("tr");
 
 /* Satır kısıtı prop'tan geldiği için `line-clamp-3` gibi sabit bir sınıf

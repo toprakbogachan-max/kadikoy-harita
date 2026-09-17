@@ -112,7 +112,8 @@ export default function YineGiderMisin({
                 değişmiyor; kaynağı puan. Dolu kırmızı kalp skill §14'ün
                 beğeni kalıbı, renk yalnızca emojide ve pastel rozette.
                 Kasa elde yazılı ("FAVORİM"): CSS uppercase'in Türkçe
-                davranışı lang'a bağlı, iOS Safari doğrulanmadı (DENETIM-faz3 T19). */}
+                davranışı lang="tr" altında Chrome ve WebKit'te doğru (ölçüldü); elde
+                yazmak lang dışı bağlama karşı güvence (DENETIM-faz3 T19). */}
             {favori && (
               <Rozet ton="pembe" sekil="hap" ikon="❤️">
                 FAVORİM

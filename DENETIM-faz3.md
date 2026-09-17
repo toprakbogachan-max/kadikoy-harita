@@ -255,6 +255,8 @@ durumu) kararla kapandı — dipnot 7.
 
 ## Karar bekleyen maddeler
 
+> **Hepsi uygulandı (2026-09-17)** — aşağıdaki "Kararların uygulanması" bölümü. Tek sapma T17: öneri `secili` yerine `aktif` oldu.
+
 | # | konu | öneri |
 |---|---|---|
 | T6 | `filter` gölgesi için token (`YerImiPini`, `RozetCikartma`) | `--golge-sekil` gibi tek token; iki değer (.22 / .24) birleşsin |
@@ -327,3 +329,34 @@ yüksekliği olmayan bir kaba sardığı için alta hizalama orada çalışmıyo
 Fotoğraf verilmezse eski cümle + karo hâli. `/tasarim/kaydetme-eksikleri`
 "yükleniyor · boş" kutusuna fotoğraflı örnek ve fotoğrafsız yedek eklendi;
 kırpılmış görüntüyle 390 ve 1280 px'te bakıldı, taşma ve konsol hatası yok.
+
+### Türkçe kasa (T19, T20)
+
+Karar "gerçek motorda sınansın"dı. Safari'nin motoru **WebKit 26.6**
+Playwright ile iPhone 15 emülasyonunda (`lang="tr"` sayfa) ölçüldü:
+
+| | Chrome | WebKit 26.6 |
+|---|---|---|
+| `uppercase` "pin kişi i" | PİN KİŞİ İ | PİN KİŞİ İ |
+| `lowercase` "İSMAİL İ" | ismail i | ismail i |
+| aynısı `lang="en"` | PIN KIŞI I / i̇smai̇l | PIN KIŞI I / i̇smai̇l |
+| gerçek `SemtCipi` (CSS lowercase) | — | "moda 131", "yeldeğirmeni 64" |
+
+İki motor da `lang="tr"` altında Türkçe büyük/küçük harfi doğru yapıyor.
+**T20 için kod değişikliği gerekmedi.** JS'teki `toLocaleUpperCase("tr")`
+büyütmeleri kaldırılmadı: zararsızlar ve bileşen `lang="tr"` dışı bir
+bağlamda render edilirse güvence. Altı yorumdaki "iOS Safari doğrulanmadı"
+ölçülen sonuçla değiştirildi. (Playwright WebKit gerçek iOS Safari'nin
+kendisi değil, aynı motor; tarayıcı bu oturumun geçici klasörüne indirildi,
+depoya ya da sisteme kurulmadı.)
+
+## Son durum
+
+**23 bulgu** (T1–T23) + kontrol listesinin tek `✗`'i:
+
+- **10 düzeltildi:** T1, T4, T5, T10, T11, T12, T13, T15, T22, T23
+- **8 karar uygulandı:** T6, T7, T8, T9 (token), T16, T17 (adlandırma),
+  T19, T20 (ölçüldü, yalnızca yorum) + §11-8 (boş liste davet kartı)
+- **5 kalsın:** T2, T3, T14, T18, T21
+
+Kontrol listesi 138/138. Karar bekleyen madde kalmadı.

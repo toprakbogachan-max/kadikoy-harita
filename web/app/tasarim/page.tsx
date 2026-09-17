@@ -21,7 +21,7 @@ import { Baslik } from "@/app/tasarim/_vitrin/Iskelet";
 type Durum = "hazir" | "kismen" | "bekliyor";
 
 /* Kasa elde yazılı: Rozet CSS uppercase kullanıyor; Türkçe "İ" davranışı
-   lang'a bağlı, iOS Safari doğrulanmadı (DENETIM-faz3 T19). Ton bir övünme değil bir durum: bekleyen bej
+   lang="tr" altında Chrome ve WebKit'te doğru (ölçüldü); elde yazmak güvence (DENETIM-faz3 T19). Ton bir övünme değil bir durum: bekleyen bej
    (hata değil), kısmen kahve, hazır nane. */
 const DURUM: Record<Durum, { etiket: string; ton: RozetTon }> = {
   hazir: { etiket: "MONTAJA HAZIR", ton: "nane" },

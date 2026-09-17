@@ -55,7 +55,7 @@ const YER_TUTUCU: Record<"kucuk" | "orta", string> = {
 const bicimle = (n: number) =>
   String(Math.max(0, Math.trunc(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-/* Türkçe kasa JS'te: `<html lang="tr">` altında Chrome CSS `uppercase`'i Türkçe yapıyor (ölçüldü: "pin" → "PİN"), ama iOS Safari doğrulanmadı ve bileşen `lang` bağlamına güvenmemeli — DENETIM-faz3 T19. */
+/* Türkçe kasa JS'te: `<html lang="tr">` altında CSS `uppercase` Türkçe doğru — Chrome ve WebKit 26.6'da (Safari motoru, iPhone emülasyonu) ölçüldü: "pin" → "PİN". JS'te büyütme zorunlu değil; bileşen `lang="tr"` dışı bir bağlamda render edilirse diye güvence (DENETIM-faz3 T19). */
 const buyut = (s: string) => s.toLocaleUpperCase("tr");
 
 export default function KayitRozeti({
