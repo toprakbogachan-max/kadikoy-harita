@@ -29,6 +29,7 @@ import ListeSecimKarti, {
 import ListeAcKarosu from "@/components/corner/ListeAcKarosu";
 import GidecegimGittim, { type GidisDurumu } from "@/components/corner/GidecegimGittim";
 import Pill from "@/components/corner/primitives/Pill";
+import { Alt, Baslik, Kutu, TelefonCercevesi } from "@/app/tasarim/_vitrin/Iskelet";
 
 /* ---------- sahte kapaklar ----------
    Ağ isteği YOK: kapaklar data: URI'li SVG. Gerçek fotoğraf yerine
@@ -63,52 +64,6 @@ const LISTELER: SecilebilirListe[] = [
   /* Ne kapak ne emoji: en sessiz yedek. Ad da bilerek uzun — kırpma denetimi. */
   { id: "l4", baslik: "annem geldiğinde götürebileceğim yerler listesi", yerSayisi: 0 },
 ];
-
-/* ---------- vitrin iskeleti (önceki vitrinlerle aynı kalıp) ---------- */
-
-function Baslik({ no, ad, kod, not }: { no: string; ad: string; kod: string; not: string }) {
-  return (
-    <header className="mb-4 mt-12 first:mt-0">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-sayi text-2xs text-gri-500">{no}</span>
-        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
-        <span className="font-sayi text-2xs text-gri-400">{kod}</span>
-      </div>
-      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
-    </header>
-  );
-}
-
-function Etiket({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mb-2.5 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>
-  );
-}
-
-/* Kağıt zemin: beyaz kartın gölgesi ancak burada görünür, yani "kenarlık
-   yerine gölge" kuralı ancak burada denetlenebilir. */
-function Kutu({
-  baslik,
-  children,
-  className = "",
-}: {
-  baslik: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className="mb-3">
-      <Etiket>{baslik}</Etiket>
-      <div className={`rounded-lg bg-kagit p-4 ${className}`} style={{ border: "1px solid var(--cizgi)" }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Alt({ children }: { children: React.ReactNode }) {
-  return <div className="mt-2 text-2xs lowercase tracking-ui text-gri-500">{children}</div>;
-}
 
 export default function KaydetmeEksikleriSayfasi() {
   /* E5 canlı: çok seçim. Bir mekan aynı anda birden çok listede olabilir,
@@ -294,11 +249,8 @@ export default function KaydetmeEksikleriSayfasi() {
             alt sınırlı, iframe frame-ancestors ile engelli). Kapsayıcıyı
             390'a kilitlemek taşmayı da kırpmayı da aynı şekilde gösteriyor;
             asıl kullanım telefon genişliği, o yüzden denetim burada. */}
-        <Kutu baslik="dar ekran — 390 piksel kapsayıcı">
-          <div
-            className="mx-auto flex w-[390px] max-w-full flex-col gap-3 overflow-hidden rounded-lg bg-kagit p-4"
-            style={{ border: "1px dashed var(--cizgi)" }}
-          >
+        <Kutu baslik="dar ekran — 390 piksel kapsayıcı" yalin>
+          <TelefonCercevesi className="flex flex-col gap-3 overflow-hidden">
             <GidecegimGittim durum="gittim" onDegis={bosDegis} />
             <YineGiderMisin deger="belki" onDegis={bosDegis} ipucu="isteğe bağlı" />
             <ListeSecici
@@ -320,7 +272,7 @@ export default function KaydetmeEksikleriSayfasi() {
             <Pill dolgu="nane" boy="buyuk" kat={3} tamGenislik ikon="✓" onTikla={bosDegis}>
               kaydet
             </Pill>
-          </div>
+          </TelefonCercevesi>
           <Alt>yatay taşma var mı, uzun ad kırpılıyor mu, şerit solması duruyor mu</Alt>
         </Kutu>
       </div>

@@ -20,6 +20,7 @@
  */
 
 import { useState } from "react";
+import { Baslik, Etiket } from "@/app/tasarim/_vitrin/Iskelet";
 
 /* Kategoriler lib/paleti.ts'teki sırayla; o dosyayı İÇE AKTARMIYORUZ.
    Denetim sayfası ürün koduna bağlanırsa paleti.ts değiştiğinde sayfa
@@ -67,21 +68,6 @@ const YARICAPLAR = [
   ["2xl", "28px", "alt panel üst köşesi"],
 ] as const;
 
-/* Bölüm başlığı — Kademe C: BÜYÜK ama küçük punto, FERAH aralık.
-   Kademe A'nın (sıkı, iri) tam tersi ayarı; ikisi yan yana durunca
-   fark görünür oluyor, bu sayfanın yarısı zaten o farkı göstermek. */
-function Baslik({ no, ad, not }: { no: string; ad: string; not: string }) {
-  return (
-    <header className="mb-4 mt-12 first:mt-0">
-      <div className="flex items-baseline gap-2">
-        <span className="font-sayi text-2xs text-gri-500">{no}</span>
-        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
-      </div>
-      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
-    </header>
-  );
-}
-
 /* Kart: beyaz yüzey + saç teli + kat-1. Ayraç çizgisi YOK, derinlik
    gölgeden geliyor (skill §5). */
 function Kart({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -93,10 +79,6 @@ function Kart({ children, className = "" }: { children: React.ReactNode; classNa
       {children}
     </div>
   );
-}
-
-function Etiket({ children }: { children: React.ReactNode }) {
-  return <div className="mb-3 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>;
 }
 
 export default function TasarimSayfasi() {

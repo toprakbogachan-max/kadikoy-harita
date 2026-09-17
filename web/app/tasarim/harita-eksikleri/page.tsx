@@ -30,40 +30,7 @@ import ArkadasMarkeri from "@/components/corner/ArkadasMarkeri";
 import SemtCipi from "@/components/corner/SemtCipi";
 import BuradaAra from "@/components/corner/BuradaAra";
 import { IkiliPill } from "@/components/corner/primitives/Pill";
-
-/* ---------- vitrin iskeleti (mekan vitriniyle aynı kalıp) ---------- */
-
-function Baslik({ no, ad, kod, not }: { no: string; ad: string; kod: string; not: string }) {
-  return (
-    <header className="mb-4 mt-12 first:mt-0">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-sayi text-2xs text-gri-500">{no}</span>
-        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
-        <span className="font-sayi text-2xs text-gri-400">{kod}</span>
-      </div>
-      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
-    </header>
-  );
-}
-
-function Etiket({ children }: { children: ReactNode }) {
-  return <div className="mb-2.5 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>;
-}
-
-function Kutu({ baslik, children, className = "" }: { baslik: string; children: ReactNode; className?: string }) {
-  return (
-    <section className="mb-3">
-      <Etiket>{baslik}</Etiket>
-      <div className={`rounded-lg bg-kagit p-4 ${className}`} style={{ border: "1px solid var(--cizgi)" }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Alt({ children }: { children: ReactNode }) {
-  return <div className="mt-2 text-2xs lowercase tracking-ui text-gri-500">{children}</div>;
-}
+import { Alt, Baslik, Kutu, TelefonCercevesi } from "@/app/tasarim/_vitrin/Iskelet";
 
 /**
  * Sahte altlık harita. Marker'ların tek sınavı bu: beyaz kenar ve gölge
@@ -416,8 +383,8 @@ export default function HaritaEksikleriSayfasi() {
           not="Uygulama telefonda yaşıyor; dördü de 390 pikselde sınanmadan bitmiş sayılmaz. Aşağıdaki sütun tam olarak o genişlikte ve haritanın üst/alt yüzen chrome’unu taklit ediyor — düzen yalnızca oturuşu görmek için, montaj değil."
         />
 
-        <Kutu baslik="390 px çerçeve">
-          <div className="mx-auto w-[390px] max-w-full">
+        <Kutu baslik="390 px çerçeve" yalin>
+          <TelefonCercevesi yalin>
             <HaritaZemini yukseklik={420} className="overflow-hidden">
               {/* üst: yatay süzgeç sırası — “nereye bakıyorum” */}
               <div className="serit absolute inset-x-0 top-0 z-[4] flex gap-2 p-3" style={{ ["--serit-solma" as string]: "2rem" }}>
@@ -451,7 +418,7 @@ export default function HaritaEksikleriSayfasi() {
                 <BuradaAra calisiyor={calisiyor} onTikla={ara} />
               </div>
             </HaritaZemini>
-          </div>
+          </TelefonCercevesi>
           <Alt>
             ekranda tek dolu siyah eleman var (B7) · semt şeridi taşmıyor, kenarda soluyor ·
             arkadaş etiketleri kadrajın dışına çıkınca kırpılıyor, düzeni itmiyor

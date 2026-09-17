@@ -17,47 +17,13 @@
  * Montaj yok: ikisi de hiçbir ekrana bağlı değil, o iş sonraki fazın.
  */
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import DereceGostergesi, {
   DERECE_KADEMELERI,
   puanKademesi,
 } from "@/components/corner/DereceGostergesi";
 import YineGiderMisin, { type YineGiderDegeri } from "@/components/corner/YineGiderMisin";
-
-/* ---------- vitrin iskeleti (önceki vitrinlerle aynı kalıp) ---------- */
-
-function Baslik({ no, ad, kod, not }: { no: string; ad: string; kod: string; not: string }) {
-  return (
-    <header className="mb-4 mt-12 first:mt-0">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-sayi text-2xs text-gri-500">{no}</span>
-        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
-        <span className="font-sayi text-2xs text-gri-400">{kod}</span>
-      </div>
-      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
-    </header>
-  );
-}
-
-function Etiket({ children }: { children: ReactNode }) {
-  return <div className="mb-2.5 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>;
-}
-
-/* Kağıt zemin: beyaz hapın gölgesi ancak burada görünür. */
-function Kutu({ baslik, children, className = "" }: { baslik: string; children: ReactNode; className?: string }) {
-  return (
-    <section className="mb-3">
-      <Etiket>{baslik}</Etiket>
-      <div className={`rounded-lg bg-kagit p-4 ${className}`} style={{ border: "1px solid var(--cizgi)" }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Alt({ children }: { children: ReactNode }) {
-  return <div className="mt-2 text-2xs lowercase tracking-ui text-gri-500">{children}</div>;
-}
+import { Alt, Baslik, Kutu, TelefonCercevesi } from "@/app/tasarim/_vitrin/Iskelet";
 
 /* Sayfadaki sayı yazımı bileşeninkiyle aynı: Türkçe virgül. */
 const yaz = (p: number) => new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 }).format(p);
@@ -254,15 +220,8 @@ export default function DegerlendirmeSayfasi() {
           not="Uygulama telefonda yaşıyor. Aşağıdaki sütun tam 390 piksel ve bir pin detayının değerlendirme bloğunu taklit ediyor — düzen yalnızca oturuşu görmek için, montaj değil."
         />
 
-        {/* Kutu'nun İÇİNE konmuyor: kutunun kendi dolgusu telefon genişliğinde
-            çerçeveyi 324 piksele düşürüyor ve gerçek bir ekrandan dar bir şey
-            sınanmış oluyor. Çerçeve doğrudan sayfa sütununda. */}
-        <section className="mb-3">
-          <Etiket>390 px · pin detayı</Etiket>
-          <div
-            className="mx-auto flex w-[390px] max-w-full flex-col gap-3 overflow-hidden rounded-lg bg-kagit p-4"
-            style={{ border: "1px dashed var(--cizgi)" }}
-          >
+        <Kutu baslik="390 px · pin detayı" yalin>
+          <TelefonCercevesi className="flex flex-col gap-3 overflow-hidden">
             <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
               <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">bana hitap puanı</div>
               <div className="mt-2.5">
@@ -281,13 +240,13 @@ export default function DegerlendirmeSayfasi() {
               <span className="text-sm font-bold text-gri-900">Deniz Arslan</span>
               <DereceGostergesi puan={3} boy="kucuk" puanGoster />
             </div>
-          </div>
+          </TelefonCercevesi>
           <Alt>
             yatay taşma var mı · en geniş kademe (beğenmedim) de tek satır mı · puan 9 ve üstünde
             kalp rozeti başlık satırını itmiyor mu · dar kapta önce sayı alta iniyor, sonra seçili
             yazı kırpılıyor
           </Alt>
-        </section>
+        </Kutu>
 
         {/* ============ kapanış ============ */}
         <Baslik

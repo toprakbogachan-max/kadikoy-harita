@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from "react";
 import KayitRozeti from "@/components/corner/KayitRozeti";
 import GidecegimGittim, { type GidisDurumu } from "@/components/corner/GidecegimGittim";
 import MekanNotu, { NOT_BASLIKLARI } from "@/components/corner/MekanNotu";
+import { Alt, Baslik, Kutu, TelefonCercevesi } from "@/app/tasarim/_vitrin/Iskelet";
 
 const KISA = "Sabah sekizde açıyor ve o saatte içeride üç kişi oluyor; on birden sonra kuyruk kapının dışına taşıyor.";
 
@@ -35,42 +36,6 @@ const UZUN =
   "Kalabalık ağırlıklı mahalleli: aynı üç masa, aynı saatlerde, aynı insanlar. " +
   "İlk gelişinde tezgahın arkasındaki tahtaya bak, günün demlemesi orada yazıyor ve " +
   "menüde görünmüyor.";
-
-/* ---------- vitrin iskeleti (primitif vitriniyle aynı kalıp) ---------- */
-
-function Baslik({ no, ad, kod, not }: { no: string; ad: string; kod: string; not: string }) {
-  return (
-    <header className="mb-4 mt-12 first:mt-0">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-sayi text-2xs text-gri-500">{no}</span>
-        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
-        <span className="font-sayi text-2xs text-gri-400">{kod}</span>
-      </div>
-      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
-    </header>
-  );
-}
-
-function Etiket({ children }: { children: React.ReactNode }) {
-  return <div className="mb-2.5 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>;
-}
-
-/* Kağıt zemin: beyaz kartın ve beyaz dairenin gölgesi ancak burada görünür,
-   yani "kenarlık yerine gölge" kuralı ancak burada denetlenebilir. */
-function Kutu({ baslik, children, className = "" }: { baslik: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className="mb-3">
-      <Etiket>{baslik}</Etiket>
-      <div className={`rounded-lg bg-kagit p-4 ${className}`} style={{ border: "1px solid var(--cizgi)" }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Alt({ children }: { children: React.ReactNode }) {
-  return <div className="mt-2 text-2xs lowercase tracking-ui text-gri-500">{children}</div>;
-}
 
 export default function MekanEksikleriSayfasi() {
   /* D5 canlı: durum SAYFANIN state'i. Bileşenin kendi hafızası yok ve
@@ -283,8 +248,8 @@ export default function MekanEksikleriSayfasi() {
           not="Uygulama telefonda yaşıyor; üçü de 390 pikselde sınanmadan bitmiş sayılmaz. Aşağıdaki sütun tam olarak o genişlikte ve mekan detayındaki komşularını (başlık, sıralama satırı) taklit ediyor — düzen yalnızca oturuşu görmek için, montaj değil."
         />
 
-        <Kutu baslik="390 px sütun">
-          <div className="mx-auto w-[390px] max-w-full rounded-lg bg-kagit p-4" style={{ border: "1px dashed var(--cizgi)" }}>
+        <Kutu baslik="390 px sütun" yalin>
+          <TelefonCercevesi>
             <div className="flex items-start gap-2">
               <h3 className="m-0 min-w-0 flex-1 text-2xl font-extrabold leading-none tracking-isim text-gri-900">
                 Fazıl Bey
@@ -302,7 +267,7 @@ export default function MekanEksikleriSayfasi() {
               <MekanNotu baslik={NOT_BASLIKLARI.havasi} ikon="🌤️" metin={UZUN} satirSiniri={3} imza="— sinem · şubat" />
               <MekanNotu baslik={NOT_BASLIKLARI.neSoylesen} ikon="☕" onYaz={() => setNotAcik(true)} />
             </div>
-          </div>
+          </TelefonCercevesi>
           <Alt>ikili sağ üstte başlıkla aynı hizada · rozetler sarıyor, taşmıyor</Alt>
         </Kutu>
 

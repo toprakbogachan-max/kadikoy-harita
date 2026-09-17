@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import OrtakListeHapi, { type Katkici } from "@/components/corner/OrtakListeHapi";
 import SeriRozeti, { SeriRozetSatiri } from "@/components/corner/SeriRozeti";
 import { RozetSayac } from "@/components/corner/primitives/Rozet";
+import { Alt, Baslik, Kutu, TelefonCercevesi } from "@/app/tasarim/_vitrin/Iskelet";
 
 /* Örnek katkıcılar — fotosuz, baş harf + renk. Renkler kategori paletinin
    doygun ucundan: 20 piksellik daire "geniş yüzey" değil (skill §3). */
@@ -35,42 +36,6 @@ const CREW: Katkici[] = [
 ];
 
 const UZUN_METIN = "bu listeyi birlikte dolduralım, sen de ekle";
-
-/* ---------- vitrin iskeleti (diğer vitrinlerle aynı kalıp) ---------- */
-
-function Baslik({ no, ad, kod, not }: { no: string; ad: string; kod: string; not: string }) {
-  return (
-    <header className="mb-4 mt-12 first:mt-0">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-sayi text-2xs text-gri-500">{no}</span>
-        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
-        <span className="font-sayi text-2xs text-gri-400">{kod}</span>
-      </div>
-      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
-    </header>
-  );
-}
-
-function Etiket({ children }: { children: React.ReactNode }) {
-  return <div className="mb-2.5 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>;
-}
-
-/* Kağıt zemin: beyaz hapın ve beyaz dairenin gölgesi ancak burada görünür,
-   yani "kenarlık yerine gölge" kuralı ancak burada denetlenebilir. */
-function Kutu({ baslik, children, className = "" }: { baslik: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className="mb-3">
-      <Etiket>{baslik}</Etiket>
-      <div className={`rounded-lg bg-kagit p-4 ${className}`} style={{ border: "1px solid var(--cizgi)" }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Alt({ children }: { children: React.ReactNode }) {
-  return <div className="mt-2 text-2xs lowercase tracking-ui text-gri-500">{children}</div>;
-}
 
 export default function ProfilEksikleriSayfasi() {
   /* F2 canlı: davet bağlantısı üretiliyormuş gibi bekliyor, sonra
@@ -254,8 +219,8 @@ export default function ProfilEksikleriSayfasi() {
           not="Uygulama telefonda yaşıyor; ikisi de 390 pikselde sınanmadan bitmiş sayılmaz. Aşağıdaki iki sütun tam olarak o genişlikte ve komşularını (profil başlığı, liste başlık kartı) taklit ediyor — düzen yalnızca oturuşu görmek için, montaj değil."
         />
 
-        <Kutu baslik="390 px · profil başlığı">
-          <div className="mx-auto w-[390px] max-w-full rounded-lg bg-kagit p-4" style={{ border: "1px dashed var(--cizgi)" }}>
+        <Kutu baslik="390 px · profil başlığı" yalin>
+          <TelefonCercevesi>
             <div className="flex items-center gap-3">
               <span
                 className="grid size-16 shrink-0 place-items-center font-extrabold text-white"
@@ -278,12 +243,12 @@ export default function ProfilEksikleriSayfasi() {
                 <RozetSayac sayi="🥉" etiket="kadıköy sırası" ton="kahve" ikinciTon="magaza" />
               </SeriRozetSatiri>
             </div>
-          </div>
+          </TelefonCercevesi>
           <Alt>kişi adı düzgün kasa (§4: kişi adı asla BÜYÜK değil) · iki rozet sarıyor, taşmıyor</Alt>
         </Kutu>
 
-        <Kutu baslik="390 px · liste başlık kartı">
-          <div className="mx-auto w-[390px] max-w-full rounded-lg bg-kagit p-4" style={{ border: "1px dashed var(--cizgi)" }}>
+        <Kutu baslik="390 px · liste başlık kartı" yalin>
+          <TelefonCercevesi>
             <h3 className="m-0 text-2xl font-extrabold uppercase leading-none tracking-siki text-gri-900">
               Yağmurlu günde Kadıköy
             </h3>
@@ -298,7 +263,7 @@ export default function ProfilEksikleriSayfasi() {
             <div className="mt-3">
               <OrtakListeHapi tamGenislik onTikla={() => {}} />
             </div>
-          </div>
+          </TelefonCercevesi>
           <Alt>boş listede tam genişlik · degrade kenarlık dar ekranda da kesintisiz</Alt>
         </Kutu>
 

@@ -24,6 +24,7 @@ import Kart from "@/components/corner/primitives/Kart";
 import Avatar from "@/components/corner/primitives/Avatar";
 import Rozet, { RozetCikartma, RozetNokta, RozetSayac } from "@/components/corner/primitives/Rozet";
 import Panel from "@/components/corner/primitives/Panel";
+import { Baslik, Etiket, Kutu } from "@/app/tasarim/_vitrin/Iskelet";
 
 /* Fotoğraf yerine degrade: depoda örnek görsel yok ve vitrin için ağ
    isteği yapmak (ya da repoya jpeg koymak) yanlış olur. Kartın işi zaten
@@ -54,49 +55,6 @@ const KISILER = [
   { ad: "Barış Ergin", renk: "#329179" },
   { ad: "İlayda Şen", renk: "#DE9B2E" },
 ] as const;
-
-/* ---------- vitrin iskeleti ---------- */
-
-function Baslik({ no, ad, kodlar, not }: { no: string; ad: string; kodlar: string; not: string }) {
-  return (
-    <header className="mb-4 mt-12 first:mt-0">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-sayi text-2xs text-gri-500">{no}</span>
-        <h2 className="text-xs font-bold uppercase tracking-etiket text-gri-900">{ad}</h2>
-        <span className="font-sayi text-2xs text-gri-400">{kodlar}</span>
-      </div>
-      <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-700">{not}</p>
-    </header>
-  );
-}
-
-function Etiket({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mb-2.5 text-2xs font-bold uppercase tracking-etiket text-gri-500">{children}</div>
-  );
-}
-
-/* Vitrin kutusu: primitifleri KAĞIT zeminde gösteriyor, beyaz kartın
-   içinde değil — beyaz hapın beyaz kart üstündeki gölgesi görünmüyor ve
-   "kenarlık yerine gölge" kuralı denetlenemiyor. */
-function Kutu({
-  baslik,
-  children,
-  className = "",
-}: {
-  baslik: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className="mb-3">
-      <Etiket>{baslik}</Etiket>
-      <div className={`rounded-lg bg-kagit p-4 ${className}`} style={{ border: "1px solid var(--cizgi)" }}>
-        {children}
-      </div>
-    </section>
-  );
-}
 
 /* ---------- ikonlar: yuva içeriği, primitifin parçası değil ---------- */
 
@@ -164,7 +122,7 @@ export default function PrimitiflerSayfasi() {
         <Baslik
           no="01"
           ad="Hap"
-          kodlar="A3 · A4 · A6 · D8 · E7 · F2 · I7 · I9 · J3"
+          kod="A3 · A4 · A6 · D8 · E7 · F2 · I7 · I9 · J3"
           not="Yatay, metin taşıyan her şey. Dolu koyu eleman ekranda BİR tane olur, o yüzden varsayılan beyaz. Mavi ve nane iki ayrı istisna: mavi çalışıyor/birincil eylem, nane bu üründe kaydetmenin rengi."
         />
 
@@ -303,7 +261,7 @@ export default function PrimitiflerSayfasi() {
         <Baslik
           no="02"
           ad="Çip"
-          kodlar="C1–C7 · G5"
+          kod="C1–C7 · G5"
           not="Haritada İKİ AYRI filtre biçimi var, karıştırılmaz: yatay hap 'hangi mekanlara bakıyorum' sorusunu, dikey emoji-daire 'ne arıyorum' sorusunu sorar. İki farklı soru, iki farklı biçim."
         />
 
@@ -393,7 +351,7 @@ export default function PrimitiflerSayfasi() {
         <Baslik
           no="03"
           ad="Kart kabuğu"
-          kodlar="F1 · F4 · F6 · G1–G4 · D11 · E5 · H7"
+          kod="F1 · F4 · F6 · G1–G4 · D11 · E5 · H7"
           not="Yalnızca kabuk: zemin, yarıçap, gölge, dolgu, gerekiyorsa koyu örtü. İçerik düzeni montaj fazının işi. Kullanıcı içeriği beyaz kartta, sistem/aktivite mesajı degrade kartta durur — renk burada anlam taşıyor."
         />
 
@@ -486,7 +444,7 @@ export default function PrimitiflerSayfasi() {
         <Baslik
           no="04"
           ad="Avatar"
-          kodlar="squircle = kimlik · daire = haritadaki nokta"
+          kod="squircle = kimlik · daire = haritadaki nokta"
           not="Tutarsızlık değil, ayrımın kendisi: yuvarlak kare 'bu bir kişi', tam daire 'bu bir konum işareti ya da listedeki ufak iz'. Yarıçap boyutla ölçekleniyor — sabit 22px, 20 piksellik avatarda neredeyse daire yapıyor."
         />
 
@@ -547,7 +505,7 @@ export default function PrimitiflerSayfasi() {
         <Baslik
           no="05"
           ad="Rozet"
-          kodlar="D2 · D3 · D7 · H2"
+          kod="D2 · D3 · D7 · H2"
           not="Pastel vurgular YALNIZCA burada yaşar. Doygunluk alanla ters orantılı: küçük rozette renk canlı olabilir, alan büyüdükçe düşer. Çıkartma ekran başına BİR tane — ikiye çıktığı anda ucuzluyor."
         />
 
@@ -610,7 +568,7 @@ export default function PrimitiflerSayfasi() {
         <Baslik
           no="06"
           ad="Alt panel"
-          kodlar="A7 · tutamaç · duraklama noktaları"
+          kod="A7 · tutamaç · duraklama noktaları"
           not="Envanter bölüm 6'nın 8 numaralı bulgusu: aynı panel üç FARKLI yükseklikte yakalanmış. Sürükle, bırak, en yakın durağa otursun. Tutamaca dokunmak durakları sırayla geziyor — sürükleyemeyen kullanıcı için tek erişim yolu o."
         />
 
