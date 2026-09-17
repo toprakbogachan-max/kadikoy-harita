@@ -26,3 +26,12 @@ Dosyalar: `YerImiPini` (spec: BookmarkPin), `ArkadasMarkeri` (AktifKisiIsareti),
   söylüyor. **Soru:** semt çipi kalsın mı, yoksa "bu üründe karşılığı yok"
   deyip atlansın mı?
 
+## Paket 2 — burada ara
+
+Dosya: `BuradaAra` (spec: AraBuradan). Önizleme: `/tasarim/harita-eksikleri`
+(Paket 1 ile aynı sayfa; 390 px çerçevede dördü birlikte sınanıyor).
+
+Açık karar yok. Metin çalışırken değişmiyor ("aranıyor…"a dönseydi hap
+genişlik değiştirip yerinden sıçrardı); durum ekran okuyucuya `aria-label` ve
+`aria-busy` ile gidiyor.
+
