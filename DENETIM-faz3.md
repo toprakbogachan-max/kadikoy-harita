@@ -226,7 +226,7 @@ Paket 3'ün düzeltmelerinden **sonraki** hâl, her bileşenin kendi
 | MekanNotu | ✓ | — | — | ✓ | ✓ | — | — | ✓⁶ | ✓ | — | ✓ | — | — | ✓ | ✓ |
 | DereceGostergesi | ✓ | ✓ | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | — | ✓ | ✓ |
 | YineGiderMisin | ✓ | ✓ | — | ✓ | ✓ | — | — | — | ✓ | — | ✓ | — | — | ✓ | ✓ |
-| ListeSecimKarti | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | ✗⁷ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| ListeSecimKarti | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | ✓⁷ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | ListeAcKarosu | ✓ | — | — | ✓ | ✓ | — | — | — | ✓ | — | ✓ | — | — | ✓ | ✓ |
 | OrtakListeHapi | ✓⁸ | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | ✓ |
 | SeriRozeti | ✓ | — | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | — | — | ✓ | ✓ |
@@ -242,16 +242,16 @@ Paket 3'ün düzeltmelerinden **sonraki** hâl, her bileşenin kendi
    ürün kararı 2026-09-17, yalnızca bu pinin dolgusu.
 6. Boş hâl davet cümlesi + "ilk sen yaz." hapı. §11'in fotoğraflı CTA kuralı
    listeler için; bu tek bir metin bloğu.
-7. **Geçmiyor.** Boş liste hâli beyaz alan değil (cümle + yeni liste karosu)
-   ama §6'nın istediği fotoğraflı CTA kartı da değil. Bileşen yorumu bunu
-   montaja bırakmış ("orada gerçek kapaklar var"). **Karar:** montajda
-   fotoğraflı CTA'ya mı çevrilsin, yoksa seçici bağlamında (akışın ortasında
-   küçük bir panel) cümle + karo yeterli mi?
+7. İlk denetimde **geçmiyordu** (cümle + yeni liste karosu, fotoğraflı CTA
+   değil). Karar uygulandı: `ListeSecici.bosKapak` — kaydedilmekte olan
+   mekanın fotoğrafıyla tam genişlik davet kartı ("ilk listeni bununla aç").
+   Liste yokken liste kapağı da yok, ama kaydedilen mekanın fotoğrafı her
+   zaman elde. Fotoğraf verilmezse cümle + karo yedeği kalıyor.
 8. Degrade yalnızca 1.5 px kenarlık, hap beyaz.
 
-**Sonuç:** 19 satırda uygulanabilen 138 hücreden 137'si geçiyor (147 hücre
-bu bileşen için anlamsız); tek `✗` ListeSecimKarti'nin boş durumu (karar
-bekliyor).
+**Sonuç:** 19 satırda uygulanabilen 138 hücrenin 138'i geçiyor (147 hücre
+bu bileşen için anlamsız). İlk denetimdeki tek `✗` (ListeSecimKarti boş
+durumu) kararla kapandı — dipnot 7.
 
 ## Karar bekleyen maddeler
 
@@ -317,3 +317,13 @@ diğer dört sayfada sıfır fark.
 Önizlemelerde yalnızca ilgili bileşenin JSX etiketinin içindeki öznitelikler
 değişti (30 yer); tip denetimi eksik bırakılan kullanımı yakalıyor.
 Yerleşim dökümü altı sayfada iki genişlikte sıfır fark.
+
+### Boş liste seçicisi (§11-8)
+
+`ListeSecici`'ye `bosKapak` (ve `bosCagri`): hiç liste yokken ve kaydedilen
+mekanın fotoğrafı verilmişse boş hâl, o fotoğrafın üstünde tam genişlik
+davet kartı — örtü elle, metin altta (Kart'ın örtülü zemini içeriği
+yüksekliği olmayan bir kaba sardığı için alta hizalama orada çalışmıyor).
+Fotoğraf verilmezse eski cümle + karo hâli. `/tasarim/kaydetme-eksikleri`
+"yükleniyor · boş" kutusuna fotoğraflı örnek ve fotoğrafsız yedek eklendi;
+kırpılmış görüntüyle 390 ve 1280 px'te bakıldı, taşma ve konsol hatası yok.

@@ -372,6 +372,17 @@ export interface ListeSeciciProps {
   yukleniyor?: boolean;
   /** hiç liste yokken çıkan davet cümlesi. */
   bosMetin?: string;
+  /**
+   * Kaydedilmekte olan mekanın kapak fotoğrafı (`places.cover_url`).
+   * Verilirse ve hiç liste yoksa boş hâl, bu fotoğrafın üstünde tam genişlik
+   * bir davet kartı olur (skill §6: boş durum = fotoğraflı CTA). Liste yokken
+   * liste kapağı da yok; ama kaydedilen mekanın fotoğrafı her zaman eldedir
+   * ve "ilk listeni BUNUNLA aç" cümlesini doğru yapar (DENETIM-faz3 §11-8).
+   * Verilmezse cümle + yeni liste karosu kalır.
+   */
+  bosKapak?: string | null;
+  /** fotoğraflı davet kartının cümlesi. */
+  bosCagri?: string;
   pasif?: boolean;
   className?: string;
 }
@@ -390,6 +401,8 @@ export function ListeSecici({
   seritKenar = 16,
   yukleniyor = false,
   bosMetin = "henüz listen yok. ilk seçkini burada açabilirsin.",
+  bosKapak,
+  bosCagri = "ilk listeni bununla aç",
   pasif = false,
   className = "",
 }: ListeSeciciProps) {
@@ -405,13 +418,52 @@ export function ListeSecici({
     />
   );
 
+  const basligi = baslik && (
+    <h3 className="mb-2 text-2xs font-bold uppercase leading-none tracking-etiket text-gri-600">
+      {baslik}
+    </h3>
+  );
+
+  /* Fotoğraflı davet: seçicide hiç liste yok ve kaydedilen mekanın fotoğrafı
+     elde. Karo ve cümle yerine tek, tam genişlik kart — orası bir hata değil,
+     ürünün "listelerini kur" dediği an. Metin ALTTA: koyu örtü alttan yukarı
+     sönüyor (--ortu), ortalanmış beyaz yazı fotoğrafın açık yerine düşebilir. */
+  if (bos && onYeniListe && bosKapak) {
+    return (
+      <section className={className}>
+        {basligi}
+        <button
+          type="button"
+          onClick={onYeniListe}
+          disabled={pasif}
+          className="bas block w-full border-none bg-transparent p-0 text-left disabled:pointer-events-none disabled:opacity-45"
+        >
+          {/* ortu={false} + elle örtü: Kart'ın örtülü hâli içeriği yüksekliği
+              olmayan bir kaba sarıyor, alta hizalama orada çalışmıyor. Karo
+              biçimindeki kapakla aynı yöntem. */}
+          <Kart zemin="foto" foto={bosKapak} ortu={false} dolgu="yok" yaricap="lg" kat={1} oran="2/1" className="w-full">
+            <span aria-hidden className="absolute inset-0" style={{ background: "var(--ortu)" }} />
+            <span className="absolute inset-0 flex flex-col justify-end gap-1 p-4">
+              <span className="flex items-center gap-2 text-lg font-extrabold lowercase leading-tight tracking-siki text-white">
+                <span
+                  aria-hidden
+                  className="grid size-7 shrink-0 place-items-center rounded-full bg-yuzey/90 text-base leading-none text-gri-900"
+                >
+                  +
+                </span>
+                {bosCagri}
+              </span>
+              <span className="font-metin text-sm leading-snug text-white/85">{bosMetin}</span>
+            </span>
+          </Kart>
+        </button>
+      </section>
+    );
+  }
+
   return (
     <section className={className}>
-      {baslik && (
-        <h3 className="mb-2 text-2xs font-bold uppercase leading-none tracking-etiket text-gri-600">
-          {baslik}
-        </h3>
-      )}
+      {basligi}
 
       {yukleniyor ? (
         <YerTutucu bicim={bicim} genislik={karoGenislik} />

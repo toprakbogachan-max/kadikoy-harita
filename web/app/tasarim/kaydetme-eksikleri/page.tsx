@@ -156,11 +156,21 @@ export default function KaydetmeEksikleriSayfasi() {
               secililer={[]}
               onSec={bosDegis}
               onYeniListe={bosDegis}
+              bosKapak={sahteKapak("#6E8F6A", "#27402B", "☕")}
+              bosMetin="kaydettiğin yerleri gruplamak için bir liste aç."
+            />
+            <ListeSecici
+              baslik="fotoğrafsız yedek"
+              listeler={[]}
+              secililer={[]}
+              onSec={bosDegis}
+              onYeniListe={bosDegis}
             />
           </div>
           <Alt>
-            boş durum beyaz alan değil davet: E6 karosu + cümle. Fotoğraflı CTA kartına
-            çevirmek Faz 3 — orada gerçek kapaklar var
+            boş durum beyaz alan değil davet: kaydedilen mekanın fotoğrafı elindeyse (bosKapak)
+            tam genişlik fotoğraflı kart — liste yokken liste kapağı da yok, ama mekanın fotoğrafı
+            her zaman var. fotoğraf yoksa e6 karosu + cümle
           </Alt>
         </Kutu>
 
