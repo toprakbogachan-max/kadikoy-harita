@@ -14,7 +14,7 @@ import Rozet, { type RozetTon } from "@/components/corner/primitives/Rozet";
  * Neden ayrı bir dosya, neden doğrudan <Rozet> değil: rozetin kendisi
  * biçim primitifi, buradaki üç karar ise İÇERİĞE ait —
  *   1) sayının binlik ayracı,
- *   2) Türkçe büyük harf (CSS `uppercase` "pin"i "PIN" yapar, "PİN" değil),
+ *   2) Türkçe büyük harf JS'te (`toLocaleUpperCase("tr")`, "pin" → "PİN"),
  *   3) sıfırın ne anlama geldiği.
  * Üçü de her çağıran yerde tekrar edilecek kararlar; bir kez burada.
  *
@@ -55,8 +55,7 @@ const YER_TUTUCU: Record<"kucuk" | "orta", string> = {
 const bicimle = (n: number) =>
   String(Math.max(0, Math.trunc(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-/* Türkçe kasa JS'te: CSS `uppercase` tarayıcıya göre "i"yi "I" yapıyor
-   (Avatar'daki aynı not). "pin" → "PIN" olurdu; burada "PİN" lazım. */
+/* Türkçe kasa JS'te: `<html lang="tr">` altında Chrome CSS `uppercase`'i Türkçe yapıyor (ölçüldü: "pin" → "PİN"), ama iOS Safari doğrulanmadı ve bileşen `lang` bağlamına güvenmemeli — DENETIM-faz3 T19. */
 const buyut = (s: string) => s.toLocaleUpperCase("tr");
 
 export default function KayitRozeti({

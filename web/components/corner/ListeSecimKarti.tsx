@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import Kart from "@/components/corner/primitives/Kart";
 import Rozet from "@/components/corner/primitives/Rozet";
+import { OnayIsareti, useZipla } from "@/components/corner/primitives/Pill";
 import ListeAcKarosu from "@/components/corner/ListeAcKarosu";
 
 /**
@@ -38,7 +39,7 @@ import ListeAcKarosu from "@/components/corner/ListeAcKarosu";
  *     BÜYÜK, listede akan isim düzgün kasa — burası bir seçim listesi.
  *     `components/ListeKarti.tsx` aynı kararı aynı gerekçeyle vermiş:
  *     listeyi adlandırmak kullanıcının işi, kasasını elinden almıyoruz
- *     (Türkçe İ/ı da CSS `uppercase`te bozuluyor).
+ *     (ve CSS `uppercase`in Türkçe İ/ı davranışı `lang`'a bağlı — DENETIM-faz3 T19).
  */
 
 /**
@@ -144,27 +145,8 @@ function Kapak({ liste }: { liste: SecilebilirListe }) {
   );
 }
 
-/* `secili` her değiştiğinde artan sayaç — ✓ dairesini zıplatmak için
-   (skill §13 kalıp 4: durum değiştiren düğmede renk tek başına zayıf bir
-   onay, göz düğmenin üstündeyken rengin döndüğünü kaçırabilir).
-   İlk render sayılmıyor: sayfa açılır açılmaz zıplayan onay, onay değil
-   gürültü. `Pill`'in kendi useZipla'sının aynısı; Pill burada
-   kullanılamıyor çünkü ✓ dairesi zaten bir düğmenin İÇİNDE. */
-function useZipla(deger: boolean) {
-  const [sayac, setSayac] = useState(0);
-  const ilk = useRef(true);
-  useEffect(() => {
-    if (ilk.current) {
-      ilk.current = false;
-      return;
-    }
-    setSayac((n) => n + 1);
-  }, [deger]);
-  return sayac;
-}
-
 function OnayDairesi({ secili, boyut = 24 }: { secili: boolean; boyut?: number }) {
-  const zip = useZipla(secili);
+  const zip = useZipla(true, secili);
   return (
     <span
       aria-hidden
@@ -186,24 +168,13 @@ function OnayDairesi({ secili, boyut = 24 }: { secili: boolean; boyut?: number }
       {/* key: CSS animasyonunu yeniden başlatmanın en ucuz yolu elemanı
           yeniden monte etmek. Zıplayan yalnızca ✓, kabı değil. */}
       <span key={zip} className={zip ? "zipla" : ""}>
-        <svg
-          width={Math.round(boyut * 0.54)}
-          height={Math.round(boyut * 0.54)}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M4 12.5 9.5 18 20 6.5" />
-        </svg>
+        <OnayIsareti boyut={Math.round(boyut * 0.54)} kalinlik={3} />
       </span>
     </span>
   );
 }
 
-/** `🔒 GİZLİ` rozeti. Kasa elde: CSS `uppercase` "gizli"yi "GIZLI" yapar. */
+/** `🔒 GİZLİ` rozeti. Kasa elde yazılı: `<html lang="tr">` altında Chrome CSS `uppercase`'i Türkçe yapıyor (ölçüldü: "pin" → "PİN"), ama iOS Safari doğrulanmadı ve bileşen `lang` bağlamına güvenmemeli — DENETIM-faz3 T19. */
 function GizliRozeti() {
   return (
     /* Bej ton bilinçli: gizlilik bir övünme değil bir ayar. Pembe/lila

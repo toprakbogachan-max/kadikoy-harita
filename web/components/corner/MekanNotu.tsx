@@ -60,8 +60,7 @@ export interface MekanNotuProps {
   className?: string;
 }
 
-/* Türkçe kasa JS'te: CSS `uppercase` "ne içsen"i "NE IÇSEN" yapıyor.
-   `toLocaleUpperCase("tr")` "NE İÇSEN" veriyor — Avatar'daki aynı tuzak. */
+/* Türkçe kasa JS'te ("ne içsen" → "NE İÇSEN"): `<html lang="tr">` altında Chrome CSS `uppercase`'i Türkçe yapıyor (ölçüldü: "pin" → "PİN"), ama iOS Safari doğrulanmadı ve bileşen `lang` bağlamına güvenmemeli — DENETIM-faz3 T19. */
 const buyut = (s: string) => s.toLocaleUpperCase("tr");
 
 /* Satır kısıtı prop'tan geldiği için `line-clamp-3` gibi sabit bir sınıf

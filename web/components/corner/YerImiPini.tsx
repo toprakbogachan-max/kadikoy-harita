@@ -15,9 +15,11 @@ import type { ReactNode } from "react";
  * kimin kaydı olduğunu bilmiyor. Hepsi props.
  *
  * ── Biçim ──────────────────────────────────────────────────────────
- * Silüet, D5'teki `gideceğim` yer imiyle AYNI glif (GidecegimGittim'in
- * `Imlec`i). Bilinçli: "kaydedildi" fikri uygulamanın iki ayrı yerinde
- * aynı şekille konuşsun. Skill §5 "daire = haritadaki nokta" diyor ve
+ * Silüet, D5'teki `gideceğim` yer imiyle AYNI BİÇİM — ama aynı çizim değil:
+ * pin 30×40 kutuda üst köşeleri yuvarlatılmış bir nesne, `GidecegimGittim`'in
+ * `Imlec`i 24'lük ızgarada keskin köşeli bir ikon (DENETIM-faz3 T15;
+ * eşitlemek görünür değişiklik, karar gerektirir). Bilinçli olan biçim:
+ * "kaydedildi" fikri uygulamanın iki ayrı yerinde aynı şekille konuşsun. Skill §5 "daire = haritadaki nokta" diyor ve
  * bu ondan sapma — ama sapmanın kendisi bilgi: daire mekanı, yer imi
  * mekana yapılmış bir işareti gösteriyor.
  *

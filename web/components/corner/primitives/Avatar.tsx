@@ -73,8 +73,7 @@ export default function Avatar({
 }: AvatarProps) {
   const px = typeof boyut === "number" ? boyut : OLCEK[boyut];
   const yaricap = sekil === "daire" ? "50%" : Math.round(px * 0.28);
-  /* Türkçe kasa JS'te: CSS `uppercase` tarayıcıya göre "i"yi "I" yapıyor,
-     lang="tr" her yerde güvenilir değil. toLocaleUpperCase("tr") kesin. */
+  /* Türkçe kasa JS'te, `toLocaleUpperCase("tr")`: `<html lang="tr">` altında Chrome CSS `uppercase`'i Türkçe yapıyor (ölçüldü: "pin" → "PİN"), ama iOS Safari doğrulanmadı ve bileşen `lang` bağlamına güvenmemeli — DENETIM-faz3 T19. */
   const harf = ad?.trim() ? ad.trim()[0].toLocaleUpperCase("tr") : "";
   const golge = [halka === "yok" ? "" : HALKA[halka], kat ? `var(--shadow-kat-${kat})` : ""]
     .filter(Boolean)

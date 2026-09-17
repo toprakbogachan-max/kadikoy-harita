@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Pill from "@/components/corner/primitives/Pill";
+import Pill, { OnayIsareti } from "@/components/corner/primitives/Pill";
 
 /**
  * D5 — `gideceğim` / `gittim` ikilisi. Referansta `to try` / `been`.
@@ -61,21 +61,6 @@ const Imlec = ({ dolu }: { dolu: boolean }) => (
     strokeLinejoin="round"
   >
     <path d="M6 3.6h12v17l-6-4.2-6 4.2z" />
-  </svg>
-);
-
-const Onay = ({ kalin }: { kalin: boolean }) => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={kalin ? "2.8" : "2"}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M4 12.5 9.5 18 20 6.5" />
   </svg>
 );
 
@@ -172,7 +157,7 @@ export default function GidecegimGittim({
         aktif={gitti}
         /* Dolu hâl TEK siyah çapa (skill §3): ekranda ikinci bir dolu
            siyah eleman varsa o değil bu geri çekilmeli. */
-        ikon={<Onay kalin={gitti} />}
+        ikon={<OnayIsareti boyut={20} kalinlik={gitti ? 2.8 : 2} />}
         dolgu={gitti ? "siyah" : "beyaz"}
         pasif={pasif || yukleniyor === "gidecegim"}
         yukleniyor={yukleniyor === "gittim"}

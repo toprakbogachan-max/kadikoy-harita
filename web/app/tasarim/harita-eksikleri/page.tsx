@@ -149,7 +149,7 @@ export default function HaritaEksikleriSayfasi() {
           id="YerImiPini"
           ad="Yer imi pini"
           kod="B4 · YerImiPini"
-          not="Referansta “başkasının kaydettiği mekanlar mavi bookmark şeklinde”. Silüet D5’teki gideceğim yer imiyle aynı glif: kaydetme fikri uygulamanın iki yerinde de aynı şekille konuşuyor. Renk nane (karar 2026-09-17): referans mavi diyor ama bu üründe kaydetmenin rengi nane ve mavi haritada zaten kullanıcının kendi konumu. Dolgu bu pin için açılan doygun --color-nane tokeni."
+          not="Referansta “başkasının kaydettiği mekanlar mavi bookmark şeklinde”. Silüet D5’teki gideceğim yer imiyle aynı biçim (çizim değil — pin yuvarlak köşeli): kaydetme fikri uygulamanın iki yerinde de aynı şekille konuşuyor. Renk nane (karar 2026-09-17): referans mavi diyor ama bu üründe kaydetmenin rengi nane ve mavi haritada zaten kullanıcının kendi konumu. Dolgu bu pin için açılan doygun --color-nane tokeni."
         />
 
         <Kutu baslik="nane — konum noktasıyla yan yana">

@@ -256,7 +256,7 @@ export function IkiliPill<T extends string>({
           >
             {aktif ? (
               <span aria-hidden className="grid place-items-center">
-                <Onay />
+                <OnayIsareti />
               </span>
             ) : (
               s.ikon && (
@@ -275,15 +275,22 @@ export function IkiliPill<T extends string>({
 
 /* `aktif` her değiştiğinde artan sayaç. İlk render sayılmıyor: sayfa
    açılır açılmaz zıplayan bir düğme onay değil gürültü. */
-function useZipla(acik: boolean, aktif: boolean | undefined) {
+/**
+ * `aktif` her değiştiğinde artan sayaç; ilk render sayılmıyor. Sayaç `key`
+ * olarak verilince zıplama animasyonu baştan oynar (skill §13 kalıp 4).
+ * Pill'in kendisi ve Pill kullanamayan durum göstergeleri (ör.
+ * `ListeSecimKarti`'nın onay dairesi) aynı kancayı kullanır — DENETIM-faz3 T13.
+ */
+export function useZipla(acik: boolean, aktif: boolean | undefined) {
   const [sayac, setSayac] = useState(0);
-  const ilk = useRef(true);
+  /* "İlk render mı" bayrağı DEĞİL, önceki değer: geliştirme modunda React
+     efekti iki kez çalıştırıyor ve bayrak ikinci çalıştırmayı değişiklik
+     sanıyordu — sayfa açılır açılmaz her ikon bir kez zıplıyordu
+     (DENETIM-faz3 T22). Değer gerçekten değişmediyse sayaç artmıyor. */
+  const onceki = useRef(aktif);
   useEffect(() => {
-    if (!acik) return;
-    if (ilk.current) {
-      ilk.current = false;
-      return;
-    }
+    if (!acik || onceki.current === aktif) return;
+    onceki.current = aktif;
     setSayac((n) => n + 1);
   }, [acik, aktif]);
   return acik ? sayac : 0;
@@ -307,9 +314,23 @@ function Donen() {
   );
 }
 
-function Onay() {
+/**
+ * Onay işareti ✓ — kütüphanedeki tek çizimi. Boy ve kalınlık bağlama göre
+ * değişiyor (hapta 13 px, iri dairede 20 px), yol değişmiyor — DENETIM-faz3 T12.
+ */
+export function OnayIsareti({ boyut = 13, kalinlik = 2.6 }: { boyut?: number; kalinlik?: number }) {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      aria-hidden
+      width={boyut}
+      height={boyut}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={kalinlik}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 12.5 9.5 18 20 6.5" />
     </svg>
   );

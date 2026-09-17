@@ -20,8 +20,8 @@ import { Baslik } from "@/app/tasarim/_vitrin/Iskelet";
 
 type Durum = "hazir" | "kismen" | "bekliyor";
 
-/* Kasa JS'te: Rozet CSS uppercase kullanıyor ve "İ" yalnızca kaynağında
-   büyükse doğru çıkıyor. Ton bir övünme değil bir durum: bekleyen bej
+/* Kasa elde yazılı: Rozet CSS uppercase kullanıyor; Türkçe "İ" davranışı
+   lang'a bağlı, iOS Safari doğrulanmadı (DENETIM-faz3 T19). Ton bir övünme değil bir durum: bekleyen bej
    (hata değil), kısmen kahve, hazır nane. */
 const DURUM: Record<Durum, { etiket: string; ton: RozetTon }> = {
   hazir: { etiket: "MONTAJA HAZIR", ton: "nane" },
@@ -270,7 +270,7 @@ export default function TasarimIndexSayfasi() {
                     <span className="mt-1.5 block font-metin text-sm text-gri-800">{b.tanim}</span>
                     {b.not && (
                       /* Küçük harf sınıfı YOK: notlarda "İstanbul", "RLS", tablo adları
-                           var; CSS lowercase ilkini bozar, ötekileri tanınmaz yapar. */
+                           var; özel adın ve tanımlayıcının kasası korunmalı. */
                       <span className="mt-1 block text-2xs tracking-ui text-gri-500">{b.not}</span>
                     )}
                   </Link>

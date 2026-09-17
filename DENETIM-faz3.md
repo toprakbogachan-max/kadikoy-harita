@@ -153,3 +153,33 @@ sayılır. Varsayılan `false`, yani mevcut her kullanım aynı. Örnek
 |---|---|---|
 | `/tasarim/harita-eksikleri` | üç avatar marker'ında halka iç avatardan dış kaba taşındı: 2 px → 2.5 px, gölge aynı (kat 3), konum ve boyut farkı 0 | T11 |
 | diğer beş önizleme | yok | token değişikliği aynı rengi çözüyor; süreler ve basma tepkisi durağan görünümü etkilemiyor |
+
+### Grup 3 — glif, kanca, yorum (T12, T13, T15, T19 yorumları, T22)
+
+- **T12:** onay işareti ✓ dört kopyadan tek çizime indi: `Pill`'den
+  `OnayIsareti` (`boyut`, `kalinlik`). Her kullanım bugünkü değerleriyle:
+  hap 13/2.6, `OrtakListeHapi` 14/2.6, `ListeSecimKarti` dairesi
+  (daire × 0.54)/3, `GidecegimGittim` 20/2 (seçiliyken 2.8).
+- **T13:** `useZipla` tek kopya, `Pill`'den export; `ListeSecimKarti` onu
+  kullanıyor.
+- **T15:** `YerImiPini` yorumu ve harita önizlemesindeki not: "aynı glif"
+  değil "aynı biçim" — çizimler farklı.
+- **T19:** "CSS uppercase bozar" diyen yedi yorum ölçülen gerçekle
+  değiştirildi: `lang="tr"` altında Chrome doğru yapıyor, iOS Safari
+  doğrulanmadı, JS'te büyütme güvenli taraf olarak kalıyor.
+- **T22 (denetim sırasında çıktı):** `useZipla` "ilk render sayılmasın"
+  niyetini bir bayrakla uyguluyordu; geliştirme modunda React efekti iki kez
+  çalıştırınca bayrak ikinci çalıştırmayı değişiklik sanıyordu. Ölçüldü:
+  `/tasarim/kaydetme-eksikleri` açılır açılmaz **39** ikon bir kez
+  zıplıyordu. Bayrak yerine önceki değer karşılaştırılıyor; açılışta
+  zıplama 0 (altı sayfada ölçüldü), dokunulan ikon zıplıyor. Kopya iki
+  taneyken ikisinde de aynı hata vardı.
+
+| sayfa | fark | neden |
+|---|---|---|
+| `/tasarim/harita-eksikleri` | B4 notunun altındaki her şey 19 px aşağı | not bir satır uzadı (T15) |
+| diğer beş önizleme | yok | glif değerleri korundu; kanca durağan görünümü etkilemiyor |
+
+**Güncel özet:** 22 bulgu · 9 düzeltildi (T1, T4, T5, T10, T11, T12, T13,
+T15, T22; ayrıca T19'un yorum kısmı) · 8 karar (T6, T7, T8, T9, T16, T17,
+T19, T20) · 5 kalsın (T2, T3, T14, T18, T21).
