@@ -104,7 +104,7 @@ export default function ArkadasMarkeri({
     >
       {/* Ölçek iç katmanda — MapLibre'nin transform'uyla çakışmasın. */}
       <span
-        className="block size-full origin-center transition-transform duration-[160ms] ease-yumusak motion-reduce:transition-none"
+        className="block size-full origin-center transition-transform duration-(--sure-gecis) ease-yumusak motion-reduce:transition-none"
         style={{ transform: secili ? "scale(1.18)" : undefined }}
       >
         {foto || ad ? (

@@ -86,7 +86,7 @@ export default function Cip({
       >
         <span
           aria-hidden
-          className="grid size-11 place-items-center overflow-hidden rounded-full bg-yuzey bg-cover bg-center text-[20px] leading-none transition-shadow duration-200 ease-yumusak"
+          className="grid size-11 place-items-center overflow-hidden rounded-full bg-yuzey bg-cover bg-center text-[20px] leading-none transition-shadow duration-(--sure-gecis) ease-yumusak"
           style={{
             /* Halka gölgeyle AYNI özellikte yaşıyor, satır içi birleşiyor. */
             boxShadow: aktif
@@ -151,7 +151,7 @@ export default function Cip({
       onClick={onTikla}
       aria-pressed={aktif}
       aria-expanded={acilir ? acik : undefined}
-      className={`bas inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none py-2 pl-3 pr-3.5 text-sm font-semibold lowercase tracking-ui transition-[background-color,color] duration-200 ease-yumusak ${aktifSinif} ${className}`}
+      className={`bas bas-gecis inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none py-2 pl-3 pr-3.5 text-sm font-semibold lowercase tracking-ui ${aktifSinif} ${className}`}
       style={{
         boxShadow:
           aktif && aktifBicim === "halka"
@@ -173,12 +173,12 @@ export default function Cip({
           not. Aynı satırda normal punto yazılsa "kadıköy 131" bir mekan
           adı gibi okunur. */}
       {sayi != null && (
-        <sup className="font-sayi text-[9px] font-bold leading-none opacity-70">{sayi}</sup>
+        <sup className="font-sayi text-2xs font-bold leading-none opacity-70">{sayi}</sup>
       )}
       {acilir && (
         <span
           aria-hidden
-          className={`shrink-0 text-xs leading-none opacity-60 transition-transform duration-200 ease-yumusak ${
+          className={`shrink-0 text-xs leading-none opacity-60 transition-transform duration-(--sure-gecis) ease-yumusak ${
             acik ? "rotate-180" : ""
           }`}
         >

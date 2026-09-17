@@ -136,7 +136,7 @@ export default function MekanNotu({
               {acik ? "kısa tut" : "devamını oku"}
               <span
                 aria-hidden
-                className={`leading-none transition-transform duration-200 ease-yumusak ${acik ? "rotate-180" : ""}`}
+                className={`leading-none transition-transform duration-(--sure-gecis) ease-yumusak ${acik ? "rotate-180" : ""}`}
               >
                 ⌄
               </span>

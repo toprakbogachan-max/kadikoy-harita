@@ -100,7 +100,7 @@ function Daire({
       {/* Etiket dairenin ÜSTÜNDE (envanter D5). Altına alınırsa iki
           daire birbirine yaklaşır ve ikili tek bir düğme gibi okunur. */}
       <span
-        className={`text-2xs lowercase tracking-ui transition-colors duration-200 ease-yumusak ${
+        className={`text-2xs lowercase tracking-ui transition-colors duration-(--sure-gecis) ease-yumusak ${
           aktif ? "font-bold text-gri-900" : "font-semibold text-gri-600"
         }`}
       >

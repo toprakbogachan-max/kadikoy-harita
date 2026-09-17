@@ -38,7 +38,7 @@ const DOLGU: Record<PillDolgu, string> = {
   mavi: "bg-mavi text-white active:bg-mavi-koyu",
   nane: "bg-rozet-nane text-rozet-nane-ink",
   degrade:
-    "bg-[linear-gradient(135deg,var(--color-rozet-lila),var(--color-rozet-pembe))] text-rozet-lila-ink",
+    "bg-(image:--degrade-aktivite) text-rozet-lila-ink",
   seffaf: "bg-transparent",
   cam: "cam text-gri-900",
 };
@@ -54,7 +54,7 @@ const BOY: Record<PillBoy, string> = {
    degrade çerçeve üretmenin ek DOM'suz tek yolu bu. */
 const DEGRADE_KENAR =
   "linear-gradient(var(--color-yuzey), var(--color-yuzey)) padding-box," +
-  " linear-gradient(135deg, var(--color-rozet-lila), var(--color-rozet-pembe)) border-box";
+  " var(--degrade-aktivite) border-box";
 
 export interface PillProps {
   children?: ReactNode;
@@ -137,9 +137,9 @@ export default function Pill({
 
   const sinif = [
     /* bas: dokunulabilir her şey basılır (skill §13) — dokunulmayan hariç. */
-    etkilesimsiz ? "" : "bas",
+    etkilesimsiz ? "" : "bas bas-gecis",
     "inline-flex items-center justify-center whitespace-nowrap rounded-full border-none no-underline",
-    "font-semibold tracking-ui transition-[background-color,color] duration-200 ease-yumusak",
+    "font-semibold tracking-ui",
     kasa === "kucuk" ? "lowercase" : "",
     /* Degrade kenarlıkta zemin satır içi geliyor; dolgu sınıfı yalnızca
        yazı rengini taşısın diye beyaza sabitleniyor. */
@@ -250,7 +250,7 @@ export function IkiliPill<T extends string>({
             type="button"
             onClick={() => onSec(s.id)}
             aria-pressed={aktif}
-            className={`bas inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border-none px-3.5 py-1.5 text-sm font-semibold lowercase tracking-ui transition-[background-color,color] duration-200 ease-yumusak ${
+            className={`bas bas-gecis inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border-none px-3.5 py-1.5 text-sm font-semibold lowercase tracking-ui ${
               aktif ? "bg-gri-900 text-white" : "bg-transparent text-gri-600"
             }`}
           >

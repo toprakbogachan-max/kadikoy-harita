@@ -196,7 +196,7 @@ export function RozetCikartma({
   return (
     <span
       aria-hidden
-      className={`grid shrink-0 place-items-center text-center ${
+      className={`grid shrink-0 place-items-center text-center drop-shadow-sekil ${
         canlan ? "yapistir" : ""
       } ${className}`}
       style={{
@@ -211,7 +211,6 @@ export function RozetCikartma({
         clipPath: patlama(uc, 50, 41),
         background: zemin(ton),
         color: murekkep(ton),
-        filter: "drop-shadow(0 2px 6px rgba(16,16,20,.22))",
       }}
     >
       <span className="px-1">

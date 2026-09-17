@@ -150,7 +150,7 @@ function OnayDairesi({ secili, boyut = 24 }: { secili: boolean; boyut?: number }
   return (
     <span
       aria-hidden
-      className="grid shrink-0 place-items-center rounded-full transition-colors duration-200 ease-yumusak"
+      className="grid shrink-0 place-items-center rounded-full transition-colors duration-(--sure-gecis) ease-yumusak"
       style={{
         width: boyut,
         height: boyut,

@@ -245,6 +245,14 @@
   --ease-yayli:   cubic-bezier(.22, 1.18, .36, 1);
   --ease-yumusak: cubic-bezier(.22, .61, .36, 1);
   --ease-cikis:   cubic-bezier(.32, 0, .67, 0);
+
+  /* ---------- şekli izleyen gölge ----------
+     box-shadow kutuyu izler; yer imi pini ve yıldız çıkartma gibi kesik
+     şekillerin gölgesi `filter: drop-shadow` olmak zorunda. Faz 3'e kadar
+     iki yerde sabit ve farklı opaklıkla (.22 / .24) yazılıydı
+     (DENETIM-faz3 T6). Değer kademe 3'ün yakın gölgesine denk: haritanın
+     ve fotoğrafın üstünde yüzen tek parça. `drop-shadow-sekil` sınıfı. */
+  --drop-shadow-sekil: 0 2px 6px rgb(16 16 20 / .24);
 }
 
 :root {
@@ -275,6 +283,24 @@
      kartının üstüne binince ikisi de okunmuyordu. Bağlam hissi 0.82'de
      duruyor — harita olduğu anlaşılıyor, detayı okunmuyor. */
   --cam-zemin: rgba(255, 255, 255, 0.82);
+
+  /* ---------- süre ----------
+     Eğrinin yanında süre de tek yerden (DENETIM-faz3 T7). Faz 3'e kadar
+     bileşenlerde 150 / 160 / 200 / 300 ms dağınık yazılıydı. Üç ses yeter:
+       bas     basma tepkisi — .bas; parmak kalkmadan bitmeli
+       gecis   renk, halka, seçili ölçek — kısa mesafe durum geçişi
+       panel   duraklı panelin yer değiştirmesi — uzun yol
+     Kullanım: `duration-(--sure-gecis)`. Hareket azaltmada .bas geçişi ve
+     animasyonlar zaten kapanıyor. */
+  --sure-bas:   150ms;
+  --sure-gecis: 200ms;
+  --sure-panel: 300ms;
+
+  /* Aktivite / sistem mesajının degradesi — lila → pembe (skill §6: gradyan
+     kart "bu bir olay"). Pill dolgusu, Pill degrade kenarlığı ve Kart
+     zemini aynı değeri üç kez yazıyordu (DENETIM-faz3 T8).
+     Kullanım: `bg-(image:--degrade-aktivite)`. */
+  --degrade-aktivite: linear-gradient(135deg, var(--color-rozet-lila), var(--color-rozet-pembe));
 }
 
 * { box-sizing: border-box; }
@@ -412,7 +438,20 @@ body {
 
    0.955: 44 piksellik bir düğmede 2 piksel. Daha fazlası (0.92) oyuncak,
    daha azı fark edilmiyor. */
-.bas { transition: transform .15s var(--ease-yumusak); }
+.bas { transition: transform var(--sure-bas) var(--ease-yumusak); }
+/* Basılan VE durumu değişen öğe (seçilen hap, çip): basma ölçeği ile
+   renk/halka geçişi BİRLİKTE. Ayrı sınıf çünkü .bas katmansız bir
+   `transition` kısaltması ve aynı öğedeki Tailwind transition-* sınıflarını
+   eziyordu — ölçüldü: seçilen hapın geçiş özelliği yalnızca `transform`,
+   renk anında değişiyordu (DENETIM-faz3 T23). .bas'ın kendisine
+   dokunulmadı: uygulamanın ekranlarında da kullanılıyor. */
+.bas.bas-gecis {
+  transition:
+    transform var(--sure-bas) var(--ease-yumusak),
+    background-color var(--sure-gecis) var(--ease-yumusak),
+    color var(--sure-gecis) var(--ease-yumusak),
+    box-shadow var(--sure-gecis) var(--ease-yumusak);
+}
 .bas:active { transform: scale(.955); }
 
 /* ---------- üste açılan katman ----------
@@ -469,7 +508,7 @@ body {
    hareket olur. */
 @media (prefers-reduced-motion: reduce) {
   .yuksel, .yapistir, .zipla { animation: none; }
-  .bas { transition: none; }
+  .bas, .bas.bas-gecis { transition: none; }
   .bas:active { transform: none; }
 }
 

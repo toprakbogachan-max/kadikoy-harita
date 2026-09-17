@@ -147,7 +147,7 @@ export default function Panel({
       ref={kutu}
       aria-label={etiket}
       className={`absolute inset-x-0 bottom-0 flex flex-col rounded-t-2xl ${ZEMIN[zemin]} ${
-        cekiliyor ? "" : "transition-[top,transform] duration-300 ease-yayli motion-reduce:transition-none"
+        cekiliyor ? "" : "transition-[top,transform] duration-(--sure-panel) ease-yayli motion-reduce:transition-none"
       } ${className}`}
       style={{
         top: `${ustYuzde}%`,

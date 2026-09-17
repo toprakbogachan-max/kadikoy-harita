@@ -265,3 +265,36 @@ bekliyor).
 | T17 | `aktif` / `secili` | tek ad: `secili` (kartlar ve işaretler için doğal, düğmede de anlaşılır) |
 | T19/T20 | Türkçe CSS büyük/küçük harf iOS Safari'de | gerçek cihazda "pin" / "İSMAİL" sınansın; doğruysa JS büyütmeleri sadeleşebilir |
 | §11-8 | `ListeSecimKarti` boş durumu | montajda fotoğraflı CTA (yukarıda dipnot 7) |
+
+## Kararların uygulanması (2026-09-17)
+
+Karar bekleyen maddeler kullanıcının yetkisiyle önerilen seçeneklerle
+uygulandı; bir yerde öneri değişti (aşağıda T17).
+
+### Token boşlukları (T6, T7, T8, T9) + T23
+
+- **T6** `--drop-shadow-sekil: 0 2px 6px rgb(16 16 20 / .24)` (`@theme`,
+  Tailwind'in `drop-shadow` ad alanı) → `drop-shadow-sekil` sınıfı.
+  `YerImiPini` ve `RozetCikartma` onu kullanıyor; çıkartmanın gölgesi
+  .22 → .24. Yer iminin kapalı hâlindeki gri tonlama artık sınıf
+  (`grayscale-65 brightness-98`), Tailwind'in filtre bileşimiyle gölgeyle
+  birleşiyor.
+- **T7** `--sure-bas` 150 ms, `--sure-gecis` 200 ms, `--sure-panel` 300 ms
+  (`:root`). `.bas` ve bileşenlerdeki bütün süreler bunlara bağlı
+  (`duration-(--sure-gecis)`); harita işaretlerinin seçili ölçeği 160 → 200 ms.
+- **T8** `--degrade-aktivite` (`:root`) → `Pill` dolgusu ve degrade kenarlığı,
+  `Kart` zemini (`bg-(image:--degrade-aktivite)`).
+- **T9** `Cip` üst simge sayısı `text-[9px]` → `text-2xs` (10 px).
+- **T23 (tokenları doğrularken çıktı):** `.bas` katmansız bir `transition`
+  kısaltması ve aynı öğedeki Tailwind `transition-*` sınıflarını eziyordu.
+  Ölçüldü: seçilen `Pill`, `IkiliPill` ve yatay `Cip`'in geçiş özelliği
+  yalnızca `transform` — renk ve halka anında değişiyordu, yani T10'daki
+  süre düzeltmesi de etkisizdi. `.bas.bas-gecis` eklendi: basma 150 ms +
+  zemin/renk/halka 200 ms, hareket azaltmada kapalı. `.bas`'ın kendisine
+  dokunulmadı; uygulamanın yedi ekran dosyasında kullanılıyor ve orada
+  davranış değişmesin.
+
+Tarayıcıda ölçüldü: üç bileşende geçiş `transform 0.15s, background-color /
+color / box-shadow 0.2s`; hareket azaltmada `none`. Durağan görünüm: yalnızca
+çip sayıları 9 → 10 px (primitifler 2, harita 9 çip; komşular 1–5 px kaydı),
+diğer dört sayfada sıfır fark.

@@ -46,7 +46,7 @@ const DOLGU: Record<KartDolgu, string> = {
 
 const ZEMIN: Record<KartZemin, string> = {
   beyaz: "bg-yuzey",
-  degrade: "bg-[linear-gradient(135deg,var(--color-rozet-lila),var(--color-rozet-pembe))]",
+  degrade: "bg-(image:--degrade-aktivite)",
   foto: "bg-gri-200 bg-cover bg-center",
   bos: "bg-gri-100",
   kagit: "bg-kagit",

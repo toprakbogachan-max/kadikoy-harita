@@ -81,12 +81,12 @@ export default function YerImiPini({
           zoom sırasında kaydırıyor (Harita.tsx'in .jeton-ic ayrımı da
           bu yüzden var). */}
       <span
-        className="block size-full origin-bottom transition-transform duration-[160ms] ease-yumusak motion-reduce:transition-none"
+        className={`block size-full origin-bottom drop-shadow-sekil transition-transform duration-(--sure-gecis) ease-yumusak motion-reduce:transition-none ${
+          kapali ? "brightness-98 grayscale-65" : ""
+        }`}
         style={{
           transform: secili ? "scale(1.18)" : undefined,
-          /* Silüetin gölgesi box-shadow olamaz: kutuyu değil şekli
-             takip etmesi gerekiyor. */
-          filter: `drop-shadow(0 2px 6px rgba(16,16,20,.24))${kapali ? " grayscale(.65) brightness(.98)" : ""}`,
+          /* Gölge şekli izliyor (drop-shadow-sekil), kutuyu değil. */
           opacity: kapali ? 0.62 : undefined,
         }}
       >
