@@ -37,7 +37,8 @@ const OLCEK: Record<AvatarBoyut, number> = {
 
 const HALKA: Record<AvatarHalka, string> = {
   yok: "",
-  beyaz: "0 0 0 2px #fff",
+  /* Beyaz = yüzey tokenı (#FFFFFF); sabit #fff yazılmıyor (DENETIM-faz3 T5). */
+  beyaz: "0 0 0 2px var(--color-yuzey)",
   siyah: "0 0 0 2px var(--color-gri-900)",
   kagit: "0 0 0 2px var(--color-kagit)",
 };

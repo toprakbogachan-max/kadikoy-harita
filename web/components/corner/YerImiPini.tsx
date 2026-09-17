@@ -92,7 +92,8 @@ export default function YerImiPini({
           <path
             d="M7 2 H23 A5 5 0 0 1 28 7 V37 L15 28.5 L2 37 V7 A5 5 0 0 1 7 2 Z"
             fill="var(--color-nane)"
-            stroke="#fff"
+            /* SVG sunum özniteliği CSS değişkenini çözmüyor; stil üzerinden. */
+            style={{ stroke: "var(--color-yuzey)" }}
             strokeWidth="2.6"
             strokeLinejoin="round"
           />

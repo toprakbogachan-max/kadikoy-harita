@@ -86,7 +86,7 @@ export default function Cip({
       >
         <span
           aria-hidden
-          className="grid size-11 place-items-center overflow-hidden rounded-full bg-yuzey bg-cover bg-center text-[20px] leading-none transition-shadow duration-[160ms] ease-yumusak"
+          className="grid size-11 place-items-center overflow-hidden rounded-full bg-yuzey bg-cover bg-center text-[20px] leading-none transition-shadow duration-200 ease-yumusak"
           style={{
             /* Halka gölgeyle AYNI özellikte yaşıyor, satır içi birleşiyor. */
             boxShadow: aktif
@@ -151,7 +151,7 @@ export default function Cip({
       onClick={onTikla}
       aria-pressed={aktif}
       aria-expanded={acilir ? acik : undefined}
-      className={`bas inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none py-2 pl-3 pr-3.5 text-sm font-semibold lowercase tracking-ui transition-[background-color,color] duration-[150ms] ease-yumusak ${aktifSinif} ${className}`}
+      className={`bas inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none py-2 pl-3 pr-3.5 text-sm font-semibold lowercase tracking-ui transition-[background-color,color] duration-200 ease-yumusak ${aktifSinif} ${className}`}
       style={{
         boxShadow:
           aktif && aktifBicim === "halka"

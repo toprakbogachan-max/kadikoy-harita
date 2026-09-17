@@ -173,7 +173,7 @@ function Kume({ katkicilar }: { katkicilar: Katkici[] }) {
           className="-ml-1.5 grid size-5 place-items-center rounded-full bg-gri-100 font-sayi text-2xs font-bold leading-none text-gri-700"
           /* Sayaç yığının EN ÜSTÜNDE: yüzler ilk-üstte dizildiği için sayaç
              son yüzün altında kalıyor ve "+" işareti örtülüyordu. */
-          style={{ boxShadow: "0 0 0 2px #fff", zIndex: KUME_SINIRI + 2 }}
+          style={{ boxShadow: "0 0 0 2px var(--color-yuzey)", zIndex: KUME_SINIRI + 2 }}
         >
           {`+${artan}`}
         </span>

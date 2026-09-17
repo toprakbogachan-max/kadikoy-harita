@@ -174,7 +174,7 @@ export default function Panel({
             aria-label={enUstte ? "Paneli küçült" : "Paneli büyüt"}
             aria-expanded={enUstte}
             title="Dokun ya da sürükle"
-            className="w-full border-none bg-transparent px-0 pb-1 pt-2.5"
+            className="bas w-full border-none bg-transparent px-0 pb-1 pt-2.5"
           >
             <span className="mx-auto block h-1 w-[38px] rounded-full bg-gri-300" />
           </button>

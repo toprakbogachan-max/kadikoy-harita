@@ -135,3 +135,21 @@ sayılır. Varsayılan `false`, yani mevcut her kullanım aynı. Örnek
 | `/tasarim/harita-eksikleri` | arkadaş etiketleri 22 → 24 px (1 px yukarı, 1 px aşağı büyüdü) | elle çizilmiş hap standart küçük Pill'den 2 px kısaydı; artık Pill'in kendisi. Farkın kendisi düzeltilen tutarsızlık |
 | `/tasarim/primitifler` | yeni "etkileşimsiz" kutusu, altındaki içerik aşağı kaydı | varyantın önizlemesi |
 | diğerleri | yok | — |
+
+### Grup 2 — kenar, süre, basma (T4, T5, T10, T11)
+
+- **T4:** `Panel` tutamacına `bas`.
+- **T5:** `Avatar` beyaz halkası, `OrtakListeHapi` sayaç kenarı,
+  `ArkadasMarkeri` kenarı ve `YerImiPini` SVG kenarı `#fff` yerine
+  `var(--color-yuzey)` (SVG'de öznitelik değişkeni çözmediği için stil
+  üzerinden).
+- **T10:** `Cip` yatay (150 ms) ve dikey (160 ms) seçim geçişleri `Pill` ile
+  aynı 200 ms.
+- **T11:** `ArkadasMarkeri` avatar varyantının kenarı `Avatar`'ın 2 px
+  halkasından dış kaba alındı ve silüet varyantıyla aynı 2.5 px oldu
+  (`HARITA_KENARI` sabiti, `.foto-marker-kutu` ile aynı değer).
+
+| sayfa | fark | neden |
+|---|---|---|
+| `/tasarim/harita-eksikleri` | üç avatar marker'ında halka iç avatardan dış kaba taşındı: 2 px → 2.5 px, gölge aynı (kat 3), konum ve boyut farkı 0 | T11 |
+| diğer beş önizleme | yok | token değişikliği aynı rengi çözüyor; süreler ve basma tepkisi durağan görünümü etkilemiyor |

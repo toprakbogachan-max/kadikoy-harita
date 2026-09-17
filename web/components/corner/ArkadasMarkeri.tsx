@@ -56,6 +56,9 @@ function Siluet({ boyut }: { boyut: number }) {
   );
 }
 
+/* Harita işaretlerinin beyaz kenarı — .foto-marker-kutu ile aynı 2.5 px. */
+const HARITA_KENARI = "0 0 0 2.5px var(--color-yuzey)";
+
 export interface ArkadasMarkeriProps {
   /** `@` olmadan kullanıcı adı. Etikette başına `@` konuyor. */
   kullaniciAdi?: string;
@@ -108,15 +111,17 @@ export default function ArkadasMarkeri({
           /* Kim olduğunu BİLİYORSAK yüzü göstermek silüetten iyidir:
              "bir arkadaşın" değil "Deniz" diyor. Şekil yine DAİRE —
              squircle kimlik, daire haritadaki nokta (skill §5). */
-          <Avatar
-            ad={ad}
-            foto={foto}
-            renk={renk}
-            boyut={boyut}
-            sekil="daire"
-            halka="beyaz"
-            kat={3}
-          />
+          /* Kenar Avatar'ın kendi halkası değil, dış kapta: haritadaki
+             işaretlerin beyaz kenar sözleşmesi 2.5 px (.foto-marker-kutu,
+             aşağıdaki silüet), Avatar'ın `beyaz` halkası ise 2 px — aynı
+             bileşenin iki varyantı farklı kalınlıkta duruyordu
+             (DENETIM-faz3 T11). */
+          <span
+            className="block size-full rounded-full"
+            style={{ boxShadow: `${HARITA_KENARI}, var(--shadow-kat-3)` }}
+          >
+            <Avatar ad={ad} foto={foto} renk={renk} boyut={boyut} sekil="daire" kat={0} />
+          </span>
         ) : (
           <span
             aria-hidden
@@ -124,7 +129,7 @@ export default function ArkadasMarkeri({
             style={{
               background: "var(--color-rozet-lila)",
               color: "var(--color-rozet-lila-ink)",
-              boxShadow: "0 0 0 2.5px #fff, var(--shadow-kat-3)",
+              boxShadow: `${HARITA_KENARI}, var(--shadow-kat-3)`,
             }}
           >
             <Siluet boyut={Math.round(boyut * 0.66)} />
