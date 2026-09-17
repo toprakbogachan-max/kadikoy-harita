@@ -15,12 +15,14 @@ import Pill from "@/components/corner/primitives/Pill";
  * herhangi bir ondalık olabilir. Bu yüzden eşikler tam sayı kovası değil,
  * sürekli aralık — `puanKademesi` her ondalığı tek bir kademeye düşürüyor.
  *
- * ── Eşik: ÖNERİ, kesin değil ───────────────────────────────────────
+ * ── Eşik (karar 2026-09-17) ────────────────────────────────────────
  *   1 – 3,5  → beğenmedim   (puan < 4)
  *   4 – 6,5  → idare eder   (puan < 7)
  *   7 – 8,5  → beğendim     (puan < 9)
  *   9 – 10   → favorim
- * Gerekçe ve karşı seçenek `NOT.md`'de; ürün sahibine sorulacak.
+ * Gerekçe `NOT.md`'de. `favorim` bandı aynı zamanda ürünün favori tanımı:
+ * ayrı bir favori sütunu yok, `YineGiderMisin`'in kalbi de buradan okuyor.
+ * Gerçek pin birikince `place_summary.rating_buckets` ile yeniden bakılacak.
  *
  * ── Biçim ──────────────────────────────────────────────────────────
  * Dört Pill yan yana, ama yalnızca SEÇİLİ olan yazısını taşıyor; diğer

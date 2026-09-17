@@ -3,6 +3,8 @@
 import { useId } from "react";
 import Kart from "@/components/corner/primitives/Kart";
 import Pill from "@/components/corner/primitives/Pill";
+import Rozet from "@/components/corner/primitives/Rozet";
+import { puanKademesi } from "@/components/corner/DereceGostergesi";
 
 /**
  * E2 — `yine gider miydin?` kartı. Referansta `would you go back?`.
@@ -20,7 +22,8 @@ import Pill from "@/components/corner/primitives/Pill";
  *  1) ÜÇ SEÇENEK, iki değil. Referans `👎` / `👍` ikilisi gösteriyor;
  *     bizim şemada arada `belki` var ve o orta kademe bu üründe bilgi
  *     taşıyor ("gene giderim ama sırf o yüzden yoldan çıkmam"). İkiye
- *     indirmek veriyi kaybetmek olurdu.
+ *     indirmek veriyi kaybetmek olurdu. Ürün kararı (2026-09-17): üç
+ *     seçenek kalıyor.
  *
  *  2) SEÇİLİ HÂL DOLU SİYAH DEĞİL, SİYAH HALKA. Referansta aktif seçenek
  *     dolu siyah; ama skill §14 seçenek listeleri için halkayı söylüyor ve
@@ -30,15 +33,14 @@ import Pill from "@/components/corner/primitives/Pill";
  *     göz hangisinin asıl eylem olduğunu bilemez. Halka istediğin kadar
  *     olabilir, dolu siyah bir tane.
  *
- * ── Favorim kalbi ─────────────────────────────────────────────────
+ * ── Favorim kalbi: puanın okunuşu (karar 2026-09-17) ─────────────────
  * Referansta sorunun yanında ayrı bir `♥ fav'd` kutusu var. Bizde "favori"
- * diye bir sütun YOK — en yakın karşılık `DereceGostergesi`'nin 9–10
- * bandı (`favorim`), ama o puandan türeyen bir okunuş, ayrı bir işaret
- * değil. Kalbin ayrı bir bayrak mı yoksa puanın ≥ 9 okunuşu mu olacağı
- * ürünün kararı (NOT.md). Bileşen ikisine de açık: kalp yalnızca
- * `onFavoriDegis` verilirse çiziliyor, durumu da dışarıdan geliyor.
+ * diye bir sütun YOK ve açılmıyor: favorim, puanın `DereceGostergesi`
+ * eşiğindeki en üst kademesi (≥ 9). Bu yüzden kalp bir DÜĞME değil
+ * GÖSTERGE — açıp kapatmanın yolu puanı değiştirmek. Eşik tek yerde
+ * (`puanKademesi`) yaşıyor, burada tekrar yazılmıyor.
  *
- * Saf sunum: `deger`, `favori` ve geri çağrılar props'tan gelir, `lib/`
+ * Saf sunum: `deger`, `puan` ve geri çağrı props'tan gelir, `lib/`
  * çağrılmaz.
  */
 
@@ -75,15 +77,11 @@ export interface YineGiderMisinProps {
   pasif?: boolean;
   /** hangi seçenek ağ isteğini bekliyor — o kutuda dönen halka çıkar. */
   yukleniyor?: YineGiderDegeri | null;
-  /** favorim kalbi dolu mu. `onFavoriDegis` yoksa yok sayılır. */
-  favori?: boolean;
   /**
-   * Verilirse kartın altında kalp düğmesi çıkar. Veri modelinde karşılığı
-   * henüz yok (yukarıdaki not) — kalbi göstermek çağıranın kararı.
+   * Aynı pinin puanı (`pins.rating`). Favorim kademesindeyse (≥ 9) sorunun
+   * yanında kalp rozeti çıkar; verilmezse ya da altındaysa hiçbir şey.
    */
-  onFavoriDegis?: (yeni: boolean) => void;
-  /** kalp isteği bekliyor: kalbin yerinde dönen halka. */
-  favoriYukleniyor?: boolean;
+  puan?: number | null;
   className?: string;
 }
 
@@ -94,12 +92,11 @@ export default function YineGiderMisin({
   ipucu,
   pasif = false,
   yukleniyor = null,
-  favori = false,
-  onFavoriDegis,
-  favoriYukleniyor = false,
+  puan = null,
   className = "",
 }: YineGiderMisinProps) {
   const basId = useId();
+  const favori = puan != null && !Number.isNaN(puan) && puanKademesi(puan) === "favorim";
 
   return (
     <Kart zemin="beyaz" yaricap="lg" dolgu="normal" kat={1} className={`w-full ${className}`}>
@@ -107,8 +104,23 @@ export default function YineGiderMisin({
         <h3 id={basId} className="m-0 text-base font-bold lowercase leading-tight tracking-ui text-gri-900">
           {baslik}
         </h3>
-        {ipucu && (
-          <span className="text-2xs lowercase leading-none tracking-ui text-gri-500">{ipucu}</span>
+        {(favori || ipucu) && (
+          <span className="flex items-center gap-2">
+            {/* Kalp sorunun YANINDA, seçeneklerin arasında değil: "yine
+                giderim" ile "favorim" aynı eksende değil — biri geri
+                dönüş, öbürü gönül. Düğme değil rozet, çünkü basınca
+                değişmiyor; kaynağı puan. Dolu kırmızı kalp skill §14'ün
+                beğeni kalıbı, renk yalnızca emojide ve pastel rozette.
+                Kasa JS'te: CSS uppercase "favorim"i "FAVORIM" yapar. */}
+            {favori && (
+              <Rozet ton="pembe" sekil="hap" ikon="❤️">
+                FAVORİM
+              </Rozet>
+            )}
+            {ipucu && (
+              <span className="text-2xs lowercase leading-none tracking-ui text-gri-500">{ipucu}</span>
+            )}
+          </span>
         )}
       </div>
 
@@ -145,31 +157,6 @@ export default function YineGiderMisin({
         })}
       </div>
 
-      {onFavoriDegis && (
-        <div className="mt-3">
-          {/* Üç seçenekten AYRI bir düğme, dördüncü seçenek değil: "yine
-              giderim" ile "favorim" aynı eksende değil — biri geri dönüş,
-              öbürü gönül. Sol hizalı ve eşit genişlikli satırın altında,
-              yoksa göz onu da aynı sorunun cevabı sanıyor.
-
-              Dolu kırmızı kalp skill §14'ün beğeni kalıbı; renk yalnızca
-              emojide, hap beyaz kalıyor. Seçili hâl yine siyah halka.
-              Cümle değişiyor çünkü durum değişiyor: boşken teklif
-              ("favorim olsun"), doluyken beyan ("favorim"). */}
-          <Pill
-            ikon={favori ? "❤️" : "🤍"}
-            kenar={favori ? "halka" : "yok"}
-            kat={favori ? 1 : 2}
-            aktif={favori}
-            zipla
-            pasif={pasif}
-            yukleniyor={favoriYukleniyor}
-            onTikla={() => onFavoriDegis(!favori)}
-          >
-            {favori ? "favorim" : "favorim olsun"}
-          </Pill>
-        </div>
-      )}
     </Kart>
   );
 }
