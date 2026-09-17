@@ -75,6 +75,20 @@
   --color-mavi:      #2F6FB8;
   --color-mavi-koyu: #2A6099;   /* basılı hâl; beyazla 6.50:1 */
 
+  /* ---------- kaydetmenin doygun ucu ----------
+     Ürün kararı (2026-09-17): kaydetmenin rengi nane, mavi değil — mavi
+     haritada zaten "sen" noktası. Pastel --color-rozet-nane 40 piksellik
+     bir harita pininde altlıktan ayrışmıyor; bu doygun uç YALNIZCA
+     haritada başkasının kaydını gösteren yer imi pininin dolgusu
+     (YerImiPini). Buton ya da yüzey rengi DEĞİL: kaydet hapı pastel
+     nanede kalıyor, mavinin kotası da değişmiyor.
+
+     Işıklık maviye yakın seçildi ki konum noktasıyla aynı haritada eşit
+     ağırlıkta dursun: beyazla 4.96:1, harita zemini #EBE8E1 ile 4.05:1
+     (mavi 5.14 / 4.20). Koyu park alanında ikisi de ~1:1 — ayrışmayı
+     beyaz kenar sağlıyor, rengin kendisi değil. */
+  --color-nane:      #0F7F62;
+
   /* ---------- kategori: iki uç, ikisinin de yeri belli ----------
      Skill §3'ün doygunluk kuralı: DOYGUNLUK ALANLA TERS ORANTILI.
      Bu yüzden kategori rengi iki ayrı kademede yaşıyor ve biri

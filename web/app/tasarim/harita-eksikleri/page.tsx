@@ -181,36 +181,44 @@ export default function HaritaEksikleriSayfasi() {
           no="01"
           ad="Yer imi pini"
           kod="B4 · YerImiPini"
-          not="Referansta “başkasının kaydettiği mekanlar mavi bookmark şeklinde”. Silüet D5’teki gideceğim yer imiyle aynı glif: kaydetme fikri uygulamanın iki yerinde de aynı şekille konuşuyor. Renk kararı açık — referans mavi diyor, ürün kuralı “kaydetmek nane, mavi yalnızca çalışıyor” diyor, üstelik mavi haritada zaten kullanıcının kendi konumu."
+          not="Referansta “başkasının kaydettiği mekanlar mavi bookmark şeklinde”. Silüet D5’teki gideceğim yer imiyle aynı glif: kaydetme fikri uygulamanın iki yerinde de aynı şekille konuşuyor. Renk nane (karar 2026-09-17): referans mavi diyor ama bu üründe kaydetmenin rengi nane ve mavi haritada zaten kullanıcının kendi konumu. Dolgu bu pin için açılan doygun --color-nane tokeni."
         />
 
-        <Kutu baslik="ton — karar ürünün">
+        <Kutu baslik="nane — konum noktasıyla yan yana">
           <HaritaZemini yukseklik={150}>
             <div className="flex h-full flex-wrap items-center gap-8 p-6">
               <span className="text-center">
-                <YerImiPini simge="☕" ton="nane" etiket="Kaydedilmiş mekan" />
+                <YerImiPini simge="☕" etiket="Kaydedilmiş mekan" />
                 <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
-                  nane · varsayılan
+                  simgeli
                 </span>
               </span>
               <span className="text-center">
-                <YerImiPini simge="☕" ton="mavi" etiket="Kaydedilmiş mekan" />
-                <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
-                  mavi · referans
-                </span>
-              </span>
-              <span className="text-center">
-                <YerImiPini ton="nane" etiket="Kaydedilmiş mekan" />
+                <YerImiPini etiket="Kaydedilmiş mekan" />
                 <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
                   simgesiz
+                </span>
+              </span>
+              <span className="text-center">
+                {/* Konum noktasının TEMSİLİ (.benim-konum-nokta): kararın
+                    gerekçesi bu ikisinin aynı haritada karışmaması. */}
+                <span className="grid h-10 place-items-center">
+                  <span
+                    aria-hidden
+                    className="block size-4 rounded-full"
+                    style={{ background: "var(--color-mavi)", boxShadow: "0 0 0 3px #fff, var(--shadow-kat-2)" }}
+                  />
+                </span>
+                <span className="mt-2 block rounded-full bg-yuzey/85 px-2 py-0.5 text-2xs lowercase tracking-ui text-gri-700">
+                  sen · mavi
                 </span>
               </span>
             </div>
           </HaritaZemini>
           <Alt>
-            beyaz kenar koyu yeşil alanın üstünde de ayrışıyor · nane dolgusu
-            <code className="mx-1 font-sayi">--color-rozet-nane-ink</code>, yani bir mürekkep
-            tokenı dolgu olarak kullanılıyor (token boşluğu, raporda)
+            dolgu <code className="mx-1 font-sayi">--color-nane</code> (beyazla 4.96:1, zeminle 4.05:1) ·
+            konum noktasının mavisiyle aynı ışıklıkta, ama ayrı renk · koyu parkta ayrışmayı beyaz
+            kenar sağlıyor
           </Alt>
         </Kutu>
 
@@ -325,7 +333,7 @@ export default function HaritaEksikleriSayfasi() {
           no="03"
           ad="Semt çipi"
           kod="B6 · SemtCipi — UYARLAMA"
-          not="Referansın B6’sı dünya zoom’undaki 🌐 singapore çipleri. Kadıköy tek ilçe, dünya zoom’u yok; bileşeni birebir taşımak boş kabuk üretirdi. Uyarlama semt: bu üründe semt gerçek bir kimlik (Profil.tsx onu istatistik olarak sayıyor). Dürüst karşı argüman kutunun altında."
+          not="Referansın B6’sı dünya zoom’undaki 🌐 singapore çipleri. Kadıköy tek ilçe, dünya zoom’u yok; bileşeni birebir taşımak boş kabuk üretirdi. Uyarlama semt: bu üründe semt gerçek bir kimlik (Profil.tsx onu istatistik olarak sayıyor). Karar (2026-09-17): çip kalıyor ama yalnızca pin sayısıyla — altlık harita semt adını zaten yazıyor, sayısız çip aynı bilgiyi ikinci kez söylerdi. Bu yüzden sayi zorunlu prop."
         />
 
         <Kutu baslik="şerit — pin sayısıyla">
@@ -345,21 +353,6 @@ export default function HaritaEksikleriSayfasi() {
           <Alt>
             seçili hâl siyah HALKA, dolu siyah değil — haritadaki tek dolu siyah B7&apos;nin ·
             şerit kenarda soluyor (“devamı var”)
-          </Alt>
-        </Kutu>
-
-        <Kutu baslik="sayısız — bu hâlde çip hak etmiyor">
-          <HaritaZemini yukseklik={110}>
-            <div className="flex flex-wrap gap-2 p-4">
-              {SEMTLER.slice(0, 3).map((s) => (
-                <SemtCipi key={s.ad} semt={s.ad} />
-              ))}
-            </div>
-          </HaritaZemini>
-          <Alt>
-            altlık harita semt adlarını ZATEN yazıyor (Harita.tsx <code className="font-sayi">uygunSiniflar</code>).
-            Sayı yoksa çip aynı bilgiyi ikinci kez söylüyor — Harita.tsx&apos;in pinsiz mekanları
-            çizmeme gerekçesiyle birebir aynı hata
           </Alt>
         </Kutu>
 
@@ -468,36 +461,34 @@ export default function HaritaEksikleriSayfasi() {
         {/* ============ kapanış ============ */}
         <Baslik
           no="06"
-          ad="Açık kalan kararlar"
-          kod="ürün sahibine"
-          not="Bu dört bileşenin üçü bir karar bekliyor. Uydurmak yerine yazıyoruz."
+          ad="Verilen kararlar"
+          kod="2026-09-17 · NOT.md"
+          not="Bu dört bileşenin üçü bir ürün kararı bekliyordu; hepsi verildi."
         />
 
         <div className="flex flex-col gap-2.5">
           <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
             <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">B4 · renk</div>
             <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-800">
-              Referans mavi diyor; ürün kuralı “kaydetmek nane, mavi yalnızca çalışıyor”
-              diyor ve <code className="font-sayi">--color-mavi</code> haritada zaten
-              kullanıcının kendi konum noktası. Varsayılan nane yapıldı, mavi varyant duruyor.
-              Nane&apos;nin doygun karşılığı olan token YOK; şu an mürekkep tokenı dolgu olarak
-              kullanılıyor.
+              Nane. <code className="font-sayi">--color-mavi</code> haritada kullanıcının kendi
+              konum noktası; kaydetmenin rengi nane. Doygun{" "}
+              <code className="font-sayi">--color-nane</code> tokeni açıldı, referansa sadık mavi
+              varyant kaldırıldı.
             </p>
           </div>
           <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
             <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">B5 · veri</div>
             <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-800">
-              Bileşen hazır, verisi yok. <code className="font-sayi">places_nearby</code>{" "}
-              “bu mekanı kim kaydetti” bilgisini döndürmüyor; mekan → kaydeden kişi yolu
-              istemciye hiç gelmiyor. Şema önerilmedi, bileşen saf sunum bırakıldı.
+              Ayrı bir RPC. “Bu mekanı kim kaydetti” yalnızca arkadaş modunda çağrılan yeni
+              bir fonksiyondan gelecek; <code className="font-sayi">places_nearby</code> her
+              harita hareketinde koştuğu için genişletilmiyor. RPC henüz yazılmadı.
             </p>
           </div>
           <div className="rounded-lg bg-yuzey p-4 shadow-kat-1">
-            <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">B6 · var mı yok mu</div>
+            <div className="text-2xs font-bold uppercase tracking-etiket text-gri-500">B6 · semt çipi</div>
             <p className="mt-1.5 max-w-[62ch] font-metin text-sm text-gri-800">
-              Şehir çipinin bu üründe birebir karşılığı yok. Semte uyarlandı ama yalnızca
-              pin sayısı taşırsa hak ediyor; sayısız hâli altlık haritanın etiketini tekrar
-              ediyor. “Bu üründe karşılığı yok, atlansın” da geçerli bir cevap.
+              Kalıyor, pin sayısıyla. Sayısız hâli altlık haritanın etiketini tekrar ettiği
+              için bileşende <code className="font-sayi">sayi</code> zorunlu yapıldı.
             </p>
           </div>
         </div>

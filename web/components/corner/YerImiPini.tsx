@@ -21,34 +21,19 @@ import type { ReactNode } from "react";
  * bu ondan sapma — ama sapmanın kendisi bilgi: daire mekanı, yer imi
  * mekana yapılmış bir işareti gösteriyor.
  *
- * ── Renk: KARAR ÜRÜNÜN ─────────────────────────────────────────────
- * Referans MAVİ. Bu üründe verilmiş karar ise "kaydetmenin rengi nane,
- * mavi yalnızca çalışıyor/burada ara için ayrıldı" (skill §14'ün tek
- * istisnası, B7 orada). Üstelik `--color-mavi` haritada ZATEN dolu:
- * kullanıcının kendi konum noktası o renk (.benim-konum-nokta). Mavi
- * yer imi koyarsak haritada iki ayrı mavi olur — biri "sen", diğeri
- * "başkasının kaydı".
+ * ── Renk: NANE (karar 2026-09-17) ──────────────────────────────────
+ * Referans MAVİ. Ürün kararı nane: kaydetmenin rengi bu üründe nane, mavi
+ * yalnızca çalışıyor/burada ara için ayrıldı (skill §14'ün tek istisnası,
+ * B7 orada) ve `--color-mavi` haritada ZATEN kullanıcının kendi konum
+ * noktası (.benim-konum-nokta). Mavi yer imi haritada iki ayrı mavi
+ * demekti — biri "sen", diğeri "başkasının kaydı". Referansa sadık mavi
+ * varyant bu yüzden kaldırıldı.
  *
- * Bu yüzden varsayılan `nane`, `mavi` referansa sadık varyant olarak
- * duruyor. İkisi de önizlemede yan yana; seçim ürün sahibinin.
- *
- * ── Token boşluğu ──────────────────────────────────────────────────
- * Nane'nin DOYGUN karşılığı yok. Pastel `--color-rozet-nane` 30 pikselik
- * bir pinde altlık haritadan ayrışmıyor, o yüzden dolgu olarak
- * `--color-rozet-nane-ink` kullanılıyor — tokenın adı "mürekkep", yani
- * burada amacı dışında. Yeni token TANIMLANMADI (görev kuralı); ihtiyaç
- * raporda.
+ * Dolgu `--color-nane`: bu pin için açılan doygun uç. Pastel
+ * `--color-rozet-nane` 40 piksellik bir pinde altlıktan ayrışmıyordu.
+ * Beyaz kenar zorunlu: kenarsız pin koyu bir binanın ya da parkın
+ * üstünde kayboluyor (.foto-marker-kutu'nun beyaz kenarı da aynı sebeple).
  */
-
-export type YerImiTonu = "nane" | "mavi";
-
-/* Dolgu ve üstündeki glif rengi. Beyaz kenar ikisinde de zorunlu:
-   kenarsız bir pin koyu bir binanın ya da parkın üstünde kayboluyor
-   (.foto-marker-kutu'nun beyaz kenarı da aynı sebeple duruyor). */
-const DOLGU: Record<YerImiTonu, string> = {
-  nane: "var(--color-rozet-nane-ink)",
-  mavi: "var(--color-mavi)",
-};
 
 export interface YerImiPiniProps {
   /**
@@ -57,7 +42,6 @@ export interface YerImiPiniProps {
    * bilgisi tek başına da bir şey söylüyor.
    */
   simge?: ReactNode;
-  ton?: YerImiTonu;
   /** yükseklik (px). Genişlik oranla türüyor. */
   boyut?: number;
   secili?: boolean;
@@ -74,7 +58,6 @@ export interface YerImiPiniProps {
 
 export default function YerImiPini({
   simge,
-  ton = "nane",
   boyut = 40,
   secili = false,
   kapali = false,
@@ -108,7 +91,7 @@ export default function YerImiPini({
         <svg viewBox="0 0 30 40" className="block size-full" aria-hidden>
           <path
             d="M7 2 H23 A5 5 0 0 1 28 7 V37 L15 28.5 L2 37 V7 A5 5 0 0 1 7 2 Z"
-            fill={DOLGU[ton]}
+            fill="var(--color-nane)"
             stroke="#fff"
             strokeWidth="2.6"
             strokeLinejoin="round"

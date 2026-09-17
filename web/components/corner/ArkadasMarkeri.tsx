@@ -15,8 +15,11 @@ import Avatar from "@/components/corner/primitives/Avatar";
  * Yakınlık sorgusu (`places_nearby`) "bu mekanı kim kaydetti" bilgisini
  * döndürmüyor; şemada mekan → kaydeden kişi yolu istemciye hiç gelmiyor.
  * Bu yüzden kişi adı, fotoğrafı ve eylem metni PROPS olarak gelir.
- * Burada fetch, şema tahmini ya da `lib/` çağrısı YOKTUR. Hangi verinin
- * gerektiği raporda; kararı ürünün.
+ * Burada fetch, şema tahmini ya da `lib/` çağrısı YOKTUR.
+ *
+ * Ürün kararı (2026-09-17): veri AYRI BİR RPC'den gelecek, yalnızca
+ * arkadaş modunda çağrılan — `places_nearby` her harita hareketinde
+ * koştuğu için genişletilmiyor. RPC henüz yazılmadı (NOT.md).
  *
  * ── Renk: referanstan bilinçli ayrım ───────────────────────────────
  * Referansın moru doygun. Bizde haritadaki son doygun renk (kategori

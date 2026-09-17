@@ -7,7 +7,8 @@ import Cip from "@/components/corner/primitives/Cip";
 /**
  * B6 — referansın ŞEHİR ÇİPİ'nin bu üründeki karşılığı: SEMT çipi.
  *
- * ⚠ BU BİR UYARLAMA, BİREBİR KARŞILIK DEĞİL. Kararı ürün sahibinin.
+ * ⚠ BU BİR UYARLAMA, BİREBİR KARŞILIK DEĞİL. Ürün kararı (2026-09-17):
+ * uyarlama kalıyor, ama YALNIZCA pin sayısıyla.
  *
  * Referansta B6 dünya zoom'unda beliren `🌐 singapore`, `🌐 melbourne`
  * çipleridir: haritayı sonuna kadar uzaklaştırdığında "içerik OLAN
@@ -25,7 +26,7 @@ import Cip from "@/components/corner/primitives/Cip";
  * ikinci kez söylemek Harita.tsx'in pinsiz mekanları çizmeme gerekçesiyle
  * birebir aynı hataya düşmek olur. Bu yüzden çip ancak altlığın
  * SÖYLEYEMEDİĞİ şeyi taşırsa hak ediyor: o semtte kaç pin olduğu.
- * `sayi` verilmediğinde çip bilgi olarak altlıkla eş değerdedir.
+ * `sayi` bu yüzden ZORUNLU — sayısız bir semt çipi yazılamasın.
  *
  * Bileşen bilerek İNCE: tüm biçim `Cip` primitifinden geliyor
  * (bicim="yatay", C7'nin üst simge sayısı dahil). Buradaki tek katkı
@@ -39,9 +40,9 @@ export interface SemtCipiProps {
   semt: string;
   /**
    * O semtteki pin sayısı. Çipi altlık haritanın etiketinden ayıran
-   * TEK şey bu; yoksa çip yalnızca bir gezinme kısayolu olur.
+   * TEK şey bu, o yüzden zorunlu (yukarıdaki karar).
    */
-  sayi?: number;
+  sayi: number;
   /** başka bir emoji gerekiyorsa. Referansın 🌐'u burada anlamsız. */
   simge?: ReactNode;
   aktif?: boolean;

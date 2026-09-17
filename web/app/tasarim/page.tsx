@@ -213,7 +213,7 @@ export default function TasarimSayfasi() {
         <Baslik
           no="03"
           ad="Siyah çapa ve tek mavi istisna"
-          not="Ekranda genelde TEK dolu siyah eleman olur: gözün tutunduğu nokta. Halka istediğin kadar, dolu iki taneden fazla olamaz. Renklendirme yasağının tek istisnası birincil eylem — mavi 'ne yapabilirim'i, siyah 'neredeyim'i taşıyor."
+          not="Ekranda genelde TEK dolu siyah eleman olur: gözün tutunduğu nokta. Halka istediğin kadar, dolu iki taneden fazla olamaz. Renklendirme yasağının tek istisnası birincil eylem — mavi 'ne yapabilirim'i, siyah 'neredeyim'i taşıyor. Nane bir UI rengi değil: yalnızca haritada başkasının kaydını gösteren yer imi pininin dolgusu."
         />
         <Kart>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -239,6 +239,19 @@ export default function TasarimSayfasi() {
             </button>
             <span className="font-metin text-2xs text-gri-600">
               mavi: <code className="font-sayi">--color-mavi</code> · beyazla 5.14:1
+            </span>
+            {/* Renk ve etiketi tek parça: ayrı sarılırsa renk bir satırda,
+                adı öbüründe kalıyor. */}
+            <span className="inline-flex items-center gap-2.5">
+              <span
+                aria-hidden
+                className="block size-6 shrink-0 rounded-full bg-nane"
+                style={{ boxShadow: "0 0 0 2.5px #fff, var(--shadow-kat-2)" }}
+              />
+              <span className="font-metin text-2xs text-gri-600">
+                nane: <code className="font-sayi">--color-nane</code> · beyazla 4.96:1 · yalnızca
+                yer imi pini
+              </span>
             </span>
           </div>
         </Kart>
