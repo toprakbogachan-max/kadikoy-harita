@@ -127,3 +127,45 @@ Dosya: `SeriRozeti` (+ çift rozet için `SeriRozetSatiri`). Önizleme:
 - **Ateş eşiği 4 hafta** (`atesEsigi`) — "bir ay". Ürün eşiği, tasarım sabiti
   değil.
 
+## Faz 2'nin geneli
+
+### Adlar spec'le birebir değil
+
+Bileşenler spec'teki İngilizce/karma adlar yerine Türkçe envanter adlarıyla
+yazıldı. Önizleme sayfaları da paket başına değil ekran başına toplandı; böylece
+aynı ekranda duracak bileşenler 390 px çerçevede yan yana sınanabiliyor.
+
+| paket | spec adı | dosya | önizleme |
+|---|---|---|---|
+| 1 | BookmarkPin | `YerImiPini` | `/tasarim/harita-eksikleri` |
+| 1 | AktifKisiIsareti | `ArkadasMarkeri` | `/tasarim/harita-eksikleri` |
+| 1 | SehirCipi | `SemtCipi` | `/tasarim/harita-eksikleri` |
+| 2 | AraBuradan | `BuradaAra` | `/tasarim/harita-eksikleri` |
+| 3 | KayitRozeti | `KayitRozeti` | `/tasarim/mekan-eksikleri` |
+| 3 | ToTryBeen | `GidecegimGittim` | `/tasarim/mekan-eksikleri` |
+| 3 | EditoryalBolum | `MekanNotu` | `/tasarim/mekan-eksikleri` |
+| 4 | DereceGostergesi | `DereceGostergesi` | `/tasarim/degerlendirme` |
+| 4 | TekrarGiderMiydin | `YineGiderMisin` | `/tasarim/degerlendirme` |
+| 5 | CurationSecici | `ListeSecimKarti` | `/tasarim/kaydetme-eksikleri` |
+| 5 | YeniCurationKarosu | `ListeAcKarosu` | `/tasarim/kaydetme-eksikleri` |
+| 5 | BirlikteCalis | `OrtakListeHapi` | `/tasarim/profil-eksikleri` |
+| 6 | SeriRozeti | `SeriRozeti` | `/tasarim/profil-eksikleri` |
+| 7 | — | `globals.css` `--aci-cikartma` | `/tasarim/primitifler` |
+
+**Soru:** Montajdan önce adlar spec'e çekilsin mi, yoksa envanter adları mı
+kalıcı?
+
+### Paket 3 — gideceğim / gittim spec kararına aykırı
+
+Spec açıkça "segmented pill (birleşik kapsül) kalsın, ayrı daire çifti
+varyantı eklenmedi, o kararı bozma" diyor. `GidecegimGittim` (commit
+`3011ac9`) **iki ayrı daire** olarak yazıldı. Faz 1.5'in `IkiliPill`'i
+`/tasarim/primitifler`'de segmented hâliyle duruyor. **Soru:** daire çifti
+bilinçli bir karar değişikliği olarak kabul mü, yoksa bileşen `IkiliPill`
+üstüne yeniden mi yazılsın?
+
+### Paket 7 zaten bitmişti
+
+`.yapistir` keyframe'inin `--aci-cikartma`'ya bağlanması Faz 1.5'te
+(`2779396`) yapıldı. `/tasarim/primitifler`'de −9°, +7° ve −18° çıkartmalar
+animasyonlu. Bu fazda ayrıca iş çıkmadı.
