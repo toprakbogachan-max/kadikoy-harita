@@ -33,3 +33,8 @@ yarn-error.log*
 
 # kişisel dosyalar — bu repo public, buraya asla kişisel belge girmez
 Claude outputs/
+
+# Codex kopyaları — asılları CLAUDE.md ve .claude/skills/ (kökle sınırlı:
+# web/AGENTS.md next dev'in yazdığı izlenen dosya, o yok sayılmamalı)
+/AGENTS.md
+/.agents/
