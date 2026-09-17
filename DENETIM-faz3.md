@@ -34,3 +34,32 @@ Yedi önizleme sayfasındaki `Baslik` / `Etiket` / `Kutu` / `Alt` kopyaları
 
 Başka hiçbir öğenin stili değişmedi. Bütün sayfalar iki genişlikte yatay
 taşmasız (sayfa ve kutu içi), konsol temiz.
+
+## Paket 2 — önizleme index'i
+
+`/tasarim` artık bütün önizlemelerin index'i; token denetim sayfası
+`git mv` ile `/tasarim/tokenlar`'a taşındı. Bileşen bölümlerine bağlantı
+için altı sayfadaki başlıklara `id` eklendi (bileşen adıyla:
+`#YerImiPini`, `#Pill` …).
+
+| sayfa | fark | neden |
+|---|---|---|
+| `/tasarim/tokenlar` | yok (Paket 1 sonrasıyla birebir) | yalnızca adres değişti |
+| diğer altı önizleme | yok | `id` yerleşimi etkilemiyor |
+| `/tasarim` | yeni sayfa | — |
+
+Hash bağlantısı gerçek gezinmeyle sınandı: `/tasarim` → `#YineGiderMisin`
+hedef başlığı ekranın 32 px altına getiriyor (`scroll-mt-8`).
+
+**Montaj durumları** (index'te her bileşenin yanında) şema taramasıyla
+çıkarıldı, üç yerde `NOT.md`'den fazlasını söylüyor:
+
+- `YerImiPini` veri bekliyor: `saves` tablosunun tek policy'si
+  `user_id = auth.uid()`, başkalarının kayıtları istemciden okunamıyor.
+- `SemtCipi` kısmen: `places.neighborhood` ve `pin_count` var, semt başına
+  toplam sorgusu yok.
+- `MekanNotu` kısmen: "ne zaman git" için `place_facts.best_time` var;
+  "havası" / "ne söylesen" metni için alan yok.
+
+Sonuç: 6 montaja hazır (B7, D2, E1, E2, E5, E6), 2 kısmen (B6, D10),
+5 veri bekliyor (B4, B5, D5, F2, H2).

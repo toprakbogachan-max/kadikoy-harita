@@ -79,6 +79,7 @@ export default function DegerlendirmeSayfasi() {
         {/* ============ 1 · E1 ============ */}
         <Baslik
           no="01"
+          id="DereceGostergesi"
           ad="Derece göstergesi"
           kod="E1 · DereceGostergesi"
           not="Referansta disliked / okay / liked / favorite. Bizde sayı kalıyor, kademe onun okunuşu. Dört çip yan yana ama yalnızca seçili olan yazısını taşıyor: dördünün tam etiketi 390 pikselde sığmıyor, iki satıra kırılan bir ölçek de sıralı okunmuyor. Seçili hâl siyah halka; diğerleri soluk ve gri tonlu."
@@ -165,6 +166,7 @@ export default function DegerlendirmeSayfasi() {
         {/* ============ 2 · E2 ============ */}
         <Baslik
           no="02"
+          id="YineGiderMisin"
           ad="Yine gider miydin"
           kod="E2 · YineGiderMisin"
           not="Referansta would you go back? — 👎 / 👍 ikilisi ve ayrı bir ♥ fav’d kutusu. Bizde iki değil ÜÇ seçenek var, çünkü şema öyle: pins.would_return in ('evet','belki','hayır'). Seçili hâl dolu siyah değil siyah halka. Favorim kalbi düğme değil rozet: ayrı bir favori alanı açılmadı, kalp puanın ≥ 9 okunuşu ve sorunun yanında ancak o zaman beliriyor."

@@ -3,7 +3,7 @@
 /**
  * /tasarim/mekan-eksikleri — mekan detayında eksik olan üç bileşen.
  *
- * `/tasarim` tokenları, `/tasarim/primitifler` altı primitifi denetliyor;
+ * `/tasarim/tokenlar` tokenları, `/tasarim/primitifler` altı primitifi denetliyor;
  * burası o primitiflerden kurulan ÜÇ mekan bileşenini denetliyor:
  *   D2  KayitRozeti      (Rozet üstüne)
  *   D5  GidecegimGittim  (Pill üstüne)
@@ -80,6 +80,7 @@ export default function MekanEksikleriSayfasi() {
         {/* ============ 1 · D2 ============ */}
         <Baslik
           no="01"
+          id="KayitRozeti"
           ad="Kayıt rozeti"
           kod="D2 · KayitRozeti"
           not="Referansta 946 SAVES. Pembe zemin, küçük punto, kalın BÜYÜK harf — Kademe C. Sayı font-sayi ile konuşuyor, binlik ayracı elde (ICU'ya güvenmek hidrasyon uyuşmazlığı riski). Sıfır varsayılan olarak HİÇ çizilmiyor: “0 KAYIT” bilgi değil suçlama."
@@ -124,6 +125,7 @@ export default function MekanEksikleriSayfasi() {
         {/* ============ 2 · D5 ============ */}
         <Baslik
           no="02"
+          id="GidecegimGittim"
           ad="Gideceğim / gittim"
           kod="D5 · GidecegimGittim"
           not="İki daire, üstlerinde küçük harf etiket, üç durum. Dokun: ikon zıplıyor (skill §13 kalıp 4, yalnızca ikon — kap zıplarsa komşusu da oynuyormuş gibi olur), destekleyen cihazda haptik eşlik ediyor. Aktif daireye tekrar dokunmak durumu siliyor. Dolu “gideceğim” referansta mavi, bizde NANE: mavi bu üründe çalışıyor/burada ara için ayrıldı."
@@ -175,6 +177,7 @@ export default function MekanEksikleriSayfasi() {
         {/* ============ 3 · D10 ============ */}
         <Baslik
           no="03"
+          id="MekanNotu"
           ad="Mekan notu"
           kod="D10 · MekanNotu"
           not="Referansta VIBE / WHAT TO GET, envanterin “mekan detayının kalbi”. Başlık Kademe C (BÜYÜK, küçük punto, ferah aralık), gövde Karla — çünkü bunu bir insan yazdı. Türkçe başlıklar: havası · ne söylesen · ne kaçırma · ne zaman git."

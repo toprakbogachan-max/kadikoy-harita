@@ -3,7 +3,7 @@
 /**
  * /tasarim/kaydetme-eksikleri — kaydetme akışının liste seçicisi.
  *
- * `/tasarim` tokenları, `/tasarim/primitifler` altı primitifi,
+ * `/tasarim/tokenlar` tokenları, `/tasarim/primitifler` altı primitifi,
  * `/tasarim/mekan-eksikleri` mekan detayının üçünü,
  * `/tasarim/degerlendirme` E1 + E2'yi denetliyor; burası seçicinin ikisini:
  *   E5 ListeSecimKarti  (Kart + Rozet üstüne) + ListeSecici
@@ -110,6 +110,7 @@ export default function KaydetmeEksikleriSayfasi() {
         {/* ============ 1 · E5 satır ============ */}
         <Baslik
           no="01"
+          id="ListeSecimKarti"
           ad="Liste seçim kartı — satır"
           kod="E5 · ListeSecimKarti"
           not="Referansta add to a curation / pin to a list. Kapak + 🔒 gizli + ad + N yer + sağda ✓ dairesi. Seçilince kart siyah halka alıyor, ✓ dairesi NANE doluyor — çok seçimli bir listede dört dolu siyah daire tek çapa kuralını çökertirdi. Seçili kartta list_items.note için tek satırlık hap girdi açılıyor."
@@ -166,6 +167,7 @@ export default function KaydetmeEksikleriSayfasi() {
         {/* ============ 2 · E5 karo ============ */}
         <Baslik
           no="02"
+          id="ListeSecimKarti-karo"
           ad="Liste seçim kartı — karo şeridi"
           kod={'E5 · bicim="karo"'}
           not="Referansta seçicinin yanında gri create a curation KARESİ duruyor; yani o bağlamda liste kartları da kare ve yatay kayıyor. Kare biçim ad'ı fotoğrafın üstüne alıyor, bu yüzden koyu degrade örtü zorunlu. Şerit .serit sınıfıyla: son eleman kasıtlı olarak kenardan taşıyor, solma kaydırılabildiğinin tek işareti."
@@ -189,6 +191,7 @@ export default function KaydetmeEksikleriSayfasi() {
         {/* ============ 3 · E6 ============ */}
         <Baslik
           no="03"
+          id="ListeAcKarosu"
           ad="Yeni liste karosu"
           kod="E6 · ListeAcKarosu"
           not="Referansta gri kare + artı. Karo biçiminde gri ve gölgesiz (Kart zemin=bos gölgeyi sıfırlıyor): gölge 'bu bir nesne' der, bu bir davet. Satır biçiminde kabuk beyaz — seçim satırlarıyla aynı sütunda duruyor ve gri bir satır orada 'devre dışı' okunur; 'asıl eylem değil' bilgisini içindeki gri kare taşıyor."

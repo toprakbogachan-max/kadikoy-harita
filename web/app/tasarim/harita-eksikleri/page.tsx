@@ -4,7 +4,7 @@
  * /tasarim/harita-eksikleri — harita katmanında karşılığı olmayan dört
  * bileşen.
  *
- * `/tasarim` tokenları, `/tasarim/primitifler` altı primitifi,
+ * `/tasarim/tokenlar` tokenları, `/tasarim/primitifler` altı primitifi,
  * `/tasarim/mekan-eksikleri` mekan detayının üçünü denetliyor; burası
  * haritanın dördünü:
  *   B4 YerImiPini     (saf SVG + token)
@@ -146,6 +146,7 @@ export default function HaritaEksikleriSayfasi() {
         {/* ============ 1 · B4 ============ */}
         <Baslik
           no="01"
+          id="YerImiPini"
           ad="Yer imi pini"
           kod="B4 · YerImiPini"
           not="Referansta “başkasının kaydettiği mekanlar mavi bookmark şeklinde”. Silüet D5’teki gideceğim yer imiyle aynı glif: kaydetme fikri uygulamanın iki yerinde de aynı şekille konuşuyor. Renk nane (karar 2026-09-17): referans mavi diyor ama bu üründe kaydetmenin rengi nane ve mavi haritada zaten kullanıcının kendi konumu. Dolgu bu pin için açılan doygun --color-nane tokeni."
@@ -224,6 +225,7 @@ export default function HaritaEksikleriSayfasi() {
         {/* ============ 2 · B5 ============ */}
         <Baslik
           no="02"
+          id="ArkadasMarkeri"
           ad="Arkadaş marker’ı"
           kod="B5 · ArkadasMarkeri"
           not="Referansta mor kişi silüeti + @jake saved. Envanter §6/11: “sadece arkadaşlar” seçilince marker’ların hepsi fotoğraftan kişi ikonuna dönüyor — bu bir marker çeşidi değil, haritanın modu. Mor doygun uçtan değil pastel uçtan alındı: haritadaki son doygun renk (kategori noktası) bilerek kaldırılmıştı, onuncu renkle geri getirmiyoruz."
@@ -298,6 +300,7 @@ export default function HaritaEksikleriSayfasi() {
         {/* ============ 3 · B6 ============ */}
         <Baslik
           no="03"
+          id="SemtCipi"
           ad="Semt çipi"
           kod="B6 · SemtCipi — UYARLAMA"
           not="Referansın B6’sı dünya zoom’undaki 🌐 singapore çipleri. Kadıköy tek ilçe, dünya zoom’u yok; bileşeni birebir taşımak boş kabuk üretirdi. Uyarlama semt: bu üründe semt gerçek bir kimlik (Profil.tsx onu istatistik olarak sayıyor). Karar (2026-09-17): çip kalıyor ama yalnızca pin sayısıyla — altlık harita semt adını zaten yazıyor, sayısız çip aynı bilgiyi ikinci kez söylerdi. Bu yüzden sayi zorunlu prop."
@@ -326,6 +329,7 @@ export default function HaritaEksikleriSayfasi() {
         {/* ============ 4 · B7 ============ */}
         <Baslik
           no="04"
+          id="BuradaAra"
           ad="Burada ara"
           kod="B7 · BuradaAra"
           not="Envanter §6 madde 3: siyah (boşta) → mavi (çalışıyor), ikon dönüyor. Skill §14’ün tek renk istisnasının tam yeri — mavi bu üründe “çalışıyor / burada ara” için ayrıldı, kaydetmenin rengi nane. Metin çalışırken değişmiyor: büyüteç ile dönen halka aynı 14 pikselde, böylece geçişte tek değişen şey renk ve hap yerinden sıçramıyor."

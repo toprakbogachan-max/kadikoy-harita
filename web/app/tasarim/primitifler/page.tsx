@@ -3,7 +3,7 @@
 /**
  * /tasarim/primitifler — primitif vitrini.
  *
- * `/tasarim` tokenları denetliyor, burası o tokenlardan kurulan ALTI
+ * `/tasarim/tokenlar` tokenları denetliyor, burası o tokenlardan kurulan ALTI
  * primitifi denetliyor: Pill, Cip, Kart, Avatar, Rozet, Panel.
  * (`components/corner/primitives/`).
  *
@@ -121,6 +121,7 @@ export default function PrimitiflerSayfasi() {
         {/* ============ 1 · PILL ============ */}
         <Baslik
           no="01"
+          id="Pill"
           ad="Hap"
           kod="A3 · A4 · A6 · D8 · E7 · F2 · I7 · I9 · J3"
           not="Yatay, metin taşıyan her şey. Dolu koyu eleman ekranda BİR tane olur, o yüzden varsayılan beyaz. Mavi ve nane iki ayrı istisna: mavi çalışıyor/birincil eylem, nane bu üründe kaydetmenin rengi."
@@ -260,6 +261,7 @@ export default function PrimitiflerSayfasi() {
         {/* ============ 2 · ÇİP ============ */}
         <Baslik
           no="02"
+          id="Cip"
           ad="Çip"
           kod="C1–C7 · G5"
           not="Haritada İKİ AYRI filtre biçimi var, karıştırılmaz: yatay hap 'hangi mekanlara bakıyorum' sorusunu, dikey emoji-daire 'ne arıyorum' sorusunu sorar. İki farklı soru, iki farklı biçim."
@@ -350,6 +352,7 @@ export default function PrimitiflerSayfasi() {
         {/* ============ 3 · KART ============ */}
         <Baslik
           no="03"
+          id="Kart"
           ad="Kart kabuğu"
           kod="F1 · F4 · F6 · G1–G4 · D11 · E5 · H7"
           not="Yalnızca kabuk: zemin, yarıçap, gölge, dolgu, gerekiyorsa koyu örtü. İçerik düzeni montaj fazının işi. Kullanıcı içeriği beyaz kartta, sistem/aktivite mesajı degrade kartta durur — renk burada anlam taşıyor."
@@ -443,6 +446,7 @@ export default function PrimitiflerSayfasi() {
         {/* ============ 4 · AVATAR ============ */}
         <Baslik
           no="04"
+          id="Avatar"
           ad="Avatar"
           kod="squircle = kimlik · daire = haritadaki nokta"
           not="Tutarsızlık değil, ayrımın kendisi: yuvarlak kare 'bu bir kişi', tam daire 'bu bir konum işareti ya da listedeki ufak iz'. Yarıçap boyutla ölçekleniyor — sabit 22px, 20 piksellik avatarda neredeyse daire yapıyor."
@@ -504,6 +508,7 @@ export default function PrimitiflerSayfasi() {
         {/* ============ 5 · ROZET ============ */}
         <Baslik
           no="05"
+          id="Rozet"
           ad="Rozet"
           kod="D2 · D3 · D7 · H2"
           not="Pastel vurgular YALNIZCA burada yaşar. Doygunluk alanla ters orantılı: küçük rozette renk canlı olabilir, alan büyüdükçe düşer. Çıkartma ekran başına BİR tane — ikiye çıktığı anda ucuzluyor."
@@ -567,6 +572,7 @@ export default function PrimitiflerSayfasi() {
         {/* ============ 6 · PANEL ============ */}
         <Baslik
           no="06"
+          id="Panel"
           ad="Alt panel"
           kod="A7 · tutamaç · duraklama noktaları"
           not="Envanter bölüm 6'nın 8 numaralı bulgusu: aynı panel üç FARKLI yükseklikte yakalanmış. Sürükle, bırak, en yakın durağa otursun. Tutamaca dokunmak durakları sırayla geziyor — sürükleyemeyen kullanıcı için tek erişim yolu o."
