@@ -183,3 +183,85 @@ sayılır. Varsayılan `false`, yani mevcut her kullanım aynı. Örnek
 **Güncel özet:** 22 bulgu · 9 düzeltildi (T1, T4, T5, T10, T11, T12, T13,
 T15, T22; ayrıca T19'un yorum kısmı) · 8 karar (T6, T7, T8, T9, T16, T17,
 T19, T20) · 5 kalsın (T2, T3, T14, T18, T21).
+
+## Paket 4 — kontrol listesi (`corner-tasarim` §11)
+
+Paket 3'ün düzeltmelerinden **sonraki** hâl, her bileşenin kendi
+önizlemesinde. Sütunlar §11'in maddeleri:
+
+| | madde | nasıl bakıldı |
+|---|---|---|
+| 1 | doygun renkli UI elemanı yok | kod + önizleme |
+| 2 | dolu siyah en fazla 1–2 | kod + önizleme |
+| 3 | zemin iridesan | sayfa için anlamlı; bileşende yalnızca kendi zemini olan `Panel` |
+| 4 | ayraç çizgisi yok | **ölçüldü**: bölümdeki üst/alt kenarlıklar, önizleme kutuları hariç |
+| 5 | özel isim BÜYÜK + kalın, arayüz küçük harf | kod + önizleme |
+| 6 | kenardan kenara sabit bar yok | yalnızca bar olabilecek bileşen: `Panel` |
+| 7 | kayan şeritte taşma / solma ipucu | şeridi kendisi çizen bileşen |
+| 8 | boş durum davet, beyaz alan değil | boş hâli olan bileşen |
+| 9 | buton etiketi marka sesiyle, jenerik değil | varsayılan metni olan bileşen |
+| 10 | fotoğraflı kartta koyu degrade örtü | fotoğraf zemini olan bileşen |
+| 11 | dokunulabilir her şey basılınca tepki veriyor | **ölçüldü**: bölümdeki her `button`/`a` `bas` taşıyor mu |
+| 12 | üste açılan katman yükseliyor | katman olan bileşen: `Panel` |
+| 13 | özel isim kasası bağlama uygun | isim taşıyan bileşen |
+| 14 | hareket azaltmada animasyon yok | **ölçüldü**: `prefers-reduced-motion: reduce` emülasyonunda durum değişikliği tetiklendi; `zipla` / `yapistir` / `belir` / `animate-*` animasyonu ve `bas` geçişi sayıldı. Kontrol: emülasyon kapalıyken aynı sayfalarda sıfırdan büyük |
+| 15 | telefon genişliğinde bakıldı | **ölçüldü**: 390 px cihaz emülasyonunda sayfa + kutu içi taşma, konsol |
+
+`✓` geçiyor · `✗` geçmiyor · `—` bu bileşen için anlamsız · sayı dipnot.
+
+| bileşen | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Pill** | ✓¹ | ✓² | — | ✓ | ✓ | — | — | — | — | — | ✓ | — | ✓ | ✓ | ✓ |
+| **Cip** | ✓ | ✓ | — | ✓ | ✓ | — | — | — | — | — | ✓ | — | ✓³ | ✓ | ✓ |
+| **Kart** | ✓⁴ | — | — | ✓ | — | — | — | — | — | ✓ | ✓ | — | — | ✓ | ✓ |
+| **Avatar** | ✓ | — | — | ✓ | ✓ | — | — | — | — | — | — | — | ✓ | ✓ | ✓ |
+| **Rozet** | ✓ | — | — | ✓ | ✓ | — | — | — | — | — | — | — | — | ✓ | ✓ |
+| **Panel** | ✓ | — | ✓ | ✓ | — | ✓ | — | — | — | — | ✓ | ✓ | — | ✓ | ✓ |
+| YerImiPini | ✓⁵ | — | — | ✓ | — | — | — | — | — | — | — | — | — | ✓ | ✓ |
+| ArkadasMarkeri | ✓ | — | — | ✓ | ✓ | — | — | — | — | — | — | — | ✓ | ✓ | ✓ |
+| SemtCipi | ✓ | ✓ | — | ✓ | ✓ | — | — | — | — | — | ✓ | — | ✓³ | ✓ | ✓ |
+| BuradaAra | ✓¹ | ✓ | — | ✓ | ✓ | — | — | — | ✓ | — | ✓ | — | — | ✓ | ✓ |
+| KayitRozeti | ✓ | — | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | — | ✓ | ✓ |
+| GidecegimGittim | ✓ | ✓ | — | ✓ | ✓ | — | — | — | ✓ | — | ✓ | — | — | ✓ | ✓ |
+| MekanNotu | ✓ | — | — | ✓ | ✓ | — | — | ✓⁶ | ✓ | — | ✓ | — | — | ✓ | ✓ |
+| DereceGostergesi | ✓ | ✓ | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | — | ✓ | ✓ |
+| YineGiderMisin | ✓ | ✓ | — | ✓ | ✓ | — | — | — | ✓ | — | ✓ | — | — | ✓ | ✓ |
+| ListeSecimKarti | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | ✗⁷ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| ListeAcKarosu | ✓ | — | — | ✓ | ✓ | — | — | — | ✓ | — | ✓ | — | — | ✓ | ✓ |
+| OrtakListeHapi | ✓⁸ | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | ✓ |
+| SeriRozeti | ✓ | — | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | — | — | ✓ | ✓ |
+
+1. Mavi dolgu §14'ün tek istisnası ("çalışıyor / burada ara"); `BuradaAra`
+   yalnızca çalışırken mavi. Pill'de bir varyant, kotası çağıranın.
+2. Dolu siyah bir varyant; ekrandaki sayısı çağıranın kararı. Seçim için
+   varsayılan halka.
+3. Çip adı Kademe B küçük harf (referansta `🌐 singapore`); CSS `lowercase`
+   JS karşılığı olmadan — T20, iOS Safari'ye bağlı.
+4. `degrade` zemin bir renk süsü değil anlam: sistem / aktivite mesajı (§6).
+5. Doygun nane (`--color-nane`) bir UI elemanı değil haritadaki işaret;
+   ürün kararı 2026-09-17, yalnızca bu pinin dolgusu.
+6. Boş hâl davet cümlesi + "ilk sen yaz." hapı. §11'in fotoğraflı CTA kuralı
+   listeler için; bu tek bir metin bloğu.
+7. **Geçmiyor.** Boş liste hâli beyaz alan değil (cümle + yeni liste karosu)
+   ama §6'nın istediği fotoğraflı CTA kartı da değil. Bileşen yorumu bunu
+   montaja bırakmış ("orada gerçek kapaklar var"). **Karar:** montajda
+   fotoğraflı CTA'ya mı çevrilsin, yoksa seçici bağlamında (akışın ortasında
+   küçük bir panel) cümle + karo yeterli mi?
+8. Degrade yalnızca 1.5 px kenarlık, hap beyaz.
+
+**Sonuç:** 19 satırda uygulanabilen 138 hücreden 137'si geçiyor (147 hücre
+bu bileşen için anlamsız); tek `✗` ListeSecimKarti'nin boş durumu (karar
+bekliyor).
+
+## Karar bekleyen maddeler
+
+| # | konu | öneri |
+|---|---|---|
+| T6 | `filter` gölgesi için token (`YerImiPini`, `RozetCikartma`) | `--golge-sekil` gibi tek token; iki değer (.22 / .24) birleşsin |
+| T7 | süre tokenları | `--sure-bas` 150, `--sure-gecis` 200, `--sure-panel` 300 |
+| T8 | lila → pembe degrade tokenı | `--degrade-aktivite`; Pill ve Kart onu kullansın |
+| T9 | `Cip` üst simge sayısı 9 px (token altı) | 10 px'e (`--text-2xs`) çekilsin — `SemtCipi` sayısı 1 px büyür |
+| T16 | `etiket` prop'unun iki anlamı | görünmez olan `okunur`, görünen `etiket`; kütüphane henüz hiçbir ekranda yok, en ucuz an şimdi |
+| T17 | `aktif` / `secili` | tek ad: `secili` (kartlar ve işaretler için doğal, düğmede de anlaşılır) |
+| T19/T20 | Türkçe CSS büyük/küçük harf iOS Safari'de | gerçek cihazda "pin" / "İSMAİL" sınansın; doğruysa JS büyütmeleri sadeleşebilir |
+| §11-8 | `ListeSecimKarti` boş durumu | montajda fotoğraflı CTA (yukarıda dipnot 7) |
