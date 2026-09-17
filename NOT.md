@@ -109,3 +109,21 @@ Dosyalar: `ListeSecimKarti` + `ListeSecici` (spec: CurationSecici),
 - Pill primitifinin degrade kenarlık varyantı Faz 1.5'te zaten eklenmişti
   (`kenar="degrade"`); yeni varyant ya da token açılmadı.
 
+## Paket 6 — haftalık seri rozeti
+
+Dosya: `SeriRozeti` (+ çift rozet için `SeriRozetSatiri`). Önizleme:
+`/tasarim/profil-eksikleri`.
+
+- **"Seri" kavramı kod tabanında yok.** Ne sayaç, ne hafta tanımı, ne de
+  seriyi neyin ilerlettiği belli. **Soru:** bir hafta "en az bir pin" mi,
+  "en az bir kayıt" mı? Hafta pazartesi mi başlıyor?
+- **Etiket altta değil yanda.** Spec "içinde sayı + altında iki satır etiket"
+  diyor. Uygulama `corner-tasarim` skill'inin ekran görüntüsünden doğrulanan
+  §14 kalıbını izliyor: "yanlarında iki satırlık küçük harf gri etiket".
+  Profil başlığında yan yana iki rozet dar ekranda da tek satıra sığıyor.
+- **Sıralama rozeti bileşeni yazılmadı.** Çift rozetin ikinci yarısının
+  ("kadıköy sırası") ne verisi ne hesabı var. Önizlemede doğrudan `RozetSayac`
+  ile gösteriliyor.
+- **Ateş eşiği 4 hafta** (`atesEsigi`) — "bir ay". Ürün eşiği, tasarım sabiti
+  değil.
+
