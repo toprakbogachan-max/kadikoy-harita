@@ -190,3 +190,29 @@ bu kısıt uygulanmadan yayına çıkılmamalı.
 
 Test sırasında eklenen tek satır geri alındı; veritabanı test öncesi hâline
 döndü.
+
+## Paket 6 — indeks ve kayıt
+
+`/tasarim` index'inde altı bileşenin durumu **MONTE EDİLDİ** oldu (lila
+rozet) ve yanlarında hangi ekrana takıldıkları yazıyor. `NOT.md`'de
+`lists.is_public` maddesi kapandı, montaj maddesi Faz 4'ün kapsamıyla
+güncellendi.
+
+**Faz 4 özeti:** yedi paketin hepsi bitti, atlanan yok.
+
+| paket | ne | ekran |
+|---|---|---|
+| 2 | kayıt rozeti + derece göstergesi | mekan sayfası |
+| 3 | puan çipi | akış kartı, gönderi detayı |
+| 4 | yine gider miydin | pin formu, pin düzenleme |
+| 1 | burada ara (kendiliğinden tazeleme kalktı) | harita |
+| 5a | listeye ekleme veri yolu + `Liste.gizli` | — |
+| 5b | liste seçici paneli | mekan sayfası |
+| 6 | indeks durumları, NOT.md | — |
+
+**Gerçek hesapla teyit bekleyenler:**
+1. Kayıt rozetinin dolu hâli (veritabanında hiç kayıt yok).
+2. Pin gönderiminin `would_return`'e yazması ve pin düzenleme ekranı.
+3. Pin formundaki "yine gider miydin" bloğunun canlı ekran görüntüsü.
+4. `goc/15-demo-salt-okunur.sql` uygulandıktan sonra demo hesabın
+   yazamadığının görülmesi (yukarıdaki bulgu).

@@ -161,8 +161,9 @@ katmanı ya da montaj işi olduğu için burada yapılmadı.
   (Paket 5).
 - **Seri hesabı** — en az bir pin / pazartesi / İstanbul tanımıyla hafta
   sayacı ve `risk` durumu (Paket 6).
-- **`lists.is_public` modele** — şemada var ama `lib/model.ts`'teki `Liste`
-  tipinde yok; kilit rozeti montajda bunu bekliyor (Paket 5).
+- ~~**`lists.is_public` modele**~~ — Faz 4 Paket 5a'da yapıldı; `Liste.gizli`
+  artık taşınıyor ve kilit rozeti çalışıyor.
 - **Eşiği gerçek veriyle yeniden değerlendirme** — `rating_buckets` (Paket 4).
-- **Montaj** — bileşenlerin gerçek ekranlara ve `Harita.tsx`'in ham DOM
-  marker'larına taşınması.
+- **Montaj** — verisi hazır altı bileşen Faz 4'te takıldı (`SPEC-faz4.md`,
+  `DENETIM-faz4.md`). Kalan: `Harita.tsx`'in ham DOM marker'ları (yer imi
+  pini, arkadaş marker'ı) ve eski usul ekranların Corner diline çevrilmesi.

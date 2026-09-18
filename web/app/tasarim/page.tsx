@@ -18,12 +18,13 @@ import Link from "next/link";
 import Rozet, { type RozetTon } from "@/components/corner/primitives/Rozet";
 import { Baslik } from "@/app/tasarim/_vitrin/Iskelet";
 
-type Durum = "hazir" | "kismen" | "bekliyor";
+type Durum = "monte" | "hazir" | "kismen" | "bekliyor";
 
 /* Kasa elde yazılı: Rozet CSS uppercase kullanıyor; Türkçe "İ" davranışı
    lang="tr" altında Chrome ve WebKit'te doğru (ölçüldü); elde yazmak güvence (DENETIM-faz3 T19). Ton bir övünme değil bir durum: bekleyen bej
    (hata değil), kısmen kahve, hazır nane. */
 const DURUM: Record<Durum, { etiket: string; ton: RozetTon }> = {
+  monte: { etiket: "MONTE EDİLDİ", ton: "lila" },
   hazir: { etiket: "MONTAJA HAZIR", ton: "nane" },
   kismen: { etiket: "KISMEN", ton: "kahve" },
   bekliyor: { etiket: "VERİ BEKLİYOR", ton: "diger" },
@@ -73,7 +74,8 @@ const EKRANLAR: { ad: string; not: string; bilesenler: Bilesen[] }[] = [
         ad: "BuradaAra",
         tanim: "Harita durunca beliren “burada ara” hapı.",
         href: "/tasarim/harita-eksikleri#BuradaAra",
-        durum: "hazir",
+        durum: "monte",
+        not: "harita — kendiliğinden tazeleme yerine",
       },
     ],
   },
@@ -86,8 +88,8 @@ const EKRANLAR: { ad: string; not: string; bilesenler: Bilesen[] }[] = [
         ad: "KayitRozeti",
         tanim: "“946 KAYIT” rozeti; sıfırda çizilmiyor.",
         href: "/tasarim/mekan-eksikleri#KayitRozeti",
-        durum: "hazir",
-        not: "places.save_count",
+        durum: "monte",
+        not: "mekan sayfası, adres satırı (places.save_count)",
       },
       {
         kod: "D5",
@@ -116,16 +118,16 @@ const EKRANLAR: { ad: string; not: string; bilesenler: Bilesen[] }[] = [
         ad: "DereceGostergesi",
         tanim: "1–10 puanın dört kademeli okunuşu.",
         href: "/tasarim/degerlendirme#DereceGostergesi",
-        durum: "hazir",
-        not: "pins.rating, place_summary rating_avg",
+        durum: "monte",
+        not: "mekan sayfası, akış kartı, gönderi detayı",
       },
       {
         kod: "E2",
         ad: "YineGiderMisin",
         tanim: "Yine gider miydin? — evet / belki / hayır + favorim rozeti.",
         href: "/tasarim/degerlendirme#YineGiderMisin",
-        durum: "hazir",
-        not: "pins.would_return; favorim puandan",
+        durum: "monte",
+        not: "pin formu ve pin düzenleme",
       },
     ],
   },
@@ -138,15 +140,16 @@ const EKRANLAR: { ad: string; not: string; bilesenler: Bilesen[] }[] = [
         ad: "ListeSecimKarti",
         tanim: "Liste seçim kartı ve ListeSecici — satır ya da karo şeridi, not girdisi.",
         href: "/tasarim/kaydetme-eksikleri#ListeSecimKarti",
-        durum: "hazir",
-        not: "kilit rozeti için lists.is_public modele taşınmalı",
+        durum: "monte",
+        not: "mekan sayfası → “listeye ekle” paneli",
       },
       {
         kod: "E6",
         ad: "ListeAcKarosu",
         tanim: "Seçiciden çıkmadan yeni liste karosu.",
         href: "/tasarim/kaydetme-eksikleri#ListeAcKarosu",
-        durum: "hazir",
+        durum: "monte",
+        not: "liste seçicinin içinde",
       },
     ],
   },
@@ -199,11 +202,13 @@ export default function TasarimIndexSayfasi() {
         </p>
         <h1 className="mt-2 text-3xl font-extrabold uppercase tracking-siki text-gri-900">Tasarım</h1>
         <p className="mt-2 max-w-[62ch] font-metin text-base text-gri-800">
-          Corner dilindeki bileşen kütüphanesinin önizlemeleri. Hiçbiri henüz gerçek ekranlara
-          bağlı değil; yanlarındaki durum, montaja geçince neyin hazır olduğunu söylüyor.
+          Corner dilindeki bileşen kütüphanesinin önizlemeleri. Yanlarındaki durum, bileşenin
+          gerçek ekranlara takılıp takılmadığını söylüyor: montajı yapılanlar, verisi hazır
+          bekleyenler ve verisi olmayanlar.
         </p>
         <p className="mt-3 flex flex-wrap items-center gap-2 text-2xs lowercase tracking-ui text-gri-600">
           <span className="font-sayi">{hepsi.length}</span> ekran bileşeni ·
+          <Rozet ton={DURUM.monte.ton} sekil="hap">{`${say("monte")} ${DURUM.monte.etiket}`}</Rozet>
           <Rozet ton={DURUM.hazir.ton} sekil="hap">{`${say("hazir")} ${DURUM.hazir.etiket}`}</Rozet>
           <Rozet ton={DURUM.kismen.ton} sekil="hap">{`${say("kismen")} ${DURUM.kismen.etiket}`}</Rozet>
           <Rozet ton={DURUM.bekliyor.ton} sekil="hap">{`${say("bekliyor")} ${DURUM.bekliyor.etiket}`}</Rozet>
