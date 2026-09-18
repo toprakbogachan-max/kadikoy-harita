@@ -499,7 +499,10 @@ export default function Giris({ onKapat }: { onKapat: () => void }) {
                   type="button"
                   onClick={() => { turDegistir(s.id); setHata(null); }}
                   aria-pressed={secili}
-                  className={`ortulu bas relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-lg border-none p-3 text-left transition-shadow duration-[160ms] ${
+                  /* bas-gecis: katmansız .bas kısaltması buradaki transition-shadow
+                     sınıfını eziyordu, seçim halkası animasyonsuz beliriyordu
+                     (DENETIM-faz3 T23). Süre artık --sure-gecis. */
+                  className={`ortulu bas bas-gecis relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-lg border-none p-3 text-left ${
                     secili
                       ? "shadow-[0_0_0_2.5px_var(--color-gri-900),var(--shadow-kat-2)]"
                       : "shadow-kat-1"

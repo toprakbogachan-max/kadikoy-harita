@@ -360,3 +360,27 @@ depoya ya da sisteme kurulmadı.)
 - **5 kalsın:** T2, T3, T14, T18, T21
 
 Kontrol listesi 138/138. Karar bekleyen madde kalmadı.
+
+## Faz 3 sonrası kararlar (2026-09-18)
+
+| konu | karar |
+|---|---|
+| Sıradaki faz | **Montaj**: verisi hazır altı bileşen gerçek ekranlara — `BuradaAra` (harita), `KayitRozeti` + `DereceGostergesi` (mekan sayfası), `YineGiderMisin` + `ListeSecici` + `ListeAcKarosu` (kaydetme akışı). Önce `SPEC-faz4.md`, sonra dalga dalga |
+| Veri işleri | Dördü de yapılacak: mekan (gideceğim/gittim + not alanları), harita (arkadaş RPC'si + semt sorgusu), liste (`is_public` + ortak liste modeli), profil (seri hesabı). Montajla birlikte planlanacak |
+| Canlı `.bas` çakışması | **Şimdi düzeltildi** — aşağıda |
+| Yer imi çizimi | Farklı kalsın: pin haritada duran bir nesne, ikon çizgi. Kod değişmedi |
+| `/tasarim` yayında | Açık kalsın (`robots.ts` zaten her şeyi kapatıyor, sayfalarda gizli bilgi yok) |
+| Karşılama wordmark'ı | Şimdilik dokunulmuyor; ürün sahibi kendi bakacak. Montaj bu ekrana girmiyor |
+
+### T23'ün canlı uygulamadaki tek yeri
+
+Denetimde `.bas`'ın Tailwind geçiş sınıflarını ezdiği bulunmuştu. Uygulama
+kodunda bu çakışmanın tek yeri `components/Giris.tsx:502`: kayıt akışındaki
+kişiselleştirme kartı `transition-shadow duration-[160ms]` taşıyor ve seçim
+halkası animasyonsuz beliriyordu. `bas-gecis` eklendi, geçiş sınıfı kaldırıldı
+(süre artık `--sure-gecis`, 200 ms).
+
+Ekran kayıt akışının içinde olduğu için tarayıcıda açılamadı; aynı sınıfları
+taşıyan bir öğe enjekte edilip ölçüldü: `transform 0.15s, background-color /
+color / box-shadow 0.2s`. Başka hiçbir uygulama dosyasında `bas` ile
+`transition-*` aynı öğede değil (tarandı).
