@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent as DokunusOlayi } from "react";
 import { useVeri } from "@/lib/kanca";
-import { yerGetir, yerinPinleri, mekanOzeti, kayitDegistir, kayitliMi, kucukUrl, medyaUrl, type YerDetay } from "@/lib/veri";
+import { yerGetir, yerinPinleri, mekanOzeti, kayitDegistir, kayitliMi, kucukUrl, medyaUrl, kisininListeleri, listelerimdeMi, listeyeEkle, listedenCikar, type YerDetay } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import { useKisiler } from "@/lib/kisiler-baglam";
 import type { Pin } from "@/lib/model";
@@ -15,6 +15,8 @@ import BosDurum from "./BosDurum";
 import Cikartma from "./Cikartma";
 import KayitRozeti from "./corner/KayitRozeti";
 import DereceGostergesi from "./corner/DereceGostergesi";
+import { ListeSecici, type SecilebilirListe } from "./corner/ListeSecimKarti";
+import Panel from "./corner/primitives/Panel";
 
 type Kademe = "yarim" | "tam";
 
@@ -26,6 +28,8 @@ interface Props {
   onGonderiAc: (pinId: string, liste: string[]) => void;
   onGirisIste: () => void;
   onPinAt: (yer: YerDetay) => void;
+  /** liste oluşturma ekranını açar — seçicideki "yeni liste" bunu çağırır. */
+  onListeOlustur?: () => void;
 }
 
 const GUN_AD = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
@@ -73,7 +77,7 @@ const GECIS_MS = 300;
  * Bölüm sırası BRIEF kararı: uyarı → hızlı bakış → buraya bırakılanlar →
  * künye → özetler. Önce "buraya gitmeli miyim", sonra ayrıntı.
  */
-export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiAc, onGirisIste, onPinAt }: Props) {
+export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiAc, onGirisIste, onPinAt, onListeOlustur }: Props) {
   const { ben } = useOturum();
   /* Bir kişi üzerinden gelindiyse çekmece tam ekran AÇILIYOR — kademeyi
      efekte bırakmak yarış yaratıyordu: aşağıdaki render-içi sıfırlama
@@ -82,6 +86,14 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   /* Saat listesi açık mı — referanstaki "Wednesday: 9–9 ⌄" satırı. */
   const [saatAcik, setSaatAcik] = useState(false);
   const [kunyeAcik, setKunyeAcik] = useState(false);
+  /* ---- liste seçici (Faz 4 Paket 5b) ----
+     Panel açılınca veri çekiliyor: kapalıyken liste sorgusu atmanın anlamı
+     yok, mekan sayfası zaten üç sorgu koşuyor. */
+  const [listeSeciciAcik, setListeSeciciAcik] = useState(false);
+  const [listeHatasi, setListeHatasi] = useState<string | null>(null);
+  /* Seçimler iyimser güncelleniyor; null = "henüz dokunulmadı, sunucudaki
+     hâl geçerli". */
+  const [secilenler, setSecilenler] = useState<string[] | null>(null);
   /* Künye kaydedilince yerGetir tekrar çalışsın diye sayaç. */
   const [kunyeSayac, setKunyeSayac] = useState(0);
   const kapatDugmesi = useRef<HTMLButtonElement>(null);
@@ -220,6 +232,29 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   const kisiler = useKisiler();
   const { veri: kayitSunucu } = useVeri<boolean>(
     () => (ben ? kayitliMi(yerId) : Promise.resolve(false)), [yerId, ben?.id], false);
+
+  const { veri: listelerim, yukleniyor: listelerYukleniyor } = useVeri(
+    () => (ben && listeSeciciAcik ? kisininListeleri(ben.id) : Promise.resolve([])),
+    [ben?.id, listeSeciciAcik], []);
+  const { veri: sunucudakiSecim } = useVeri(
+    () => (ben && listeSeciciAcik ? listelerimdeMi(yerId) : Promise.resolve([])),
+    [yerId, ben?.id, listeSeciciAcik], []);
+  const seciliListeler = secilenler ?? sunucudakiSecim;
+
+  const listeSec = async (listeId: string) => {
+    const vardi = seciliListeler.includes(listeId);
+    const oncekiler = seciliListeler;
+    setListeHatasi(null);
+    setSecilenler(vardi ? oncekiler.filter((x) => x !== listeId) : [...oncekiler, listeId]);
+    try {
+      if (vardi) await listedenCikar(listeId, yerId);
+      else await listeyeEkle(listeId, yerId);
+    } catch {
+      /* Geri al: demo hesap salt okunur, RLS reddediyor. */
+      setSecilenler(oncekiler);
+      setListeHatasi("Kaydedilemedi. Demo hesapta liste düzenlenemiyor.");
+    }
+  };
   const [kayitYerel, setKayitYerel] = useState<boolean | null>(null);
   const kayitli = kayitYerel ?? kayitSunucu;
   /* Zıplama sayacı, boolean değil: aynı yöne iki kez basıldığında da
@@ -657,6 +692,18 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
                 </span>
                 {kayitli ? "kaydettin" : "kaydet"}
               </button>
+              {/* Listeye ekleme: kaydetmenin yanında ayrı bir eylem.
+                  Kaydetmek "beni ilgilendiriyor", listeye eklemek "şu
+                  seçkiye ait" demek. */}
+              <button
+                onClick={() => (ben ? setListeSeciciAcik(true) : onGirisIste())}
+                className="bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-1"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 3.6h9v17l-4.5-3.2L6 20.6z" /><path d="M18 8v8M22 12h-8" />
+                </svg>
+                listeye ekle
+              </button>
               <button
                 onClick={() => { setKademe("tam"); setKunyeAcik(true); }}
                 className="bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-1"
@@ -915,6 +962,42 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
             onKapat={() => setKunyeAcik(false)}
             onKaydedildi={() => { setKunyeAcik(false); setKunyeSayac((n) => n + 1); }}
           />
+        )}
+        {listeSeciciAcik && (
+          /* Liste seçici: alttan Panel. Kapsayıcı fixed, çünkü Panel kendi
+             kapsayıcısına göre konumlanıyor ve mekan çekmecesi zaten
+             kaydırılabilir bir kutu. */
+          <div className="fixed inset-0 z-[60]">
+            <button
+              aria-label="Kapat"
+              onClick={() => setListeSeciciAcik(false)}
+              className="absolute inset-0 border-none bg-[rgba(16,16,20,.35)]"
+            />
+            <Panel duraklar={[0.62]} onKapat={() => setListeSeciciAcik(false)} zemin="kagit" okunur="Listeye ekle">
+              <div className="px-4 pb-8">
+                <ListeSecici
+                  baslik="hangi listene?"
+                  listeler={(listelerim ?? []).map((l): SecilebilirListe => ({
+                    id: l.id,
+                    baslik: l.baslik,
+                    yerSayisi: l.yerler.length,
+                    kapak: l.kapak,
+                    kapakKonum: l.kapakKonum,
+                    gizli: l.gizli,
+                  }))}
+                  secililer={seciliListeler}
+                  onSec={listeSec}
+                  yukleniyor={listelerYukleniyor}
+                  onYeniListe={onListeOlustur ? () => { setListeSeciciAcik(false); onListeOlustur(); } : undefined}
+                  bosKapak={yer.kapak}
+                  bosMetin="kaydettiğin yerleri gruplamak için bir liste aç."
+                />
+                {listeHatasi && (
+                  <p className="mt-3 mb-0 text-sm text-kapali">{listeHatasi}</p>
+                )}
+              </div>
+            </Panel>
+          </div>
         )}
       </div>
     </>

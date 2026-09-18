@@ -152,3 +152,41 @@ taşıyordu, değişmedi):
 **Doğrulama:** bu pakette yalnızca tip denetimi ve lint. Fonksiyonlar 5b'de
 arayüze bağlanınca tıklanarak sınandı; yazma yolu demo hesapla
 denenemiyor (salt okunur).
+
+## Paket 5b — arayüz: liste seçici
+
+`components/MekanSayfasi.tsx`: eylem satırına "listeye ekle" (giriş yoksa
+giriş katmanını açıyor). Dokununca alttan `Panel` primitifi açılıyor,
+içinde `ListeSecici` (`kisininListeleri` + `listelerimdeMi`). Seçim iyimser
+güncelleniyor; yazma başarısız olursa geri alınıp panelde hata satırı
+çıkıyor. "yeni liste" seçeneği mevcut liste oluşturma ekranını açıyor
+(`app/page.tsx` → `onListeOlustur`). Boş hâlde mekanın kendi fotoğrafıyla
+davet kartı.
+
+**Tıklanan akış (390 px, iki hesapla):**
+- `canyz@demo.invalid` (hiç listesi yok): panel açıldı, **fotoğraflı davet
+  kartı** göründü ("ilk listeni bununla aç") — Faz 3'te eklenen boş hâlin
+  canlı ekrandaki ilk doğrulaması.
+- `bogac@demo.invalid` (bir listesi var): panel "🔖 Yağmurlu günde Kadıköy ·
+  3 yer" satırını gösterdi; satıra dokunuldu → seçili oldu; panel kapatılıp
+  yeniden açıldığında **"4 yer" ve seçili** geldi, yani yazma kalıcı oldu;
+  tekrar dokunularak geri alındı ve liste "3 yer" hâline döndü (doğrulandı).
+
+## ⚠ Bulgu: demo hesaplar bu veritabanında YAZABİLİYOR
+
+Beklenti: demo hesaplar salt okunur (`public.demo_hesap()`,
+`web/scripts/goc/15-demo-salt-okunur.sql`) ve şifreleri depoda açık yazılı
+olduğu için bu kısıt güvenlik gereği.
+
+Ölçülen: `bogac@demo.invalid` ile liste öğesi **eklendi ve kalıcı oldu**
+(yeniden açıldığında 4 yer), sonra silindi. `list_items` politikası
+şemada `not public.demo_hesap()` koşulunu taşıyor, yani büyük ihtimalle
+göç 15 bu veritabanında çalıştırılmamış.
+
+**Yapılması gereken (insan):** Supabase SQL Editor'de
+`web/scripts/goc/15-demo-salt-okunur.sql` çalıştırılmalı ve sonra demo
+hesapla bir yazma denenip reddedildiği görülmeli. Depo public, şifre açık:
+bu kısıt uygulanmadan yayına çıkılmamalı.
+
+Test sırasında eklenen tek satır geri alındı; veritabanı test öncesi hâline
+döndü.

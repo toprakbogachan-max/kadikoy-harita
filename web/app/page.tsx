@@ -523,6 +523,7 @@ function Uygulama() {
             onGonderiAc={(id, liste) => setGonderi({ id, liste })}
             onGirisIste={() => setGirisAcik(true)}
             onPinAt={(y) => setPinFormu({ acik: true, yer: y })}
+            onListeOlustur={() => setListeAcik(true)}
           />
         )}
 
