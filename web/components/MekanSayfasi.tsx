@@ -17,6 +17,7 @@ import KayitRozeti from "./corner/KayitRozeti";
 import DereceGostergesi from "./corner/DereceGostergesi";
 import { ListeSecici, type SecilebilirListe } from "./corner/ListeSecimKarti";
 import Panel from "./corner/primitives/Panel";
+import IkonDugmesi from "./corner/primitives/IkonDugmesi";
 
 type Kademe = "yarim" | "tam";
 
@@ -429,16 +430,17 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
         <h2 className="pointer-events-auto mt-0.5 min-w-0 flex-1 truncate rounded-full bg-yuzey px-3.5 py-1.5 text-center text-base font-extrabold uppercase leading-tight tracking-siki shadow-kat-2">
           {yer.ad}
         </h2>
-        <button
-          onClick={() => (ben ? onPinAt(yer) : onGirisIste())}
-          aria-label="Buraya pin at"
-          className="pointer-events-auto grid size-9 shrink-0 place-items-center rounded-md border-none bg-yuzey text-gri-900 shadow-kat-2"
+        <IkonDugmesi
+          onTikla={() => (ben ? onPinAt(yer) : onGirisIste())}
+          okunur="Buraya pin at"
+          kat={2}
+          className="pointer-events-auto"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
-        </button>
+        </IkonDugmesi>
       </div>
 
       <div
@@ -503,20 +505,18 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
               <h2 className="min-w-0 flex-1 text-3xl font-extrabold leading-none tracking-isim text-gri-900">
                 {yer.ad}
               </h2>
-              <button
-                onClick={paylas}
-                aria-label="Paylaş"
-                className="grid size-9 shrink-0 place-items-center rounded-md border-none bg-yuzey text-gri-900 shadow-kat-1"
-              >
+              <IkonDugmesi okunur="Paylaş" onTikla={paylas}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 16V4m0 0L8 8m4-4 4 4" /><path d="M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5" />
                 </svg>
-              </button>
+              </IkonDugmesi>
+              {/* ref primitife geçmiyor: odak yönetimi için düğmenin
+                  kendisine gerek var, o yüzden bu biri elle kaldı. */}
               <button
                 onClick={onKapat}
                 ref={kapatDugmesi}
                 aria-label="Kapat"
-                className="grid size-9 shrink-0 place-items-center rounded-md border-none bg-yuzey text-gri-900 shadow-kat-1"
+                className="bas grid size-9 shrink-0 place-items-center rounded-md border-none bg-yuzey text-gri-900 shadow-kat-1"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round">
                   <path d="M6 6l12 12M18 6 6 18" />

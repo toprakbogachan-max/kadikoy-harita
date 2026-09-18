@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useOturum } from "@/lib/oturum";
 import Avatar from "./Avatar";
 import KayanSecim from "./KayanSecim";
+import IkonDugmesi from "./corner/primitives/IkonDugmesi";
 
 export type Ekran = "harita" | "akis" | "ara" | "profil";
 
@@ -75,6 +76,9 @@ export default function AltMenu({
      Dört soyut ikonun arasında tek kişisel eleman: "burası sensin".
      Giriş yapılmamışsa ikona düşüyor — boş bir avatar anlamsız. */
   const { ben } = useOturum();
+  /* Sekme düğmeleri IkonDugmesi'ne ÇEVRİLMEDİ: renk geçişi bilerek 240ms
+     (baloncuktan yavaş, aşağıdaki nota bak) ve primitif tek bir süre
+     tokeni kullanıyor. Görünümü korumak primitif saflığından önce gelir. */
   const dugme = (e: Ekran) => (
     <button
       key={e}
@@ -175,18 +179,22 @@ export default function AltMenu({
             </div>
           </>
         )}
-        <button
-          onClick={() => setAcik((a) => !a)}
-          aria-label="Ekle"
-          aria-expanded={acik}
-          aria-haspopup="menu"
-          className="grid size-[52px] place-items-center rounded-full border-none bg-yuzey shadow-kat-3 transition-transform"
-          style={{ transform: acik ? "rotate(45deg)" : undefined }}
+        {/* Ayrı duran "+" (skill §6: keşfet ile üret görsel olarak ayrılır).
+            Açıkken 45° dönüp çarpıya dönüşüyor. */}
+        <IkonDugmesi
+          onTikla={() => setAcik((a) => !a)}
+          okunur="Ekle"
+          acik={acik}
+          menuAcar
+          boyut={52}
+          sekil="daire"
+          kat={3}
+          className={`transition-transform duration-(--sure-gecis) ease-yumusak ${acik ? "rotate-45" : ""}`}
         >
           <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" className="text-gri-900">
             <path d="M12 5v14M5 12h14" />
           </svg>
-        </button>
+        </IkonDugmesi>
       </div>
     </div>
   );

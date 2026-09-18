@@ -72,7 +72,7 @@ export default function KonumDugmesi({
         }
         /* Filtre şeridi haritanın altında yüzdüğü için düğme onun üstünde duruyor. */
         className={`absolute bottom-[156px] right-3 z-[3] grid size-10 place-items-center rounded-full border-none shadow-kat-3 ${
-          acik ? "bg-[#2F6FB8] text-white" : "bg-yuzey text-murekkep"
+          acik ? "bg-mavi text-white" : "bg-yuzey text-murekkep"
         } ${durum === "isteniyor" ? "animate-pulse" : ""}`}
       >
         {/* nişangâh — konum düğmelerinin yerleşik dili */}
