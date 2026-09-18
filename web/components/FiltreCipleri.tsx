@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TUR_AD, emoji } from "@/lib/paleti";
 import KayanSecim from "./KayanSecim";
+import Cip from "./corner/primitives/Cip";
 
 /* Kategori artık RENKLE değil EMOJİYLE taşınıyor.
    Sebep (skill §3 + §6): doygun renk arayüz iskeletinde yaşamaz — çipin
@@ -31,31 +32,6 @@ const TURLER = Object.keys(TUR_AD).map((t) => ({ id: t, ad: TUR_AD[t].toLocaleLo
 
 const cipSimgesi = (id: string) => SIMGESI[id] ?? (TUR_AD[id] ? emoji(id) : SIMGESI.hepsi);
 
-/* Modül seviyesinde: render içinde bileşen tanımlamak her render'da yeni bir
-   tip üretir, React ağacı söküp yeniden kurar. */
-function Cip({ id, kayan, ad, aktif, onTikla }: {
-  id: string; kayan?: string; ad: string; aktif: boolean; onTikla: () => void;
-}) {
-  return (
-    <button
-      /* KayanSecim baloncuğu bu öznitelikle buluyor. "Tür" çipinde seçili
-         kategorinin kimliğini taşıması gerektiği için id'den ayrı. */
-      data-kayan={kayan ?? id}
-      onClick={onTikla}
-      aria-pressed={aktif}
-      /* Kademe B: arayüz küçük harf konuşur. Aktif çipin siyahı ARTIK
-         çipin kendi zemininde değil, altından akan baloncukta — yoksa
-         beyaz zemin baloncuğu örter ve hareket görünmezdi. Aynı sebeple
-         gölge de aktifken çipten kalkıyor, baloncuk taşıyor. */
-      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none py-2 pl-3 pr-3.5 text-sm font-semibold lowercase tracking-ui transition-[color,background-color,transform] duration-[150ms] ease-out active:scale-95 ${
-        aktif ? "bg-transparent text-white" : "bg-yuzey text-gri-800 shadow-kat-2"
-      }`}
-    >
-      <span aria-hidden className="text-sm leading-none">{cipSimgesi(id)}</span>
-      {ad}
-    </button>
-  );
-}
 
 /** Haritanın üstünde yüzen filtre şeridi. */
 export default function FiltreCipleri({
@@ -95,15 +71,31 @@ export default function FiltreCipleri({
              dilimleniyordu. Kısık gerilmeyle bütün hâlde geçiyor. */
           gerilme={0.16}
         >
+          {/* Primitif Cip (Faz 5): aktif hâl "seffaf" — KayanSecim'in siyah
+              baloncuğu çipin ALTINDAN akıyor, çipin kendi zemini olmamalı. */}
           {ANA.map((c) => (
-            <Cip key={c.id} id={c.id} ad={c.ad}
-                 aktif={secili === c.id} onTikla={() => { setTurAcik(false); onSec(c.id); }} />
+            <Cip
+              key={c.id}
+              ad={c.ad}
+              simge={cipSimgesi(c.id)}
+              kayan={c.id}
+              aktif={secili === c.id}
+              aktifBicim="seffaf"
+              kat={2}
+              onTikla={() => { setTurAcik(false); onSec(c.id); }}
+            />
           ))}
+          {/* ▾ artık etikete gömülü değil: açılır panelin açık olup olmadığını
+              primitifin kendi oku söylüyor (aria-expanded ile birlikte). */}
           <Cip
-            id={seciliTur?.id ?? "tur"}
+            ad={seciliTur ? seciliTur.ad : "tür"}
+            simge={cipSimgesi(seciliTur?.id ?? "tur")}
             kayan={seciliTur?.id ?? "tur"}
-            ad={seciliTur ? `${seciliTur.ad} ▾` : "tür ▾"}
             aktif={!!seciliTur}
+            aktifBicim="seffaf"
+            acilir
+            acik={turAcik}
+            kat={2}
             onTikla={() => setTurAcik((a) => !a)}
           />
         </KayanSecim>
@@ -131,40 +123,19 @@ export default function FiltreCipleri({
            dolu zemin değil, siyah çerçeve. */
         <div className="cam rounded-t-2xl pb-3 pt-3">
           <div className="flex gap-1 overflow-x-auto px-3 [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_calc(100%-2rem),transparent)] [-webkit-mask-image:linear-gradient(to_right,#000_calc(100%-2rem),transparent)] [&::-webkit-scrollbar]:hidden">
-            {TURLER.map((t) => {
-              const aktif = secili === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => { setTurAcik(false); onSec(t.id); }}
-                  aria-pressed={aktif}
-                  className="bas flex w-[62px] shrink-0 flex-col items-center gap-1.5 border-none bg-transparent px-0.5"
-                >
-                  <span
-                    aria-hidden
-                    className={`grid size-11 place-items-center rounded-full bg-yuzey text-[20px] leading-none transition-shadow duration-[160ms] ${
-                      aktif ? "shadow-[0_0_0_2px_var(--color-gri-900),var(--shadow-kat-2)]" : "shadow-kat-2"
-                    }`}
-                  >
-                    {emoji(t.id)}
-                  </span>
-                  {/* Etiket iki satıra sarmıyor: "kültür sanat" gibi uzun
-                      adlarda şerit yüksekliği oynardı. Kesiliyor.
-
-                      leading-none DEĞİL: truncate'in overflow-hidden'ı satır
-                      kutusunu kırpıyor ve leading-none'da kutu tam punto
-                      yüksekliğinde oluyor — "yemek"in y'si, "park"ın p'si
-                      kesiliyordu. */}
-                  <span
-                    className={`w-full truncate text-center text-2xs lowercase leading-tight tracking-ui ${
-                      aktif ? "font-bold text-gri-900" : "font-semibold text-gri-700"
-                    }`}
-                  >
-                    {t.ad}
-                  </span>
-                </button>
-              );
-            })}
+            {/* Dikey çip (C2): emoji kendi dairesinde üstte, etiket altta —
+                "ne arıyorum" sorusunun biçimi. */}
+            {TURLER.map((t) => (
+              <Cip
+                key={t.id}
+                ad={t.ad}
+                simge={emoji(t.id)}
+                bicim="dikey"
+                aktif={secili === t.id}
+                kat={2}
+                onTikla={() => { setTurAcik(false); onSec(t.id); }}
+              />
+            ))}
           </div>
         </div>
       )}
