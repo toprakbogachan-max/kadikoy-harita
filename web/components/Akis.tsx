@@ -18,6 +18,7 @@ import BosDurum from "./BosDurum";
 import KayanGecis from "./KayanGecis";
 import KayanSecim from "./KayanSecim";
 import DereceGostergesi from "./corner/DereceGostergesi";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Akış — tanıdıklarının nereye gittiği.
@@ -383,35 +384,47 @@ export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste:
  * çalışıyor.
  */
 function EylemDugmesi({
-  etiket, children, onTikla, dolu = false, sayi, kapali = false,
+  etiket, children, onTikla, dolu, sayi, kapali = false,
 }: {
   etiket: string;
   children: React.ReactNode;
   onTikla: () => void;
+  /** Açık/kapalı durumu OLAN düğmelerde verilir; yorumlarda verilmez —
+      `undefined` kalınca `aria-pressed` hiç basılmaz, çünkü yorum düğmesi
+      bir anahtar değil, bir kapı. */
   dolu?: boolean;
   sayi?: number;
   /** Giriş yapılmamış: düğme duruyor ama çalışmıyor (RLS zaten reddederdi). */
   kapali?: boolean;
 }) {
+  /* Sönük rengi düğmenin kendisine değil ÇOCUKLARINA veriyoruz: hapın
+     beyaz dolgusu `text-gri-900`'ü de getiriyor ve iki metin sınıfı aynı
+     katmanda yarışırsa kazananı sınıf dizisinin sırası değil stil
+     dosyasının sırası belirler. */
+  const sonuk = dolu ? undefined : "text-gri-500";
   return (
-    <button
-      onClick={onTikla}
-      disabled={kapali}
-      aria-label={sayi ? `${etiket} (${sayi})` : etiket}
-      aria-pressed={dolu}
-      className={`flex h-9 shrink-0 items-center gap-1 rounded-full border border-[var(--cizgi)] bg-yuzey px-3 shadow-kat-2 transition-[transform,color] duration-[160ms] ease-out active:scale-90 disabled:opacity-45 ${
-        dolu ? "text-gri-900" : "text-gri-500"
-      }`}
-    >
-      <svg
-        width="17" height="17" viewBox="0 0 24 24"
-        fill={dolu ? "currentColor" : "none"}
-        stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
-      >
-        {children}
-      </svg>
-      {/* Sıfır sayı gösterilmiyor: "0 yorum" bilgi değil, gürültü. */}
-      {!!sayi && <span className="font-sayi text-2xs leading-none">{sayi}</span>}
-    </button>
+    <Pill
+      kenar="sacTeli"
+      kat={2}
+      aktif={dolu}
+      /* Kaydet ve beğen durum değiştiriyor: ikon zıplasın (skill §13
+         kalıp 4). Yorum düğmesi ekran açıyor, zıplamıyor. */
+      zipla={dolu !== undefined}
+      pasif={kapali}
+      okunur={sayi ? `${etiket} (${sayi})` : etiket}
+      onTikla={onTikla}
+      ikon={
+        <svg
+          width="17" height="17" viewBox="0 0 24 24"
+          className={sonuk}
+          fill={dolu ? "currentColor" : "none"}
+          stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
+        >
+          {children}
+        </svg>
+      }
+      /* Sıfır sayı gösterilmiyor: "0 yorum" bilgi değil, gürültü. */
+      sag={sayi ? <span className={`font-sayi text-2xs ${sonuk ?? ""}`}>{sayi}</span> : undefined}
+    />
   );
 }

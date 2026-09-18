@@ -23,7 +23,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export type PillDolgu = "beyaz" | "siyah" | "mavi" | "nane" | "degrade" | "seffaf" | "cam";
 export type PillBoy = "kucuk" | "orta" | "buyuk";
-export type PillKenar = "yok" | "halka" | "degrade";
+export type PillKenar = "yok" | "sacTeli" | "halka" | "degrade";
 export type Kat = 0 | 1 | 2 | 3 | 4 | 5;
 
 /* Dolgular. "mavi" skill §14'ün tek istisnası (birincil eylem / çalışıyor
@@ -131,10 +131,17 @@ export default function Pill({
   const halka = kenar === "halka" ? "0 0 0 2px var(--color-gri-900)" : "";
   const boxShadow = [halka, golge].filter(Boolean).join(", ") || undefined;
 
+  /* Saç teli kenarlık gölgeyi AYIRMAK için değil DESTEKLEMEK için var
+     (skill §5): kartın alt kenarına binen düğmenin yarısı kartın
+     beyazının üstünde duruyor, orada gölge tek başına kenarı çizmiyor.
+     Satır içi geliyor çünkü sınıf dizisindeki `border-none` aksi hâlde
+     kazanır. */
   const stil =
     kenar === "degrade"
       ? { boxShadow, background: DEGRADE_KENAR, border: "1.5px solid transparent" }
-      : { boxShadow };
+      : kenar === "sacTeli"
+        ? { boxShadow, border: "1px solid var(--cizgi)" }
+        : { boxShadow };
 
   const sinif = [
     /* bas: dokunulabilir her şey basılır (skill §13) — dokunulmayan hariç. */
