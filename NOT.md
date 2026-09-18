@@ -159,11 +159,15 @@ katmanı ya da montaj işi olduğu için burada yapılmadı.
   arkadaş modunda çağrılır (Paket 1).
 - **Ortak liste veri modeli** — katkıcı tablosu, davet bağlantısı, RLS
   (Paket 5).
-- **Seri hesabı** — en az bir pin / pazartesi / İstanbul tanımıyla hafta
-  sayacı ve `risk` durumu (Paket 6).
+- ~~**Seri hesabı**~~ — Faz 5 Dalga 8'de yapıldı: `lib/seri.ts` (saf),
+  testi `scripts/kontrol/seri-testi.mjs` (12 durum), rozet profilde.
+  Yeni sorgu gerekmedi — profil zaten kişinin pinlerini çekiyor.
 - ~~**`lists.is_public` modele**~~ — Faz 4 Paket 5a'da yapıldı; `Liste.gizli`
   artık taşınıyor ve kilit rozeti çalışıyor.
 - **Eşiği gerçek veriyle yeniden değerlendirme** — `rating_buckets` (Paket 4).
 - **Montaj** — verisi hazır altı bileşen Faz 4'te takıldı (`SPEC-faz4.md`,
-  `DENETIM-faz4.md`). Kalan: `Harita.tsx`'in ham DOM marker'ları (yer imi
-  pini, arkadaş marker'ı) ve eski usul ekranların Corner diline çevrilmesi.
+  `DENETIM-faz4.md`); eski usul ekranlar Faz 5'te primitiflere çevrildi
+  (`DENETIM-faz5.md`, sekiz dalga). Kalan tek montaj `Harita.tsx`'in ham
+  DOM marker'ları — ve orada tıkanan şey kod değil, bir ürün kararı:
+  yer imi pini "başkasının kaydı" mı yoksa "benim kayıtlarım" mı
+  (DENETIM-faz5 §Bulgular F2).
