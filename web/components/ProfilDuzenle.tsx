@@ -5,6 +5,7 @@ import { useOturum } from "@/lib/oturum";
 import { profilGuncelle, avatarYukle } from "@/lib/veri";
 import { kisiRengi } from "@/lib/gorsel";
 import { SOSYAL, SOSYAL_SIRA, type SosyalAd } from "@/lib/paleti";
+import Pill from "./corner/primitives/Pill";
 
 /** Profil fotoğrafı bu boyuta indiriliyor — avatar en fazla 84px gösteriliyor,
  *  retina için 2x fazlasıyla yeter. Ham telefon fotoğrafı 4 MB olabiliyor. */
@@ -197,10 +198,10 @@ export default function ProfilDuzenle({ onKapat }: { onKapat: () => void }) {
 
         {/* Kaydet ekranın DİBİNDE değil akışın içinde: sabit bir alt çubuk
             son sosyal satırın üstünü örtüyordu ve form zaten kısa. */}
-        <button onClick={kaydet} disabled={kaydediliyor || !ad.trim()}
-          className="mt-5 w-full rounded-full border-none bg-gri-900 px-4 py-3.5 text-base font-bold lowercase tracking-ui text-white shadow-kat-2 transition-transform duration-[160ms] ease-out active:scale-[.98] disabled:opacity-40">
-          {kaydediliyor ? "…" : "kaydet"}
-        </button>
+        <Pill dolgu="siyah" boy="buyuk" tamGenislik className="mt-5"
+              onTikla={kaydet} pasif={kaydediliyor || !ad.trim()} yukleniyor={kaydediliyor}>
+          kaydet
+        </Pill>
 
         {/* Çıkıştan sonra paneli KAPATMAK şart: oturum kapanıyor ama ekran
             açık kalırsa kullanıcıya "düğme çalışmadı" gibi görünüyor. */}

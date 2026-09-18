@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { sikayetEt, SIKAYET_SEBEPLERI } from "@/lib/veri";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Şikayet formu — pin ya da yorum için.
@@ -45,10 +46,9 @@ export default function Sikayet({
               İçerik hemen kaldırılmıyor — tek şikayet buna yetmemeli, yoksa
               kötüye kullanılır. Kayıt tutuldu, incelenecek.
             </p>
-            <button onClick={onKapat}
-              className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2">
+            <Pill dolgu="siyah" boy="buyuk" tamGenislik onTikla={onKapat}>
               Tamam
-            </button>
+            </Pill>
           </>
         ) : (
           <>
@@ -79,10 +79,10 @@ export default function Sikayet({
               </p>
             )}
 
-            <button onClick={gonder} disabled={!sebep || gonderiliyor}
-              className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
-              {gonderiliyor ? "…" : "Şikayet et"}
-            </button>
+            <Pill dolgu="siyah" boy="buyuk" tamGenislik
+                  onTikla={gonder} pasif={!sebep || gonderiliyor} yukleniyor={gonderiliyor}>
+              Şikayet et
+            </Pill>
           </>
         )}
       </div>

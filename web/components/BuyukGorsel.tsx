@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { medyaUrl } from "@/lib/veri";
+import Pill from "./corner/primitives/Pill";
 
 /* Kırpma çerçevesinin oranı — akıştaki kartla (aspect-[0.8]) aynı. Kart
    object-cover ile kestiği için, kullanıcı burada ne çerçevelediyse ızgarada
@@ -102,12 +103,9 @@ export default function BuyukGorsel({
                 Paylaş/Kaydet ile oluyor — burada "Kaydet" yazsaydı kullanıcı pini
                 kaydettiğini sanırdı. Sağ üstteki çarpı da aynı işi yapıyor ama
                 "vazgeç" gibi okunuyordu; bitirdiğini söyleyen bir düğme gerekti. */}
-            <button
-              onClick={onKapat}
-              className="mt-3 w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2"
-            >
+            <Pill dolgu="siyah" boy="buyuk" tamGenislik className="mt-3" onTikla={onKapat}>
               Tamam
-            </button>
+            </Pill>
           </div>
         </>
       )}
@@ -373,13 +371,14 @@ function Kirpici({
         <NotAlani not={not} onNot={onNot} alan={notAlani} />
         {/* Kırpma burada yapılıyor ama hâlâ sunucuya bir şey yazılmıyor:
             dosya formun state'inde değişiyor, kayıt aşağıdaki Paylaş ile. */}
-        <button
-          onClick={uygula}
-          disabled={!dogal || calisiyor}
-          className="mt-3 w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40"
+        <Pill
+          dolgu="siyah" boy="buyuk" tamGenislik className="mt-3"
+          onTikla={uygula}
+          pasif={!dogal || calisiyor}
+          yukleniyor={calisiyor}
         >
-          {calisiyor ? "Kırpılıyor…" : "Tamam"}
-        </button>
+          {calisiyor ? "Kırpılıyor" : "Tamam"}
+        </Pill>
       </div>
     </>
   );

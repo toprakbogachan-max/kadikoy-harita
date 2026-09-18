@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { kunyeYaz, yerSaatiYaz, type Kunye } from "@/lib/veri";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Künye düzenleme — mekanın olgusal bilgileri.
@@ -243,10 +244,10 @@ export default function KunyeDuzenle({
       </div>
 
       <div className="shrink-0 bg-yuzey p-3">
-        <button onClick={gonder} disabled={gonderiliyor}
-          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
-          {gonderiliyor ? "…" : "Kaydet"}
-        </button>
+        <Pill dolgu="siyah" boy="buyuk" tamGenislik
+              onTikla={gonder} pasif={gonderiliyor} yukleniyor={gonderiliyor}>
+          Kaydet
+        </Pill>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { kisininPinleri, kisininYerleri } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import type { Yer, Pin } from "@/lib/model";
 import MiniHarita from "./MiniHarita";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Instagram story önizlemesi — "haritamı paylaş".
@@ -130,10 +131,13 @@ export default function PaylasimKarti({ onKapat }: { onKapat: () => void }) {
       </div>
 
       <div className="shrink-0 bg-yuzey p-3">
-        <button onClick={kopyala} disabled={ben.acikMi === false}
-          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
-          {kopyalandi ? "Kopyalandı ✓" : "Linki kopyala"}
-        </button>
+        <Pill dolgu="siyah" boy="buyuk" tamGenislik
+              onTikla={kopyala} pasif={ben.acikMi === false}
+              /* ✓ ikon yuvasında: durum değişiminde zıplayan da o
+                 (skill §13 kalıp 4) — kopyalandığını hareket söylüyor. */
+              ikon={kopyalandi ? "✓" : undefined} zipla aktif={kopyalandi}>
+          {kopyalandi ? "Kopyalandı" : "Linki kopyala"}
+        </Pill>
       </div>
     </div>
   );

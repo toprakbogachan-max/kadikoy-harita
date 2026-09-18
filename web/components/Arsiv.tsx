@@ -8,6 +8,7 @@ import Avatar from "./Avatar";
 import ListeSayfasi from "./ListeSayfasi";
 import ListeKapagi from "./ListeKapagi";
 import KayanGecis from "./KayanGecis";
+import Pill from "./corner/primitives/Pill";
 
 /* Arşiv sekmelerinin soldan sağa sırası — geçiş yönü bundan türüyor. */
 const ARSIV_SIRASI = ["kaydettiklerim", "begendiklerim", "listelerim"] as const;
@@ -149,10 +150,10 @@ export default function Arsiv({
         {/* ---- listeler ---- */}
         {tur === "listelerim" && (
           <>
-            <button onClick={onListeOlustur}
-              className="mb-3 w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2">
-              + Yeni liste
-            </button>
+            <Pill dolgu="siyah" boy="buyuk" tamGenislik ikon="+"
+                  className="mb-3" onTikla={onListeOlustur}>
+              Yeni liste
+            </Pill>
             {gorunenListeler.length ? (
               <ul className="m-0 list-none space-y-3 p-0">
                 {gorunenListeler.map((l) => (

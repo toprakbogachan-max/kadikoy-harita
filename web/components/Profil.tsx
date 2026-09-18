@@ -15,6 +15,7 @@ import ListeDuzenle from "./ListeDuzenle";
 import ListeKarti, { YeniListeKarosu } from "./ListeKarti";
 import KartGorsel from "./KartGorsel";
 import { puanEmojisi, puanYazisi } from "./corner/DereceGostergesi";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Profil — kişinin Kadıköy'ü.
@@ -124,10 +125,9 @@ export default function Profil({
         <p className="mb-3 text-sm leading-relaxed text-gri-600">
           Kendi haritanı görmek için giriş yap.
         </p>
-        <button onClick={onGirisIste}
-          className="rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2">
+        <Pill dolgu="siyah" boy="buyuk" onTikla={onGirisIste}>
           giriş yap
-        </button>
+        </Pill>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { listeGuncelle, listeSil, listeKapagiSil } from "@/lib/veri";
 import type { Liste } from "@/lib/model";
 import ListeKapakSecici from "./ListeKapakSecici";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Listenin adını, notunu ve kapağını değiştirme.
@@ -183,13 +184,14 @@ export default function ListeDuzenle({
       </div>
 
       <div className="shrink-0 p-3">
-        <button
-          onClick={kaydet}
-          disabled={kaydediliyor || !degisti || baslik.trim().length < 2}
-          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40"
+        <Pill
+          dolgu="siyah" boy="buyuk" tamGenislik
+          onTikla={kaydet}
+          pasif={kaydediliyor || !degisti || baslik.trim().length < 2}
+          yukleniyor={kaydediliyor}
         >
-          {kaydediliyor ? "…" : "böyle iyi."}
-        </button>
+          böyle iyi.
+        </Pill>
       </div>
     </div>
   );

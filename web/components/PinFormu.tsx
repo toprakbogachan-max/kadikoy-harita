@@ -13,6 +13,7 @@ import { igneStil, simgeSvg } from "@/lib/gorsel";
 import YerSecici, { type YeniNokta, type Secim } from "./YerSecici";
 import BuyukGorsel from "./BuyukGorsel";
 import YineGiderMisin, { type YineGiderDegeri } from "./corner/YineGiderMisin";
+import Pill from "./corner/primitives/Pill";
 
 /* Prototipten gelen seçenekler — şemada serbest metin, arayüzde sabit liste
    olması sonradan gruplamayı mümkün kılıyor ("çoğunlukla X için geliniyor"). */
@@ -438,10 +439,10 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
       )}
 
       <div className="shrink-0 bg-yuzey p-3">
-        <button onClick={gonder} disabled={!gecerli || gonderiliyor}
-          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
-          {gonderiliyor ? "Yükleniyor…" : "Paylaş"}
-        </button>
+        <Pill dolgu="siyah" boy="buyuk" tamGenislik
+              onTikla={gonder} pasif={!gecerli || gonderiliyor} yukleniyor={gonderiliyor}>
+          {gonderiliyor ? "Yükleniyor" : "Paylaş"}
+        </Pill>
       </div>
     </div>
   );

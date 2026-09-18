@@ -10,6 +10,7 @@ import BuyukGorsel from "./BuyukGorsel";
 import { fotograflariHazirla } from "@/lib/fotograf";
 import { useSiralama, siraStili } from "@/lib/siralama";
 import YineGiderMisin, { type YineGiderDegeri } from "./corner/YineGiderMisin";
+import Pill from "./corner/primitives/Pill";
 
 /** Listedeki bir satır: ya yüklenmiş medya ya da yeni seçilmiş dosya. */
 type Medya =
@@ -373,10 +374,10 @@ export default function PinDuzenle({
       })()}
 
       <div className="shrink-0 bg-yuzey p-3">
-        <button onClick={gonder} disabled={!gecerli || gonderiliyor}
-          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
-          {gonderiliyor ? "…" : "Kaydet"}
-        </button>
+        <Pill dolgu="siyah" boy="buyuk" tamGenislik
+              onTikla={gonder} pasif={!gecerli || gonderiliyor} yukleniyor={gonderiliyor}>
+          Kaydet
+        </Pill>
       </div>
     </div>
   );

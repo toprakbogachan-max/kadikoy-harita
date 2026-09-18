@@ -7,6 +7,7 @@ import type { Yer } from "@/lib/model";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
 import ListeKapakSecici from "./ListeKapakSecici";
 import KayanSecim from "./KayanSecim";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Liste oluşturma — "kendi küratörlüğün".
@@ -227,10 +228,10 @@ export default function ListeOlustur({
       </div>
 
       <div className="shrink-0 bg-yuzey p-3">
-        <button onClick={gonder} disabled={!gecerli || gonderiliyor}
-          className="w-full rounded-full border-none bg-gri-900 px-4 py-3 text-sm font-semibold lowercase tracking-ui text-white shadow-kat-2 disabled:opacity-40">
-          {gonderiliyor ? "…" : "Listeyi oluştur"}
-        </button>
+        <Pill dolgu="siyah" boy="buyuk" tamGenislik
+              onTikla={gonder} pasif={!gecerli || gonderiliyor} yukleniyor={gonderiliyor}>
+          Listeyi oluştur
+        </Pill>
       </div>
     </div>
   );
