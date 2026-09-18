@@ -1,6 +1,7 @@
 "use client";
 
 import { fotoZeminGenis } from "@/lib/gorsel";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Boş liste = fotoğraflı çağrı kartı, boş beyaz ekran DEĞİL.
@@ -46,12 +47,9 @@ export default function BosDurum({
         </h3>
         <p className="mt-1.5 max-w-[26ch] text-sm lowercase leading-snug text-white/85">{alt}</p>
         {eylem && eylemEtiketi && (
-          <button
-            onClick={eylem}
-            className="bas mt-3.5 rounded-full border-none bg-white px-4 py-2.5 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-2"
-          >
+          <Pill className="mt-3.5" onTikla={eylem}>
             {eylemEtiketi}
-          </button>
+          </Pill>
         )}
       </div>
     </div>

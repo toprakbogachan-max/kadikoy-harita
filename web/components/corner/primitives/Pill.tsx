@@ -84,6 +84,13 @@ export interface PillProps {
   /** ekran okuyucu metni (aria-label) — görünen metin DEĞİL. Görünen metnin adı bu kütüphanede `etiket` (DENETIM-faz3 T16). */
   okunur?: string;
   href?: string;
+  /**
+   * `<button type>`. Varsayılan "button": bir formun içinde kalan
+   * düğmenin kazara gönderim yapması bu üründe hep hataydı. Yorum
+   * kutusu gibi GERÇEKTEN gönderen düğmelerde "submit" verilir —
+   * `onSubmit`'i `onClick`'e taşımak enter tuşunu düşürürdü.
+   */
+  tur?: "button" | "submit";
   onTikla?: () => void;
   /** KayanSecim akan baloncuğu bu öznitelikle buluyor. */
   kayan?: string;
@@ -117,6 +124,7 @@ export default function Pill({
   kasa = "kucuk",
   okunur,
   href,
+  tur = "button",
   onTikla,
   kayan,
   etkilesimsiz = false,
@@ -209,7 +217,7 @@ export default function Pill({
 
   return (
     <button
-      type="button"
+      type={tur}
       onClick={onTikla}
       disabled={pasif}
       aria-pressed={aktif}

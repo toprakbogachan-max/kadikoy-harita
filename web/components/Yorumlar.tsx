@@ -8,6 +8,7 @@ import { useKisiler } from "@/lib/kisiler-baglam";
 import { zaman } from "@/lib/gorsel";
 import type { Yorum } from "@/lib/model";
 import Avatar from "./Avatar";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Yorumlar çekmecesi — gönderi detayının üstünde açılır.
@@ -127,13 +128,16 @@ export default function Yorumlar({
             aria-label="Yorum yaz"
             className="min-w-0 flex-1 rounded-lg bg-gomuk px-2.5 py-2 text-base text-murekkep outline-none placeholder:text-gri-600 focus:border-jeton"
           />
-          <button
-            type="submit"
-            disabled={gonderiliyor || !metin.trim()}
-            className="shrink-0 rounded-full border-none bg-gri-900 px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-white disabled:opacity-40"
+          <Pill
+            tur="submit"
+            dolgu="siyah"
+            kat={0}
+            className="shrink-0"
+            pasif={gonderiliyor || !metin.trim()}
+            yukleniyor={gonderiliyor}
           >
-            {gonderiliyor ? "…" : "Gönder"}
-          </button>
+            Gönder
+          </Pill>
         </form>
       ) : (
         <div className="shrink-0 bg-yuzey p-3">

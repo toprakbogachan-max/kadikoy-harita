@@ -18,6 +18,7 @@ import DereceGostergesi from "./corner/DereceGostergesi";
 import { ListeSecici, type SecilebilirListe } from "./corner/ListeSecimKarti";
 import Panel from "./corner/primitives/Panel";
 import IkonDugmesi from "./corner/primitives/IkonDugmesi";
+import Pill from "./corner/primitives/Pill";
 
 type Kademe = "yarim" | "tam";
 
@@ -258,12 +259,8 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
   };
   const [kayitYerel, setKayitYerel] = useState<boolean | null>(null);
   const kayitli = kayitYerel ?? kayitSunucu;
-  /* Zıplama sayacı, boolean değil: aynı yöne iki kez basıldığında da
-     (kaydet → vazgeç → kaydet) animasyon yeniden koşsun diye React
-     anahtarı olarak kullanılıyor — anahtar değişince ikon yeniden
-     kuruluyor ve animasyon baştan başlıyor.
-     0 = kullanıcı henüz dokunmadı; ilk yüklemede ikon zıplamamalı. */
-  const [zipSayaci, setZipSayaci] = useState(0);
+  /* Zıplama sayacı burada tutuluyordu; Faz 5'te Pill'in `zipla`sına
+     devredildi (aynı hesabı primitif yapıyor, bkz. `useZipla`). */
 
   /* Mekan değişince kademe ve açık bölümler başa döner. Karusel indeksi
      yok artık — pinler zaman tünelinde alt alta, "kaçıncı pin" diye bir
@@ -656,63 +653,70 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
                 sağ alttaki yuvarlak "+" (skill §3: ekranda tek siyah çapa). */}
             {/* pr: sağ alttaki yuvarlak "+" son hapın üstüne biniyordu. */}
             <div className="mt-3 flex gap-2 overflow-x-auto pb-3 pr-[72px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <a
+              <Pill
+                kat={1}
+                className="shrink-0"
                 href={`https://www.google.com/maps/dir/?api=1&destination=${yer.lat},${yer.lng}`}
-                target="_blank" rel="noreferrer"
-                className="bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 no-underline shadow-kat-1"
+                ikon={
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+                    <path d="M9 4 3 6.4v13.2L9 17.2l6 2.4 6-2.4V4l-6 2.4zM9 4v13.2M15 6.4v13.2" />
+                  </svg>
+                }
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
-                  <path d="M9 4 3 6.4v13.2L9 17.2l6 2.4 6-2.4V4l-6 2.4zM9 4v13.2M15 6.4v13.2" />
-                </svg>
                 yol tarifi
-              </a>
-              <button
-                onClick={async () => {
+              </Pill>
+              {/* Renk değişimi tek başına zayıf bir onay: göz düğmenin
+                  üstündeyken zeminin naneye döndüğünü kaçırabiliyor,
+                  hareketi kaçıramıyor. `zipla` bunu primitife devrediyor —
+                  zıplayan yalnızca ikon oluyor. */}
+              <Pill
+                kat={1}
+                className="shrink-0"
+                dolgu={kayitli ? "nane" : "beyaz"}
+                aktif={kayitli}
+                zipla
+                onTikla={async () => {
                   if (!ben) return onGirisIste();
                   const su = kayitli;
                   setKayitYerel(!su);
-                  setZipSayaci((n) => n + 1);
                   try { await kayitDegistir(yerId, su); }
                   catch (e) { setKayitYerel(su); alert(e instanceof Error ? e.message : String(e)); }
                 }}
-                aria-pressed={kayitli}
-                className={`bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none px-3.5 py-2 text-sm font-semibold lowercase tracking-ui shadow-kat-1 ${
-                  kayitli ? "bg-rozet-nane text-rozet-nane-ink" : "bg-yuzey text-gri-900"
-                }`}
-              >
-                {/* Renk değişimi tek başına zayıf bir onay: göz düğmenin
-                    üstündeyken zeminin naneye döndüğünü kaçırabiliyor,
-                    hareketi kaçıramıyor. Zıplayan yalnızca İKON — hapın
-                    tamamı zıplarsa yanındaki haplar da oynuyormuş gibi
-                    görünüyor. */}
-                <span key={zipSayaci} className={zipSayaci ? "zipla grid" : "grid"}>
+                ikon={
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
                     <path d="M6 3.6h12v17l-6-4.2-6 4.2z" />
                   </svg>
-                </span>
+                }
+              >
                 {kayitli ? "kaydettin" : "kaydet"}
-              </button>
+              </Pill>
               {/* Listeye ekleme: kaydetmenin yanında ayrı bir eylem.
                   Kaydetmek "beni ilgilendiriyor", listeye eklemek "şu
                   seçkiye ait" demek. */}
-              <button
-                onClick={() => (ben ? setListeSeciciAcik(true) : onGirisIste())}
-                className="bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-1"
+              <Pill
+                kat={1}
+                className="shrink-0"
+                onTikla={() => (ben ? setListeSeciciAcik(true) : onGirisIste())}
+                ikon={
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 3.6h9v17l-4.5-3.2L6 20.6z" /><path d="M18 8v8M22 12h-8" />
+                  </svg>
+                }
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 3.6h9v17l-4.5-3.2L6 20.6z" /><path d="M18 8v8M22 12h-8" />
-                </svg>
                 listeye ekle
-              </button>
-              <button
-                onClick={() => { setKademe("tam"); setKunyeAcik(true); }}
-                className="bas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-none bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-900 shadow-kat-1"
+              </Pill>
+              <Pill
+                kat={1}
+                className="shrink-0"
+                onTikla={() => { setKademe("tam"); setKunyeAcik(true); }}
+                ikon={
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <path d="M4 6h16M4 12h16M4 18h10" />
+                  </svg>
+                }
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  <path d="M4 6h16M4 12h16M4 18h10" />
-                </svg>
                 {yer.kunye ? "künye" : "künye ekle"}
-              </button>
+              </Pill>
             </div>
           </div>
 
