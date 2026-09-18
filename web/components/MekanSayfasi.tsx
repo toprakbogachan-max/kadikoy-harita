@@ -13,6 +13,8 @@ import Avatar from "./Avatar";
 import KunyeDuzenle from "./KunyeDuzenle";
 import BosDurum from "./BosDurum";
 import Cikartma from "./Cikartma";
+import KayitRozeti from "./corner/KayitRozeti";
+import DereceGostergesi from "./corner/DereceGostergesi";
 
 type Kademe = "yarim" | "tam";
 
@@ -491,9 +493,16 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
                 semt — uydurmak yerine olanı yazıyoruz. */}
             {/* Semtin kendisi "Kadıköy" olabiliyor (OSM'de mahalle bilgisi
                 olmayan kayıtlar); o zaman "kadıköy · kadıköy" yazıyordu. */}
-            <div className="mt-1.5 text-sm lowercase text-gri-600">
-              {yer.semt.toLocaleLowerCase("tr") === "kadıköy" ? "kadıköy" : `${yer.semt} · kadıköy`}
-              {yer.uzaklik != null && <span className="font-sayi"> · {Math.round(yer.uzaklik)} m</span>}
+            {/* Kayıt rozeti (D2) adres satırının yanında: "kaç kişi
+                kaydetti" mekanın kimliğine ait bir sayı, istatistik
+                bloğuna değil künyeye yakın duruyor. Sıfırda bileşen
+                kendini çizmiyor — "0 KAYIT" bilgi değil suçlama. */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm lowercase text-gri-600">
+              <span>
+                {yer.semt.toLocaleLowerCase("tr") === "kadıköy" ? "kadıköy" : `${yer.semt} · kadıköy`}
+                {yer.uzaklik != null && <span className="font-sayi"> · {Math.round(yer.uzaklik)} m</span>}
+              </span>
+              <KayitRozeti sayi={yer.kaydeden ?? 0} />
             </div>
 
             {/* Durum + saat tek satırda: referansta "closed" kırmızı, saat
@@ -808,10 +817,12 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
                 <div className="mb-2 text-2xs font-bold uppercase tracking-etiket text-gri-700">
                   Kişisel puanlar
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-sayi text-2xl font-semibold leading-none">
-                    {ozet.rating_avg?.toFixed(1) ?? "—"}
-                  </span>
+                {/* Ham ortalamanın yerine derece göstergesi (E1): sayı
+                    yanında duruyor (puanGoster), kademe onun okunuşu.
+                    Dağılım çubukları aşağıda kalıyor — göstergenin
+                    söylemediği şeyi onlar söylüyor. */}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <DereceGostergesi puan={ozet.rating_avg ?? null} puanGoster />
                   <span className="text-xs text-gri-600">herkes · {ozet.pin_count} kişi</span>
                 </div>
                 {ozet.following_avg != null && (
