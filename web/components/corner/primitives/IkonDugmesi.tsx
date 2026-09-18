@@ -22,13 +22,19 @@ import type { ReactNode } from "react";
  * okuyamaz.
  */
 
-export type IkonDolgu = "beyaz" | "siyah" | "cam" | "seffaf";
+export type IkonDolgu = "beyaz" | "siyah" | "mavi" | "cam" | "camKoyu" | "seffaf";
 export type IkonSekil = "squircle" | "daire";
 
 const DOLGU: Record<IkonDolgu, string> = {
   beyaz: "bg-yuzey text-gri-900",
   siyah: "bg-gri-900 text-white",
+  /* mavi: skill §14'ün tek istisnası — "şu an çalışıyor" durumu. */
+  mavi: "bg-mavi text-white",
   cam: "cam text-gri-900",
+  /* Koyu cam: FOTOĞRAFIN üstünde duran düğme. Beyaz olsaydı açık bir
+     karede kaybolurdu; blur'lu koyu zemin hem ikonu tutuyor hem
+     fotoğrafı örtmüyor. */
+  camKoyu: "bg-[rgba(10,10,12,.5)] text-white",
   seffaf: "bg-transparent",
 };
 
@@ -54,7 +60,15 @@ export interface IkonDugmesiProps {
   menuAcar?: boolean;
   /** KayanSecim baloncuğu bu öznitelikle buluyor. */
   kayan?: string;
+  /**
+   * `title` — masaüstünde ipucu. `okunur` ile aynı şey DEĞİL: ipucu
+   * fareyle gezen kullanıcıya, `aria-label` ekran okuyucuya konuşur ve
+   * ipucu genelde daha uzun (konumun doğruluğu, "çift dokunuş kapatır").
+   */
+  baslik?: string;
   onTikla?: () => void;
+  /** Çift dokunuş — konum düğmesinde "takibi kapat". */
+  onCiftTikla?: () => void;
   className?: string;
 }
 
@@ -71,14 +85,18 @@ export default function IkonDugmesi({
   acik,
   menuAcar = false,
   kayan,
+  baslik,
   onTikla,
+  onCiftTikla,
   className = "",
 }: IkonDugmesiProps) {
   return (
     <button
       type="button"
       onClick={onTikla}
+      onDoubleClick={onCiftTikla}
       disabled={pasif}
+      title={baslik}
       aria-label={okunur}
       aria-pressed={aktif}
       aria-current={guncel ? "page" : undefined}

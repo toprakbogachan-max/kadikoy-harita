@@ -318,9 +318,16 @@ export default function Profil({
             düğmesi (skill §3). */}
         {!benim && (
           <div className="mb-4 px-4">
-            <button
-              disabled={takipYukleniyor}
-              onClick={async () => {
+            <Pill
+              tamGenislik kat={1}
+              dolgu={takipDurumu ? "beyaz" : "siyah"}
+              aktif={takipDurumu}
+              /* ✓ ikon yuvasında, çünkü zıplayan yuva orası (skill §13
+                 kalıp 4): takip edildiğini hareket söylüyor. */
+              zipla
+              ikon={takipDurumu ? "✓" : undefined}
+              pasif={takipYukleniyor}
+              onTikla={async () => {
                 if (!oturumKisi) return onGirisIste();
                 /* İyimser güncelleme: sunucu yanıtını beklemeden düğme değişiyor,
                    hata olursa geri alınıyor. */
@@ -329,12 +336,9 @@ export default function Profil({
                 try { await takipDegistir(kisi.id, su); }
                 catch (e) { setTakipYerel(su); alert(e instanceof Error ? e.message : String(e)); }
               }}
-              className={`w-full rounded-full border-none px-3 py-3 text-sm font-semibold lowercase tracking-ui shadow-kat-1 ${
-                takipDurumu ? "bg-yuzey text-gri-800" : "bg-gri-900 text-white"
-              } disabled:opacity-50`}
             >
-              {takipDurumu ? "takiptesin ✓" : "takip et"}
-            </button>
+              {takipDurumu ? "takiptesin" : "takip et"}
+            </Pill>
           </div>
         )}
 

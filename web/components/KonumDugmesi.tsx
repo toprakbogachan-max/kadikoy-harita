@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { KONUM_MESAJI, type Konum, type KonumDurumu } from "@/lib/konum";
+import IkonDugmesi from "./corner/primitives/IkonDugmesi";
 
 interface Props {
   durum: KonumDurumu;
@@ -60,20 +61,20 @@ export default function KonumDugmesi({
         </div>
       ) : null}
 
-      <button
-        onClick={acik ? onGit : onIste}
-        onDoubleClick={acik ? onKapat : undefined}
-        aria-label={acik ? "Konumuma git" : "Konumumu göster"}
-        aria-pressed={acik}
-        title={
+      <IkonDugmesi
+        okunur={acik ? "Konumuma git" : "Konumumu göster"}
+        baslik={
           acik
             ? `Konumuma git${konum ? ` (±${Math.round(konum.dogruluk)} m)` : ""} · çift dokunuş kapatır`
             : "Konumumu göster"
         }
+        aktif={acik}
+        sekil="daire" boyut={40} kat={3}
+        dolgu={acik ? "mavi" : "beyaz"}
+        onTikla={acik ? onGit : onIste}
+        onCiftTikla={acik ? onKapat : undefined}
         /* Filtre şeridi haritanın altında yüzdüğü için düğme onun üstünde duruyor. */
-        className={`absolute bottom-[156px] right-3 z-[3] grid size-10 place-items-center rounded-full border-none shadow-kat-3 ${
-          acik ? "bg-mavi text-white" : "bg-yuzey text-murekkep"
-        } ${durum === "isteniyor" ? "animate-pulse" : ""}`}
+        className={`absolute bottom-[156px] right-3 z-[3] ${durum === "isteniyor" ? "animate-pulse" : ""}`}
       >
         {/* nişangâh — konum düğmelerinin yerleşik dili */}
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -82,7 +83,7 @@ export default function KonumDugmesi({
           <circle cx="12" cy="12" r="8" opacity=".55" />
           <path d="M12 1.6v2.6M12 19.8v2.6M22.4 12h-2.6M4.2 12H1.6" />
         </svg>
-      </button>
+      </IkonDugmesi>
     </>
   );
 }

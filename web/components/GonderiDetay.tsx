@@ -13,6 +13,7 @@ import Yorumlar from "./Yorumlar";
 import Sikayet from "./Sikayet";
 import PinDuzenle from "./PinDuzenle";
 import DereceGostergesi from "./corner/DereceGostergesi";
+import IkonDugmesi from "./corner/primitives/IkonDugmesi";
 
 interface Props {
   pinId: string;
@@ -304,22 +305,22 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
               ))}
             </div>
             {/* oklar alt panelin ÜSTÜNDE olmalı, yoksa panelin şeffaf kısmı tıklamayı yutuyor */}
-            <button
-              onClick={() => medyaGec(-1)}
-              disabled={medyaIndex === 0}
-              aria-label="Önceki medya"
-              className="absolute left-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(10,10,12,.5)] text-white disabled:opacity-30"
+            <IkonDugmesi
+              okunur="Önceki medya" sekil="daire" dolgu="camKoyu" boyut={30} kat={0}
+              pasif={medyaIndex === 0}
+              onTikla={() => medyaGec(-1)}
+              className="absolute left-2 top-[44%] z-[8] -translate-y-1/2"
             >
               ‹
-            </button>
-            <button
-              onClick={() => medyaGec(1)}
-              disabled={medyaIndex === medya.length - 1}
-              aria-label="Sonraki medya"
-              className="absolute right-2 top-[44%] z-[8] grid size-[30px] -translate-y-1/2 place-items-center rounded-full border-none bg-[rgba(10,10,12,.5)] text-white disabled:opacity-30"
+            </IkonDugmesi>
+            <IkonDugmesi
+              okunur="Sonraki medya" sekil="daire" dolgu="camKoyu" boyut={30} kat={0}
+              pasif={medyaIndex === medya.length - 1}
+              onTikla={() => medyaGec(1)}
+              className="absolute right-2 top-[44%] z-[8] -translate-y-1/2"
             >
               ›
-            </button>
+            </IkonDugmesi>
           </div>
         )}
 

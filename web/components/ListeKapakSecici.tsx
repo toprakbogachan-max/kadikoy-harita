@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { listeKapakYukle } from "@/lib/veri";
 import type { Liste } from "@/lib/model";
 import ListeKapagi from "./ListeKapagi";
+import Pill from "./corner/primitives/Pill";
 
 /**
  * Kapak fotoğrafı seçme ve KADRAJLAMA.
@@ -145,23 +146,16 @@ export default function ListeKapakSecici({
             onChange={fotoSec}
             className="hidden"
           />
-          <button
-            type="button"
-            onClick={() => dosyaGirdi.current?.click()}
-            disabled={kilit}
-            className="rounded-full bg-yuzey px-3.5 py-2 text-sm font-semibold lowercase tracking-ui text-gri-800 shadow-kat-1 disabled:opacity-40"
-          >
+          <Pill kat={1} pasif={kilit} onTikla={() => dosyaGirdi.current?.click()}>
             {liste.kapak ? "başka fotoğraf" : "kapak fotoğrafı seç"}
-          </button>
+          </Pill>
           {liste.kapak && (
-            <button
-              type="button"
-              onClick={() => onDegisti({ url: null, konum: 50 })}
-              disabled={kilit}
-              className="ml-1.5 rounded-full border-none bg-transparent px-2.5 py-2 text-sm lowercase text-gri-600 disabled:opacity-40"
+            <Pill
+              dolgu="seffaf" kat={0} className="ml-1.5 text-gri-600"
+              pasif={kilit} onTikla={() => onDegisti({ url: null, konum: 50 })}
             >
               kaldır
-            </button>
+            </Pill>
           )}
           <p className="mt-2 text-xs lowercase leading-snug text-gri-600">
             {liste.kapak

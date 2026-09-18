@@ -941,21 +941,22 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
             genişlikte bir düğme yerine bunu seçmek kasıtlı: yarım açılımda
             zaten dar olan alanı bir satır daha yemiyor ve kaydırırken
             yerinde kalıyor. Etiketi yok, o yüzden aria-label şart. */}
-        <button
-          onClick={() =>
+        <IkonDugmesi
+          okunur={benimPinim ? "Pinini aç" : "Buraya pin at"}
+          baslik={benimPinim ? "Pinini aç" : "Buraya pin at"}
+          sekil="daire" dolgu="siyah" boyut={58} kat={3}
+          onTikla={() =>
             !ben ? onGirisIste()
             : benimPinim ? onGonderiAc(benimPinim.id, siraliPinler.map((p) => p.id))
             : onPinAt(yer)
           }
-          aria-label={benimPinim ? "Pinini aç" : "Buraya pin at"}
-          title={benimPinim ? "Pinini aç" : "Buraya pin at"}
-          className="absolute bottom-4 right-4 z-[5] grid size-[58px] place-items-center rounded-full border-none bg-gri-900 text-white shadow-kat-3"
+          className="absolute bottom-4 right-4 z-[5]"
         >
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                strokeWidth="2" strokeLinecap="round">
             {benimPinim ? <path d="M4 12h16M13 5l7 7-7 7" /> : <path d="M12 5v14M5 12h14" />}
           </svg>
-        </button>
+        </IkonDugmesi>
 
         {kunyeAcik && (
           <KunyeDuzenle
