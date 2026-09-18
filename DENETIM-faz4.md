@@ -43,3 +43,32 @@ açıldı → panel kaydırıldı → puan kartı görüldü. 390 ve 1280 px.
 (veritabanında hiç kayıt yok, demo hesap da yazamıyor). Dolu hâli
 `/tasarim/mekan-eksikleri` önizlemesinde duruyor. Gerçek hesapla bir mekan
 kaydedilince rozetin çıktığı teyit edilmeli.
+
+## Paket 3 — akış kartı ve gönderi detayı: puan çipi
+
+`components/Akis.tsx` ve `components/GonderiDetay.tsx`: ham `8.5/10` yerine
+`DereceGostergesi bicim="tek" puanGoster`.
+
+**Bileşene iki geriye uyumlu prop eklendi** (montaj gerektirdi, varsayılanlar
+bugünkü görünümü koruyor):
+- `kat` — gölge kademesi. Akış kartında çip kartın kenarına oturuyor ve
+  yanındaki eylem düğmeleriyle aynı katmanda (kat 2); varsayılan 1 kalıyor.
+- `koyu` — yalnızca yanındaki sayının rengini çeviriyor. Gönderi detayında
+  çip koyu fotoğrafın üstünde; gri sayı orada sönük kalıyordu, beyaza
+  döndü (ölçüldü: detayda `rgba(255,255,255,.85)`, akışta `gri-600`).
+
+**Spec'ten sapma:** spec akış kartı için `boy="kucuk"` diyordu; orada
+varsayılan `orta` kullanıldı. Sebep: çipin yanındaki eylem düğmeleri ~36 px
+ve 24 piksellik çip aynı satırda kırpılmış duruyor. Gönderi detayında
+`kucuk` kaldı (avatar satırının içinde).
+
+**Tıklanan akış:** `/` → alt menüden akış → 29 kartta çipler → ilk kartın
+gövdesine tıklandı → gönderi detayı açıldı. 390 px.
+
+**Görülenler:** çipler gerçek puanları doğru okuyor — `9 → favorim`,
+`8 → beğendim`, `7,5 → beğendim`, `6,5 → idare eder` (Türkçe ondalık virgül).
+Puanı olmayan pin yoksa çip hiç çizilmiyor (`p.puan != null` koşulu kaldı).
+Konsolda yalnızca haritanın eski uyarıları.
+
+**Doğrulanamayan:** puanı `null` olan bir pin bugünkü veride yok; boş hâl
+gerçek veriyle görülemedi (koşul kodda duruyor, çip çizilmiyor).

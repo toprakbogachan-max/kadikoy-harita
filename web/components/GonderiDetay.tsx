@@ -12,6 +12,7 @@ import Avatar from "./Avatar";
 import Yorumlar from "./Yorumlar";
 import Sikayet from "./Sikayet";
 import PinDuzenle from "./PinDuzenle";
+import DereceGostergesi from "./corner/DereceGostergesi";
 
 interface Props {
   pinId: string;
@@ -348,11 +349,11 @@ export default function GonderiDetay({ pinId, liste, onKapat, onPinDegisti, onGi
                 </span>
               </span>
             </button>
+            {/* Fotoğrafın üstünde beyaz sayı yerine derece göstergesi:
+                beyaz hap koyu görselde zaten okunur, kademe de sayının
+                okunuşunu söylüyor. */}
             {p.puan != null && (
-              <span className="font-sayi text-base font-bold text-white">
-                {p.puan}
-                <span className="text-2xs font-normal text-white/50">/10</span>
-              </span>
+              <DereceGostergesi puan={p.puan} bicim="tek" boy="kucuk" puanGoster koyu kat={2} className="shrink-0" />
             )}
           </div>
 

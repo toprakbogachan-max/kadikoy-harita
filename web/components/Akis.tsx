@@ -17,6 +17,7 @@ import Avatar from "./Avatar";
 import BosDurum from "./BosDurum";
 import KayanGecis from "./KayanGecis";
 import KayanSecim from "./KayanSecim";
+import DereceGostergesi from "./corner/DereceGostergesi";
 
 /**
  * Akış — tanıdıklarının nereye gittiği.
@@ -300,12 +301,12 @@ export default function Akis({ onGonderiAc }: { onGonderiAc: (id: string, liste:
                       içinde ayrı bir satır olarak dururken düğmelerle
                       hizasız kalıyor ve arada boş bir bant bırakıyordu. */}
                   <div className="absolute inset-x-3.5 bottom-0 flex translate-y-1/2 items-center gap-2">
+                    {/* Puan artık ham sayı değil derece göstergesi (E1):
+                        kademe + sayı. Kendi hapını taşıdığı için eski hap
+                        kabuğu kalktı; kat 2, çünkü kartın kenarına oturuyor
+                        ve yanındaki eylem düğmeleriyle aynı katmanda. */}
                     {p.puan != null && (
-                      <span className="flex h-9 shrink-0 items-center rounded-full border border-[var(--cizgi)] bg-yuzey px-3 shadow-kat-2">
-                        <span className="font-sayi text-sm font-bold leading-none text-gri-900">
-                          {p.puan}<span className="text-xs font-normal text-gri-500">/10</span>
-                        </span>
-                      </span>
+                      <DereceGostergesi puan={p.puan} bicim="tek" puanGoster kat={2} className="shrink-0" />
                     )}
                     <span className="ml-auto flex items-center gap-2">
                     <EylemDugmesi

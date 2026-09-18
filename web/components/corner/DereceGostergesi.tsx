@@ -94,8 +94,19 @@ export interface DereceGostergesiProps {
   bicim?: "olcek" | "tek";
   /** sayıyı da yanında göster — kademe okunuşunun kaynağını saklamamak için. */
   puanGoster?: boolean;
+  /**
+   * Koyu zeminde mi duruyor (fotoğraf üstü, koyu katman). Yalnızca yanındaki
+   * sayının rengini çeviriyor: gri sayı koyu fotoğrafın üstünde sönük
+   * kalıyor. Çipler zaten beyaz hap, onlar iki zeminde de okunur.
+   */
+  koyu?: boolean;
   /** orta: pin detayı, mekan özeti · kucuk: akış kartı gibi dar satırlar. */
   boy?: "kucuk" | "orta";
+  /**
+   * Gölge kademesi. Varsayılan 1 (duran içerik). Kartın kenarına oturan ya
+   * da fotoğrafın üstünde yüzen bir satırdaysa 2 (skill §5).
+   */
+  kat?: 0 | 1 | 2 | 3 | 4 | 5;
   /** veri gelmeden yer tutucu: çipler geldiğinde satır zıplamasın. */
   yukleniyor?: boolean;
   /** puan null iken `tek` biçiminde görünen cümle. */
@@ -107,7 +118,9 @@ export default function DereceGostergesi({
   puan,
   bicim = "olcek",
   puanGoster = false,
+  koyu = false,
   boy = "orta",
+  kat = 1,
   yukleniyor = false,
   bosMetin = "henüz puan yok",
   className = "",
@@ -149,7 +162,7 @@ export default function DereceGostergesi({
         {bicim === "tek" && bos ? (
           /* Boş `tek`: kademe yok, cümle var. Soluk ama okunur —
              "puan yok" bir hata değil, henüz kimse gitmemiş. */
-          <Pill ikon="🫥" boy={boy} kat={1} etkilesimsiz className="min-w-0">
+          <Pill ikon="🫥" boy={boy} kat={kat} etkilesimsiz className="min-w-0">
             {/* Renk iç yazıda: Pill'in kendi `text-gri-900`ı ile aynı
                 özellikte ikinci bir sınıf yarışır, kazananı sıra belirler. */}
             <span className="text-gri-500">{bosMetin}</span>
@@ -165,7 +178,7 @@ export default function DereceGostergesi({
                    yokken halka "seçildi" değil "odaklandı" okunur. */
                 kenar={aktif && bicim === "olcek" ? "halka" : "yok"}
                 boy={boy}
-                kat={1}
+                kat={kat}
                 etkilesimsiz
                 /* min-h: yazısız çip 29 px, yazılı 35 px. Seçili çip varken
                    items-stretch eşitliyor; puan YOKKEN (hepsi yazısız) satır
@@ -182,7 +195,10 @@ export default function DereceGostergesi({
       </span>
 
       {puanGoster && !bos && (
-        <span aria-hidden className="font-sayi text-xs font-bold leading-none text-gri-600">
+        <span
+          aria-hidden
+          className={`font-sayi text-xs font-bold leading-none ${koyu ? "text-white/85" : "text-gri-600"}`}
+        >
           {puanYazisi(puan)}
         </span>
       )}
