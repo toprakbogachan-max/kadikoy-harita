@@ -133,3 +133,22 @@ ikisini istiyor. Fazlalık hapta değil, eski usul filtre barının seçili
 çipinde: Corner dilinde seçim dolu siyah değil siyah halka. Filtre barı
 primitife çevrilince (ayrı faz) kendiliğinden çözülür; acele gerekirse hap
 `cam` dolguya alınabilir.
+
+## Paket 5a — veri: mekanı listeye ekleme + gizlilik
+
+`lib/veri.ts` + `lib/model.ts` (types.ts'te `lists` satırı zaten `is_public`
+taşıyordu, değişmedi):
+- `listeyeEkle(listeId, yerId)` — sıra listenin sonuna. Birincil anahtar
+  `(list_id, place_id)` olduğu için çifte ekleme `ignoreDuplicates` ile
+  sessizce yutuluyor (kullanıcı için sonuç aynı).
+- `listedenCikar(listeId, yerId)`.
+- `listelerimdeMi(yerId)` — `lists!inner` kesişimiyle yalnızca kendi
+  listelerim.
+- `Liste.gizli` ← `lists.is_public === false`; `LISTE_SECIM` alanı taşıyor.
+  Kilit rozeti bunu bekliyordu (DENETIM-faz3 §11 dipnot 7).
+
+**Şema değişmedi.** `list_items` yazma politikası zaten liste sahibine açık.
+
+**Doğrulama:** bu pakette yalnızca tip denetimi ve lint. Fonksiyonlar 5b'de
+arayüze bağlanınca tıklanarak sınandı; yazma yolu demo hesapla
+denenemiyor (salt okunur).

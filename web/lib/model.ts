@@ -107,5 +107,7 @@ export interface Liste {
   kapak: string | null;
   /** Kare kartta fotoğrafın hangi dikey bandı görünecek, 0–100 (varsayılan 50). */
   kapakKonum: number;
+  /** lists.is_public === false — kilit rozetini bu taşıyor. */
+  gizli: boolean;
   yerler: Yer[];
 }

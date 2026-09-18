@@ -412,12 +412,12 @@ export async function kisileriGetir(): Promise<Record<string, Kisi>> {
 
 /* ---------- listeler ---------- */
 
-const LISTE_SECIM = `id, owner_id, slug, title, intro, cover_url, cover_pos,
+const LISTE_SECIM = `id, owner_id, slug, title, intro, cover_url, cover_pos, is_public,
              list_items ( ordering, places ( id, slug, name, category, neighborhood, lat, lng, pin_count ) )`;
 
 interface HamListe {
   id: string; owner_id: string; slug: string; title: string; intro: string | null;
-  cover_url: string | null; cover_pos: number | null;
+  cover_url: string | null; cover_pos: number | null; is_public: boolean | null;
   list_items: { ordering: number; places: { id: string; slug: string; name: string; category: PlaceCategory; neighborhood: string | null; lat: number | null; lng: number | null; pin_count: number | null } }[];
 }
 
@@ -426,6 +426,8 @@ const listeCevir = (l: HamListe): Liste => ({
   /* cover_pos'u eski satırlarda null bulabiliriz (göç 16'dan önce yazılmış
      liste yok ama sütun nullable okunabiliyor); ortadan kadraj varsayılan. */
   kapak: l.cover_url, kapakKonum: l.cover_pos ?? 50,
+  /* Sütun nullable okunabiliyor; varsayılan açık (schema: default true). */
+  gizli: l.is_public === false,
   yerler: l.list_items
     .slice().sort((a, b) => a.ordering - b.ordering)
     .map((li): Yer => ({
@@ -1281,6 +1283,58 @@ export async function listeOlustur(
     throw error;
   }
   return liste.id;
+}
+
+/* ---------- listeye mekan ekleme ----------
+   Faz 4'e kadar list_items'a yalnızca liste İLK KURULURKEN yazılıyordu
+   (listeOlustur); var olan bir listeye mekan eklemenin yolu yoktu. Şema
+   hazırdı: list_items'ın yazma politikası listenin sahibine açık
+   (p_list_items_write), okuma herkese. Şema değişmedi. */
+
+/**
+ * Mekanı listeye ekler. Sıra listenin sonuna.
+ *
+ * Birincil anahtar (list_id, place_id): aynı mekan ikinci kez eklenirse
+ * veritabanı 23505 döndürür. Kullanıcı için sonuç aynı olduğundan
+ * (mekan listede) sessizce yutuluyor — `ignoreDuplicates`.
+ */
+export async function listeyeEkle(listeId: string, yerId: string) {
+  const kimlik = await benimKimligim();
+  if (!kimlik) throw new Error("Giriş gerekiyor.");
+
+  const { data: son } = await db.from("list_items")
+    .select("ordering").eq("list_id", listeId)
+    .order("ordering", { ascending: false }).limit(1).maybeSingle();
+
+  const { error } = await db.from("list_items").upsert(
+    { list_id: listeId, place_id: yerId, ordering: ((son as { ordering: number } | null)?.ordering ?? -1) + 1 },
+    { onConflict: "list_id,place_id", ignoreDuplicates: true },
+  );
+  if (error) throw error;
+}
+
+/** Mekanı listeden çıkarır. Yoksa sessiz. */
+export async function listedenCikar(listeId: string, yerId: string) {
+  const kimlik = await benimKimligim();
+  if (!kimlik) throw new Error("Giriş gerekiyor.");
+  const { error } = await db.from("list_items").delete()
+    .eq("list_id", listeId).eq("place_id", yerId);
+  if (error) throw error;
+}
+
+/**
+ * Bu mekan BENİM hangi listelerimde? Liste seçicinin seçili işaretleri.
+ * `lists!inner` ile kesişim: başkasının listesi sayılmıyor.
+ */
+export async function listelerimdeMi(yerId: string): Promise<string[]> {
+  const kimlik = await benimKimligim();
+  if (!kimlik) return [];
+  const { data, error } = await db.from("list_items")
+    .select("list_id, lists!inner(owner_id)")
+    .eq("place_id", yerId)
+    .eq("lists.owner_id", kimlik);
+  if (error) throw error;
+  return ((data ?? []) as { list_id: string }[]).map((r) => r.list_id);
 }
 
 export async function listeSil(listeId: string) {
