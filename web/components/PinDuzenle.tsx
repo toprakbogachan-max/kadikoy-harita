@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { pinGuncelle, pinSil, medyaUrl } from "@/lib/veri";
 import type { Pin } from "@/lib/model";
 import {
-  Cip, Onizleme, SENARYOLAR, SIKLIKLAR, TEKRARLAR, METIN_MAX,
+  Cip, Onizleme, SENARYOLAR, SIKLIKLAR, METIN_MAX,
 } from "./PinFormu";
 import BuyukGorsel from "./BuyukGorsel";
 import { fotograflariHazirla } from "@/lib/fotograf";
 import { useSiralama, siraStili } from "@/lib/siralama";
+import YineGiderMisin, { type YineGiderDegeri } from "./corner/YineGiderMisin";
 
 /** Listedeki bir satır: ya yüklenmiş medya ya da yeni seçilmiş dosya. */
 type Medya =
@@ -316,13 +317,15 @@ export default function PinDuzenle({
               <Cip key={sk} secili={siklik === sk} onTikla={() => setSiklik(siklik === sk ? "" : sk)}>{sk}</Cip>
             ))}
           </div>
-          <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Tekrar gider misin">
-            {TEKRARLAR.map((tk) => (
-              <Cip key={tk} secili={tekrar === tk} onTikla={() => setTekrar(tekrar === tk ? "" : tk)}>
-                tekrar gider miyim: {tk}
-              </Cip>
-            ))}
-          </div>
+          {/* Pin formuyla aynı bileşen: başlık, üç seçenek ve favorim
+              rozeti onun içinde. */}
+          <YineGiderMisin
+            deger={(tekrar || null) as YineGiderDegeri | null}
+            onDegis={(yeni) => setTekrar(yeni ?? "")}
+            puan={puan}
+            pasif={gonderiliyor}
+            className="mb-2"
+          />
           <input value={fiyat} onChange={(e) => setFiyat(e.target.value.replace(/[^0-9]/g, ""))}
             aria-label="Kişi başı ödediğin (₺)"
             inputMode="numeric" maxLength={5} placeholder="Kişi başı ödediğin (₺)" className={girdi} />

@@ -72,3 +72,32 @@ Konsolda yalnızca haritanın eski uyarıları.
 
 **Doğrulanamayan:** puanı `null` olan bir pin bugünkü veride yok; boş hâl
 gerçek veriyle görülemedi (koşul kodda duruyor, çip çizilmiyor).
+
+## Paket 4 — pin formu ve pin düzenleme: yine gider miydin
+
+`components/PinFormu.tsx` ve `components/PinDuzenle.tsx`: `TEKRARLAR`
+dizisiyle çizilen düz çiplerin yerine `YineGiderMisin`. Formun kendi
+"Tekrar gider misin" etiketi, `role="group"` sarmalayıcısı ve elle yazılmış
+toggle'ı silindi (bileşen üçünü de taşıyor). `TEKRARLAR` sabiti artık
+kullanılmadığı için kaldırıldı. Bileşene `puan` da bağlandı: 9 ve üstünde
+soru satırında FAVORİM rozeti çıkıyor.
+
+**Tıklanan akış:** `/` → "+" → "pin at" → giriş katmanı → demo hesabıyla
+(`canyz@demo.invalid`) e-posta ve şifre adımları → harita → "+" → "pin at"
+→ pin formu açıldı. 390 px.
+
+**Görülenler (canlı formda, DOM'dan ölçüldü):**
+- Başlık `yine gider miydin?`, seçenekler `👍evet · 🤔belki · 👎hayır`.
+- Puan kaydırıcısı 9'a çekilince FAVORİM rozeti belirdi.
+- "evet"e dokununca `aria-pressed=true`.
+
+**Doğrulanamayanlar:**
+- Bloğun canlı formdaki **ekran görüntüsü** alınamadı: form sabit bir
+  katmanın içinde kendi kabında kayıyor ve otomasyonla o kap
+  kaydırılamadı (birkaç yöntem denendi). Bileşenin görünümü
+  `/tasarim/degerlendirme` önizlemesinde iki genişlikte doğrulanmıştı.
+- `PinDuzenle` ekranı açılmadı (kendi pinini düzenleme akışı); değişiklik
+  `PinFormu` ile birebir aynı kalıpta ve tip denetiminden geçiyor.
+- Pin **gönderimi** denenmedi: demo hesap salt okunur. Gerçek hesapla
+  "yine gider miydin" cevabının `pins.would_return`'e yazıldığı teyit
+  edilmeli.

@@ -12,12 +12,12 @@ import { TUR_AD } from "@/lib/paleti";
 import { igneStil, simgeSvg } from "@/lib/gorsel";
 import YerSecici, { type YeniNokta, type Secim } from "./YerSecici";
 import BuyukGorsel from "./BuyukGorsel";
+import YineGiderMisin, { type YineGiderDegeri } from "./corner/YineGiderMisin";
 
 /* Prototipten gelen seçenekler — şemada serbest metin, arayüzde sabit liste
    olması sonradan gruplamayı mümkün kılıyor ("çoğunlukla X için geliniyor"). */
 export const SENARYOLAR = ["tek başına", "çalışmak için", "ilk buluşma", "kalabalık grup", "hızlı uğrak", "uzun oturma"];
 export const SIKLIKLAR = ["haftalık uğrak", "ayda bir", "yılda birkaç", "bir kez görülür"];
-export const TEKRARLAR = ["evet", "belki", "hayır"];
 const TURLER: PlaceCategory[] = ["kahve", "yemek", "bar", "tatli", "kultur", "park", "otel", "magaza", "diger"];
 
 /* Şemadaki check ile aynı sınırlar — sunucuya boşuna gidip hata almayalım */
@@ -396,14 +396,16 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
                 ))}
               </div>
             </div>
-            <div role="group" aria-labelledby="tekrar-basligi">
-              <div className={etiket} id="tekrar-basligi">Tekrar gider misin</div>
-              <div className="flex flex-wrap gap-1.5">
-                {TEKRARLAR.map((s) => (
-                  <Cip key={s} secili={tekrar === s} onTikla={() => setTekrar(tekrar === s ? "" : s)}>{s}</Cip>
-                ))}
-              </div>
-            </div>
+            {/* Kendi başlığını ve üç seçeneğini bileşen taşıyor; formun
+                etiketi ve elle yazılmış toggle'ı kalktı. Puanı da alıyor:
+                9 ve üstünde soru satırında "FAVORİM" rozeti çıkıyor
+                (NOT.md: favorim = puanın okunuşu, ayrı alan değil). */}
+            <YineGiderMisin
+              deger={(tekrar || null) as YineGiderDegeri | null}
+              onDegis={(yeni) => setTekrar(yeni ?? "")}
+              puan={puan}
+              pasif={gonderiliyor}
+            />
             <div>
               <label className={etiket} htmlFor="fiyat">Kişi başı ödediğin (₺)</label>
               <input id="fiyat" value={fiyat} onChange={(e) => setFiyat(e.target.value.replace(/\D/g, ""))}
