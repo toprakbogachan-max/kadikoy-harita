@@ -284,6 +284,7 @@ function pinCevir(p: HamPin): Pin {
     yerSemt: p.places.neighborhood ?? "Kadıköy",
     yerTuru: p.places.category,
     saat: saatFarki(p.created_at),
+    tarih: p.created_at,
     puan: Number(p.rating),
     kelimeler: p.words ?? [],
     senaryo: p.scenario,

@@ -50,6 +50,9 @@ export interface Pin {
   yerTuru: PlaceCategory;
   /** kaç saat önce atıldı — arayüz "3 sa" diye gösteriyor */
   saat: number;
+  /** ham `created_at` (ISO). `saat` yuvarlanmış bir türev; hafta kovası
+      gibi sınır hesapları bunu okumalı (lib/seri.ts). */
+  tarih: string;
   puan: number;               // 1–10, yarım adımlı
   kelimeler: string[];
   senaryo: string;

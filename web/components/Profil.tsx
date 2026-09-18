@@ -3,6 +3,7 @@
 import { fotoZemin, simgeSvg, zeminSimgeRengi } from "@/lib/gorsel";
 import { useMemo, useState } from "react";
 import { useVeri } from "@/lib/kanca";
+import { seriHesapla } from "@/lib/seri";
 import { profilGetir, kisininPinleri, kisininListeleri, kisininYerleri, takipDegistir, takiptemiyim, davetGorseli, kucukUrl, medyaUrl } from "@/lib/veri";
 import { useOturum } from "@/lib/oturum";
 import type { Yer, Pin, Kisi, Liste } from "@/lib/model";
@@ -16,6 +17,7 @@ import ListeKarti, { YeniListeKarosu } from "./ListeKarti";
 import KartGorsel from "./KartGorsel";
 import { puanEmojisi, puanYazisi } from "./corner/DereceGostergesi";
 import Pill from "./corner/primitives/Pill";
+import SeriRozeti from "./corner/SeriRozeti";
 
 /**
  * Profil — kişinin Kadıköy'ü.
@@ -116,6 +118,9 @@ export default function Profil({
      pin ızgarası gerçekten boşken atılıyor; yüklenirken de atılmıyor, yoksa
      her profil açılışında bir istek fazladan giderdi. (veri.ts → davetGorseli) */
   const bosHarita = !!kimlik && !pinYukleniyor && pinleri.length === 0;
+  /* Seri, pinlerin tarihlerinden türüyor — pinler değişmedikçe yeniden
+     hesaplanmıyor. Hesabın kendisi saf: bkz. lib/seri.ts. */
+  const seri = useMemo(() => seriHesapla(pinleri.map((p) => p.tarih)), [pinleri]);
   const { veri: davetFoto } = useVeri<string | null>(
     () => (bosHarita ? davetGorseli() : Promise.resolve(null)), [bosHarita], null);
 
@@ -243,6 +248,19 @@ export default function Profil({
             <span className="lowercase text-gri-600">takipçi</span>
           </span>
         </div>
+
+        {/* ---- haftalık seri (Faz 2 Paket 6 → Faz 5'te monte edildi) ----
+            Sayının kaynağı ayrı bir sorgu DEĞİL: profil zaten bu kişinin
+            bütün pinlerini çekiyor, seri onlardan hesaplanıyor
+            (`lib/seri.ts`, testi `scripts/kontrol/seri-testi.mjs`).
+
+            Başkasının profilinde sıfır gösterilmiyor: "😴 seri yok" kendi
+            profilinde davet, başkasınınkinde yargı olur. */}
+        {(benim || seri.hafta > 0) && (
+          <div className="px-4 pt-3">
+            <SeriRozeti hafta={seri.hafta} durum={seri.durum} yukleniyor={pinYukleniyor} />
+          </div>
+        )}
 
         {/* Bio insanın yazdığı metin → Karla. */}
         {kisi.bio && <p className="px-4 pt-2.5 font-metin text-sm leading-relaxed text-gri-800">{kisi.bio}</p>}
