@@ -112,7 +112,7 @@ export default function Yorumlar({
       </div>
 
       {hata && (
-        <p className="shrink-0 bg-[rgba(224,39,28,.07)] px-3 py-2 text-sm">
+        <p className="shrink-0 bg-[rgba(179,38,30,.07)] px-3 py-2 text-sm">
           {hata}
         </p>
       )}

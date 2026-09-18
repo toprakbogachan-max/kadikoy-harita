@@ -80,7 +80,7 @@ export default function Arsiv({
 
       <KayanGecis anahtar={tur} sira={ARSIV_SIRASI} className="min-h-0 flex-1 overflow-y-auto p-4">
         {hata && (
-          <p className="mb-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
+          <p className="mb-3 rounded-md border border-[rgba(179,38,30,.3)] bg-[rgba(179,38,30,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}

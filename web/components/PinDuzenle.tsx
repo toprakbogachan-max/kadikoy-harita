@@ -332,7 +332,7 @@ export default function PinDuzenle({
         </div>
 
         {hata && (
-          <p className="mx-4 mt-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
+          <p className="mx-4 mt-3 rounded-md border border-[rgba(179,38,30,.3)] bg-[rgba(179,38,30,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}
@@ -341,7 +341,7 @@ export default function PinDuzenle({
             durmamalı, yanlışlıkla basılır. */}
         <div className="px-4 py-5">
           <button onClick={sil} disabled={siliniyor || gonderiliyor}
-            className="w-full border-none bg-transparent p-0 text-sm text-[#921008] underline disabled:opacity-40">
+            className="w-full border-none bg-transparent p-0 text-sm text-kapali underline disabled:opacity-40">
             {siliniyor ? "Siliniyor…" : "Bu pini sil"}
           </button>
         </div>

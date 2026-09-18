@@ -420,7 +420,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
         </p>
 
         {hata && (
-          <p className="mx-4 mb-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm leading-snug">
+          <p className="mx-4 mb-3 rounded-md border border-[rgba(179,38,30,.3)] bg-[rgba(179,38,30,.07)] p-2.5 text-sm leading-snug">
             {hata}
           </p>
         )}
@@ -447,7 +447,7 @@ export default function PinFormu({ onKapat, onAtildi, hazirYer }: Props) {
   );
 }
 
-const Zorunlu = () => <span className="text-[#E0271C]">*</span>;
+const Zorunlu = () => <span className="text-kapali">*</span>;
 
 export function Cip({ secili, onTikla, children }: { secili: boolean; onTikla: () => void; children: React.ReactNode }) {
   return (

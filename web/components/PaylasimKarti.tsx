@@ -105,8 +105,8 @@ export default function PaylasimKarti({ onKapat }: { onKapat: () => void }) {
         </div>
 
         {ben.acikMi === false ? (
-          <div className="mt-3.5 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-3 text-sm leading-snug">
-            <strong className="mb-1 block text-2xs font-bold uppercase tracking-etiket text-[#921008]">
+          <div className="mt-3.5 rounded-md border border-[rgba(179,38,30,.3)] bg-[rgba(179,38,30,.07)] p-3 text-sm leading-snug">
+            <strong className="mb-1 block text-2xs font-bold uppercase tracking-etiket text-kapali">
               Profilin gizli
             </strong>
             Bu link kimsede açılmaz. Ayarlardan “Profilim herkese açık”ı aç.

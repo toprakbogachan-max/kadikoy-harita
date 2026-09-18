@@ -58,3 +58,24 @@ düğme 45° döndü (Tailwind 4 bunu `rotate` özelliğiyle yapıyor), tekrar
 dokununca kapandı. Alt menüden akışa geçildi (`aria-current=page`),
 haritaya dönüldü, mekan sayfası açıldı: pin düğmesi 36 px / 16 px
 yarıçap, paylaş yerinde. Taşma yok, konsol temiz.
+
+## Dalga 3 — kategori rengi arayüzden çıktı
+
+Tarama: uygulama ekranlarında sabit yazılmış renk aranınca on iki dosyada
+aynı kalıp çıktı — zorunlu alan yıldızları ve hata/uyarı kutuları
+**kategori paletindeki yemek kırmızısını** (`#E0271C` = `--color-yemek`,
+mürekkebi `#921008`) kullanıyordu.
+
+Skill §3 ve §10 bunu açıkça yasaklıyor: kategori rengi arayüz iskeletinde
+yaşamaz. Doğru renk durum tokeni `--color-kapali` (#B3261E) — mekan
+sayfasındaki "gitmeden önce" uyarı kutusu zaten onu kullanıyordu.
+
+Değişenler (Giris.tsx ürün kararıyla kapsam dışı): `PinFormu`,
+`PinDuzenle`, `ListeOlustur`, `ListeDuzenle`, `ListeKapakSecici`,
+`ProfilDuzenle`, `KunyeDuzenle`, `Yorumlar`, `Ayarlar`, `Arsiv`,
+`Sikayet`, `PaylasimKarti`. Uyarı kutusunun kenar/zemin tonu da aynı
+tokenın şeffaf hâline çekildi.
+
+**Ölçüldü:** liste oluşturma ekranındaki zorunlu alan yıldızı artık
+`rgb(179, 38, 30)`. Kategori kırmızısı arayüzde sıfır yerde kaldı
+(Giris.tsx hariç).

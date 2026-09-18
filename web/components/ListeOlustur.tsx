@@ -107,7 +107,7 @@ export default function ListeOlustur({
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <label className="mb-3 block">
-          <span className={etiket}>Başlık <span className="text-[#E0271C]">*</span></span>
+          <span className={etiket}>Başlık <span className="text-kapali">*</span></span>
           <input value={baslik} onChange={(e) => setBaslik(e.target.value)}
             maxLength={60} placeholder="örn. Yağmurlu günde Kadıköy" className={girdi} />
         </label>
@@ -136,7 +136,7 @@ export default function ListeOlustur({
         </div>
 
         <div className={etiket}>
-          Mekanlar <span className="text-[#E0271C]">*</span>
+          Mekanlar <span className="text-kapali">*</span>
           {secilenler.length > 0 && (
             <span className="ml-2 font-sayi normal-case tracking-normal">{secilenler.length} seçili</span>
           )}
@@ -220,7 +220,7 @@ export default function ListeOlustur({
         )}
 
         {hata && (
-          <p className="mt-3 rounded-md border border-[rgba(224,39,28,.3)] bg-[rgba(224,39,28,.07)] p-2.5 text-sm">
+          <p className="mt-3 rounded-md border border-[rgba(179,38,30,.3)] bg-[rgba(179,38,30,.07)] p-2.5 text-sm">
             {hata}
           </p>
         )}
