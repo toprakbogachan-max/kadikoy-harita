@@ -559,6 +559,28 @@ export default function TasarimSayfasi() {
 
           <div className="mt-8" />
 
+          {/* Süre de tokendı ama burada listelenmiyordu; bileşenlerde
+              150/160/200/300 ms dağınık yazılıydı (DENETIM-faz3 T7). */}
+          <Etiket>süreler</Etiket>
+          <div className="flex flex-col gap-1 font-sayi text-2xs text-gri-700">
+            <div><b className="font-tabela text-gri-900">sure-bas</b> · 150ms — basma tepkisi (.bas); parmak kalkmadan bitmeli</div>
+            <div><b className="font-tabela text-gri-900">sure-gecis</b> · 200ms — renk, halka, seçili ölçek; kısa mesafe durum geçişi</div>
+            <div><b className="font-tabela text-gri-900">sure-panel</b> · 300ms — duraklı panelin yer değiştirmesi, uzun yol</div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {([["sure-bas", "150ms"], ["sure-gecis", "200ms"], ["sure-panel", "300ms"]] as const).map(([ad, ms]) => (
+              <span
+                key={ad}
+                className="rounded-full bg-yuzey px-3 py-1.5 font-sayi text-2xs text-gri-800 shadow-kat-1"
+                style={{ transitionDuration: `var(--${ad})` }}
+              >
+                {ad} · {ms}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-8" />
+
           <Etiket>dört kalıp</Etiket>
           <div className="flex flex-wrap items-start gap-6">
             <div>

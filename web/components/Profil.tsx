@@ -14,6 +14,7 @@ import ListeSayfasi from "./ListeSayfasi";
 import ListeDuzenle from "./ListeDuzenle";
 import ListeKarti, { YeniListeKarosu } from "./ListeKarti";
 import KartGorsel from "./KartGorsel";
+import { puanEmojisi, puanYazisi } from "./corner/DereceGostergesi";
 
 /**
  * Profil — kişinin Kadıköy'ü.
@@ -425,8 +426,12 @@ export default function Profil({
                     {/* Cam rozet: ListeKarti'ndeki sayı rozetiyle aynı dil.
                         Puan fotoğrafın üstünde duruyor ama yazıyı ezmiyor —
                         ad artık aşağıda. */}
-                    <span className="cam absolute bottom-2 left-2 rounded-full px-2 py-0.5 font-sayi text-2xs font-semibold text-gri-800">
-                      {p.puan}
+                    {/* Kademe emojisi sayının yanında: çip bu boyutta taşar,
+                        ama puanın okunuşu ızgarada da görünsün — aynı sözlük
+                        (😕 😐 😋 😍). */}
+                    <span className="cam absolute bottom-2 left-2 flex items-center gap-1 rounded-full px-2 py-0.5 font-sayi text-2xs font-semibold text-gri-800">
+                      <span aria-hidden className="text-[11px] leading-none">{puanEmojisi(p.puan)}</span>
+                      {puanYazisi(p.puan)}
                     </span>
                   </div>
                   {/* Kademe A: mekan adı, fotoğrafın altında ortalı. */}

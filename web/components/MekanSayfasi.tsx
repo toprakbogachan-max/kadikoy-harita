@@ -783,9 +783,9 @@ export default function MekanSayfasi({ yerId, oncelikliKisi, onKapat, onGonderiA
                           <span className="truncate text-sm font-bold tracking-siki text-gri-900">
                             {k?.ad ?? "…"}
                           </span>
-                          <span className="font-sayi text-xs font-semibold text-gri-900">
-                            {p.puan}<span className="font-normal text-gri-500">/10</span>
-                          </span>
+                          {/* Akış kartındakiyle aynı çip: ham "8.5/10"
+                              yerine kademe + sayı. */}
+                          <DereceGostergesi puan={p.puan} bicim="tek" boy="kucuk" puanGoster className="shrink-0" />
                           <span className="ml-auto shrink-0 font-sayi text-2xs text-gri-500">
                             {zaman(p.saat)}
                           </span>

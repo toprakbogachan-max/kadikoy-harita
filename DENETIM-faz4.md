@@ -216,3 +216,34 @@ güncellendi.
 3. Pin formundaki "yine gider miydin" bloğunun canlı ekran görüntüsü.
 4. `goc/15-demo-salt-okunur.sql` uygulandıktan sonra demo hesabın
    yazamadığının görülmesi (yukarıdaki bulgu).
+
+## Faz 4 sonrası temizlik (2026-09-18)
+
+**Teyit bekleyenlerden ikisi kapandı** (demo hesabın bu veritabanında
+yazabildiği bulgusu sayesinde, ikisi de geri alındı):
+- **Kayıt rozetinin dolu hâli:** Boğa Bar kaydedildi → sayfa yeniden
+  açıldığında adres satırında "1 KAYIT" göründü → kayıt geri alındı →
+  rozet kayboldu. Veritabanı test öncesi hâline döndü.
+- **Pin düzenleme ekranı:** profil → kendi pinim → mekan sayfası → pin
+  satırı → gönderi detayı → "düzenle". `YineGiderMisin` orada: başlık,
+  üç seçenek, puan 8,5 (favorim rozeti yok — doğru, eşik 9).
+
+**Ham puanın kaldığı iki yer daha bulundu ve çevrildi:**
+- `Profil` ızgarasındaki cam rozet: çip o boyutta taşıyor, onun yerine
+  kademe emojisi + sayı ("😋 8,5"). Emoji `puanEmojisi()` ile aynı
+  eşikten geliyor.
+- `MekanSayfasi`'ndaki pin satırları: ham "8.5/10" yerine akıştaki çipin
+  aynısı. O ekranda artık ham puan kalmadı (ölçüldü).
+- Sayı biçimi de ortaklaştı: `puanYazisi()` Türkçe ondalık virgülü tek
+  yerden veriyor ("8,5").
+
+**Token denetim sayfası:** süre tokenları (`--sure-bas`, `--sure-gecis`,
+`--sure-panel`) hareket bölümünde listelenmiyordu, eklendi.
+
+**Hâlâ insana bağlı iki madde:**
+1. `web/scripts/goc/15-demo-salt-okunur.sql` Supabase SQL Editor'de
+   çalıştırılmalı (demo hesap şu an yazabiliyor).
+2. Pin formundaki "yine gider miydin" bloğunun canlı ekran görüntüsü —
+   form sabit katmanın içinde kendi kabında kayıyor, otomasyonla
+   kaydırılamadı. Aynı bileşen pin düzenleme ekranında ve önizlemede
+   görüldü.

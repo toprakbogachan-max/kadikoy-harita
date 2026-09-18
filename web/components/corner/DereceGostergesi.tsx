@@ -76,9 +76,15 @@ export function puanKademesi(puan: number): DereceKademe {
   return sonuc;
 }
 
-/* 8.5 → "8,5", 9 → "9". Türkçe ondalık virgül; toFixed yerine
+/** Kademenin emojisi — çipin sığmadığı dar yerler için (profil ızgarası). */
+export function puanEmojisi(puan: number): string {
+  const k = puanKademesi(puan);
+  return DERECE_KADEMELERI.find((x) => x.id === k)?.emoji ?? "";
+}
+
+/** 8.5 → "8,5", 9 → "9". Türkçe ondalık virgül; toFixed yerine
    Intl, çünkü "9,0" yazmak bir yarım adımın varlığını ima ediyor. */
-const puanYazisi = (p: number) =>
+export const puanYazisi = (p: number) =>
   new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(p);
 
 export interface DereceGostergesiProps {
