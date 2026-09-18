@@ -26,6 +26,7 @@ import { yerleriGetir, kisininYerleri, ozetSayilar, kaydettiklerim, okunmamisBil
 import type { Yer, Liste } from "@/lib/model";
 import type { PlaceCategory } from "@/lib/types";
 import { useKonum, kadikoydeMi } from "@/lib/konum";
+import BuradaAra from "@/components/corner/BuradaAra";
 
 /* Haritanın açılış merkezi — Kadıköy iskelesi civarı */
 const MERKEZ = { lat: 40.9885, lng: 29.0295, yaricapM: 2500 };
@@ -35,9 +36,23 @@ const MERKEZ = { lat: 40.9885, lng: 29.0295, yaricapM: 2500 };
    en alakalılar kalıyor. */
 const MARKER_SINIRI = 160;
 
-/* Haritayı her oynatışta sorgu atmamak için: merkez bu kadar metreden az
-   kaydıysa yeni sorgu yok. Zoom/pan sırasında moveend arka arkaya tetikleniyor. */
+/* Haritanın alanı bu kadar oynayınca "burada ara" hapı beliriyor: merkez
+   250 metreden az kaydıysa ya da yarıçap dörtte birden az değiştiyse harita
+   hâlâ aynı yere bakıyor sayılır. Zoom/pan sırasında moveend arka arkaya
+   tetikleniyor, eşik onu da süzüyor. */
 const YENIDEN_SORGU_ESIGI_M = 250;
+
+/** Harita sorgunun koştuğu alandan uzaklaştı mı? */
+function alanKaydiMi(
+  a: { lat: number; lng: number; yaricapM: number },
+  b: { lat: number; lng: number; yaricapM: number },
+) {
+  const dLat = (a.lat - b.lat) * 111_320;
+  const dLng = (a.lng - b.lng) * 111_320 * Math.cos((a.lat * Math.PI) / 180);
+  const kaydi = Math.hypot(dLat, dLng) > YENIDEN_SORGU_ESIGI_M;
+  const yaricapDegisti = Math.abs(a.yaricapM - b.yaricapM) / b.yaricapM > 0.25;
+  return kaydi || yaricapDegisti;
+}
 
 /** Filtre çipi → places_nearby parametresi. "kaydettiklerim" auth bekliyor. */
 /* Şemadaki place_category enum'unun TAMAMI. Eksik bırakılan bir kategori
@@ -90,6 +105,17 @@ function Uygulama() {
   const [secili, setSecili] = useState<string | null>(null);
   const [gonderi, setGonderi] = useState<{ id: string; liste: string[] } | null>(null);
   const [alan, setAlan] = useState(MERKEZ);
+  /* Haritanın o anki alanı — sorgunun koştuğu `alan`dan ayrı. */
+  const [haritaAlani, setHaritaAlani] = useState(MERKEZ);
+  /* "burada ara"ya basılınca aranan alan. `alan` ile AYNI nesne referansı
+     veriliyor; sorgu bitince `yukleniyor` düşüyor ve hap kendiliğinden
+     boşta hâline dönüyor — ayrı bir bayrağa ve efekte gerek yok. */
+  const [aramaAlani, setAramaAlani] = useState<typeof MERKEZ | null>(null);
+  /* Haritanın İLK bildirdiği alan "kayma" değil: yarıçap ekran boyundan
+     hesaplandığı için açılışta MERKEZ sabitinden farklı geliyor ve hap
+     kullanıcı haritaya dokunmadan beliriyordu. İlk rapor sorguyu sessizce
+     hizalıyor. */
+  const [alanHizalandi, setAlanHizalandi] = useState(false);
   /* Profil artık başkasının da olabilir — aramadan bir kişiye gidilebiliyor.
      undefined = oturumdaki kişi. */
   const [profilKisi, setProfilKisi] = useState<string | undefined>(undefined);
@@ -151,17 +177,24 @@ function Uygulama() {
     { acikYer: 0, pinSayisi: 0 },
   );
 
-  /* Küçük oynamalarda sorgu tazelemiyoruz — moveend zoom sırasında arka arkaya
-     tetikleniyor, her biri yeni sorgu olsa harita takılır. */
+  /* Harita kayınca sorgu KENDİLİĞİNDEN tazelenmiyor (Faz 4 Paket 1):
+     haritanın o anki alanı burada duruyor, sorgunun koştuğu alan `alan`da.
+     İkisi ayrılınca "burada ara" hapı beliriyor ve tazeleme kullanıcının
+     kararı oluyor — referans davranışı bu ve her kaydırmada RPC atmıyor. */
   const alaniGuncelle = (a: { lat: number; lng: number; yaricapM: number }) => {
-    setAlan((onceki) => {
-      const dLat = (a.lat - onceki.lat) * 111_320;
-      const dLng = (a.lng - onceki.lng) * 111_320 * Math.cos((a.lat * Math.PI) / 180);
-      const kaydi = Math.hypot(dLat, dLng) > YENIDEN_SORGU_ESIGI_M;
-      const yaricapDegisti = Math.abs(a.yaricapM - onceki.yaricapM) / onceki.yaricapM > 0.25;
-      return kaydi || yaricapDegisti ? a : onceki;
-    });
+    setHaritaAlani(a);
+    if (!alanHizalandi) {
+      setAlanHizalandi(true);
+      setAlan(a);
+    }
   };
+
+  /* Alan sorgusu olmayan kipler: kişi/liste odağı ile takip ve kaydettiklerim
+     filtreleri haritanın neresine baktığına bakmıyor, orada hap anlamsız. */
+  const alanSorgusuVar = !listeFiltre && !kisiFiltre && filtre !== "takip" && filtre !== "kaydettiklerim";
+  const alanEski = alanSorgusuVar && alanKaydiMi(haritaAlani, alan);
+  const araniyor = aramaAlani === alan && yukleniyor;
+  const hapGorunur = alanSorgusuVar && (alanEski || araniyor);
 
   /* hikayeye dokununca kategori filtresi "hepsi"ye geçer, yoksa
      o kişinin pinlediği yerlerin hepsi görünmeyebilir */
@@ -367,6 +400,20 @@ function Uygulama() {
                 Konum düğmesi çakışmasın diye yukarıda (KonumDugmesi'ndeki
                 bottom değeri), OSM atfı da öyle (globals.css). */}
             <div className="absolute inset-x-0 bottom-[68px] z-[4]">
+              {/* "burada ara": harita kayınca beliriyor, dokununca sorgu o
+                  alanla koşuyor. Ekrandaki tek dolu siyah eleman olmaması
+                  için değil — alt menü kapsülü beyaz, FAB siyah; hap
+                  çalışırken maviye dönüyor ve siyah kalmıyor. */}
+              {hapGorunur && (
+                <div className="flex justify-center pb-2">
+                  <BuradaAra
+                    belir
+                    calisiyor={araniyor}
+                    onTikla={() => { setAramaAlani(haritaAlani); setAlan(haritaAlani); }}
+                    className="pointer-events-auto"
+                  />
+                </div>
+              )}
               {/* Kişi filtresi açıkken kimin haritasına baktığın yazıyor ve
                   kapatılabiliyor: şerit yalnızca takip ettiklerini gösterdiği
                   için yabancı biri seçiliyken hiçbir işaret kalmıyordu. */}

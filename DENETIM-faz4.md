@@ -101,3 +101,35 @@ soru satırında FAVORİM rozeti çıkıyor.
 - Pin **gönderimi** denenmedi: demo hesap salt okunur. Gerçek hesapla
   "yine gider miydin" cevabının `pins.would_return`'e yazıldığı teyit
   edilmeli.
+
+## Paket 1 — harita: burada ara
+
+`app/page.tsx`: harita kayınca sorgu **kendiliğinden tazelenmiyor**. Haritanın
+o anki alanı (`haritaAlani`) sorgunun koştuğu alandan (`alan`) ayrıldı; ikisi
+eşikten fazla ayrılınca `BuradaAra` beliriyor, dokununca sorgu o alanla
+koşuyor. Eşik eskisiyle aynı (250 m ya da yarıçapta dörtte bir).
+
+Üç incelik:
+- **Açılışta hap yok.** Haritanın ilk bildirdiği alan "kayma" sayılmıyor:
+  yarıçap ekran boyundan hesaplandığı için açılışta sabit merkezden farklı
+  geliyordu ve hap kullanıcı haritaya dokunmadan beliriyordu. İlk rapor
+  sorguyu sessizce hizalıyor.
+- **Çalışıyor hâli türetiliyor**, ayrı bayrak yok: aranan alan sorgunun
+  alanıyla aynı nesneyken ve `yukleniyor` doğruyken hap mavi. (İlk yazımda
+  efekt içinde `setState` vardı; projenin lint kuralı onu reddediyor.)
+- **Alan sorgusu olmayan kipler hariç:** kişi/liste odağı, "takip
+  ettiklerim" ve "kaydettiklerim" haritanın neresine bakıldığına bakmıyor,
+  orada hap çıkmıyor.
+
+**Tıklanan akış (390 px):** harita yüklendi (hap yok) → tuval sürüklendi →
+hap belirdi → dokunuldu → `aria-busy=true`, zemin mavi → sorgu bitti → hap
+kayboldu, marker'lar değişti. Ayrıca: kategori filtresi değiştirildi →
+marker'lar hapsız ve hemen tazelendi; "kaydettiklerim" kipinde harita
+sürüklendi → hap çıkmadı.
+
+**Not (ürün sahibine):** ekranda artık üç koyu eleman var — hap (referansta
+siyah), seçili filtre çipi ve alt menünün aktif sekmesi. Skill en fazla
+ikisini istiyor. Fazlalık hapta değil, eski usul filtre barının seçili
+çipinde: Corner dilinde seçim dolu siyah değil siyah halka. Filtre barı
+primitife çevrilince (ayrı faz) kendiliğinden çözülür; acele gerekirse hap
+`cam` dolguya alınabilir.
